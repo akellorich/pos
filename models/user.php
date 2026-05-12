@@ -4,7 +4,7 @@
     class User extends db{
 
         function checkUser($userid,$field,$searchvalue){ 
-            $sql="CALL spcheckuser({$userid},'{$field}','{$searchvalue}')";
+            $sql="CALL spcheckuser({$this->clientid},{$userid},'{$field}','{$searchvalue}')";
             $rst=$this->getData($sql);   
             if($rst->rowCount()){
                 return true;
@@ -27,7 +27,7 @@
                 // hash the pin
                 $pin=hash('SHA256',$pin.$pinsalt);
                 // blank is for salt
-                $sql="CALL  sp_saveuser({$userid},'{$password}','',{$systemadmin},'{$username}','{$firstname}','{$middlename}','{$lastname}','{$email}','{$mobile}',
+                $sql="CALL sp_saveuser({$this->clientid},{$userid},'{$password}','',{$systemadmin},'{$username}','{$firstname}','{$middlename}','{$lastname}','{$email}','{$mobile}',
                 {$changepasswordonlogon},{$accountactive},'{$pin}','{$pinsalt}',{$this->userid})";
                 //echo $sql."<br/>";
                 $rst=$this->getData($sql);   
@@ -144,14 +144,14 @@
         }
 
         function getUsers(){
-            $sql="CALL spgetallusers()";
+            $sql="CALL spgetallusers({$this->clientid},)";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         function getUserDetails($userid){
             $username=$this->getUserNameFromId($userid);
-            $sql="CALL spgetuserdetails('{$username}')";
+            $sql="CALL spgetuserdetails({$this->clientid},'{$username}')";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
@@ -185,7 +185,7 @@
 
         function checkUserPrivilege($objectid){
             $userid=$this->userid;
-            $sql="CALL spvalidateuserprivilege({$userid},{$objectid})";
+            $sql="CALL spvalidateuserprivilege({$this->clientid},{$userid},{$objectid})";
             $rst=$this->connect()->query($sql);
             if($rst->rowCount()){
                 $row=$rst->fetch();
@@ -200,63 +200,63 @@
         }
 
         function getUsersList(){
-            $sql="CALL spgetallusers()";
+            $sql="CALL spgetallusers({$this->clientid},)";
             return $this->getJSON($sql);
         }
 
         function getUserRoles($userid){
-            $sql="CALL spgetuserroles({$userid})";
+            $sql="CALL spgetuserroles({$this->clientid},{$userid})";
             return $this->getJSON($sql);
         }
 
         function getObjects($moduleid){
-            $sql="CALL spgetobjects('{$moduleid}')";
+            $sql="CALL spgetobjects({$this->clientid},'{$moduleid}')";
             return $this->getJSON($sql);
         }
 
         function getRoles(){
-            $sql="CALL spgetroles()";
+            $sql="CALL spgetroles({$this->clientid},)";
             echo $this->getJSON($sql);
         }
 
         function getRoleUsers($roleid){
-            $sql="CALL spgetroleusers({$roleid})";
+            $sql="CALL spgetroleusers({$this->clientid},{$roleid})";
             echo $this->getJSON($sql);
         }
 
         function getRoleDetails($roleid){
-            $sql="CALL spgetroledetails({$roleid})";
+            $sql="CALL spgetroledetails({$this->clientid},{$roleid})";
             echo $this->getJSON($sql);
         }
 
         function getRolesForAssignment(){
-            $sql="CALL spgetrolesforuserassignment()";
+            $sql="CALL spgetrolesforuserassignment({$this->clientid},)";
             echo $this->addUserToRolegetJSON($sql);
 
         }
 
         function getRolePrivileges($roleid){
-            $sql="CALL spgetroleprivileges({$roleid})";
+            $sql="CALL spgetroleprivileges({$this->clientid},{$roleid})";
             echo $this->getJSON($sql);
         }
 
         function getUserNonRoles($userid){
-            $sql="CALL spgetnonuserroles({$userid})";
+            $sql="CALL spgetnonuserroles({$this->clientid},{$userid})";
             echo $this->getJSON($sql);
         }
 
         function removeUserRole($userid,$roleid){
-            $sql="CALL spremoveuserrole({$userid},{$roleid},{$this->userid})";
+            $sql="CALL spremoveuserrole({$this->clientid},{$userid},{$roleid},{$this->userid})";
             return $this->getData($sql);
         }
 
         function  getUserPrivileges($userid){
-            $sql="CALL spgetuserprivileges({$userid})";
+            $sql="CALL spgetuserprivileges({$this->clientid},{$userid})";
             return $this->getJSON($sql);
         }
 
          function getUsernameFromUserId($userid){
-            $sql="CALL spgetusernamefromuserid({$userid})";
+            $sql="CALL spgetusernamefromuserid({$this->clientid},{$userid})";
             //echo $sql."<br/>";
             $rst=$this->getData($sql);
             if($rst->rowCount()){
@@ -269,7 +269,7 @@
 
         function saveTempPrivileges($refno,$id,$objectid,$valid){
             // id is either userid or role id
-            $sql="CALL spsavetempprivilege('{$refno}',{$id},{$objectid},{$valid})";
+            $sql="CALL spsavetempprivilege({$this->clientid},'{$refno}',{$id},{$objectid},{$valid})";
             $rst=$this->getData($sql);
             if($rst){
                 return 'success';
@@ -277,7 +277,7 @@
         }
 
         function checkRole($roleid,$rolename){
-            $sql="CALL spcheckrole({$roleid},'{$rolename}')";
+            $sql="CALL spcheckrole({$this->clientid},{$roleid},'{$rolename}')";
             $rst=$this->getData($sql);
             if($rst->rowCount()){
                 return true;
@@ -288,7 +288,7 @@
 
         function savePrivileges($refno,$userid,$category){
             // category is either user or role
-            $sql="CALL spsaveprivileges({$userid},'{$category}','{$refno}',{$this->userid})";
+            $sql="CALL spsaveprivileges({$this->clientid},{$userid},'{$category}','{$refno}',{$this->userid})";
             //echo $sql."<br/>";
             $rst=$this->getData($sql);
             return "Success";
@@ -298,7 +298,7 @@
             if($this-> checkRole($roleid,$rolename)){
                 return "Sorry, the role is already in use within the system.";
             }else{
-                 $sql="CALL spsaverole({$roleid},'{$rolename}','{$roledescription}',{$this->userid})";
+                 $sql="CALL spsaverole({$this->clientid},{$roleid},'{$rolename}','{$roledescription}',{$this->userid})";
                  //echo $sql;
                  $rst=$this->getData($sql);
                  //if($rst->rowCount()){
@@ -318,7 +318,7 @@
         }
 
         function addUserToRole($userid,$roleid){
-            $sql="CALL spsaveroleusers({$userid},{$roleid},{$this->userid})";
+            $sql="CALL spsaveroleusers({$this->clientid},{$userid},{$roleid},{$this->userid})";
             //echo $sql."<br/>";
             $rst=$this->getData($sql);
             if($rst){
@@ -328,7 +328,7 @@
 
         function saverequisitionprivilege($userid,$approvallevelid,$departmentid,$valid){
             // echo $_SESSION['userid'];
-            $sql="CALL sp_saverequisitionprivilege({$userid},{$approvallevelid},{$departmentid},{$valid},{$this->userid})";
+            $sql="CALL sp_saverequisitionprivilege({$this->clientid},{$userid},{$approvallevelid},{$departmentid},{$valid},{$this->userid})";
             // echo $sql."<br/>";
             $this->getData($sql);
             return "success";
@@ -340,12 +340,12 @@
         }
 
         function getuserswithprivileges($objectid){
-            $sql="CALL sp_getuserswithprivilege($objectid)";
+            $sql="CALL sp_getuserswithprivilege({$this->clientid},$objectid)";
             return $this->getData($sql);
         }
 
         function savepurchaseorderprivilege($userid,$approvallevelid,$departmentid,$valid){
-            $sql="CALL sp_savepurchaseorderprivilege({$userid},{$approvallevelid},{$departmentid},{$valid},{$this->userid})";
+            $sql="CALL sp_savepurchaseorderprivilege({$this->clientid},{$userid},{$approvallevelid},{$departmentid},{$valid},{$this->userid})";
             $this->getData($sql);
             return "success";
         }
@@ -362,7 +362,7 @@
         }
 
         function saveuserprofilephoto($userid,$documentname){
-            $sql="CALL sp_saveuserprofilephoto({$userid},'{$documentname}')";
+            $sql="CALL sp_saveuserprofilephoto({$this->clientid},{$userid},'{$documentname}')";
             $this->getData($sql);
             return "success";
         }

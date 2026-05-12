@@ -93,7 +93,7 @@
         }
 
         function getrequisitionapprovallevels(){
-            $sql="CALL sp_getmaterialrequestapprovallevels()";
+            $sql="CALL sp_getmaterialrequestapprovallevels({$this->clientid},)";
             return $this->getJSON($sql);
         }
 
@@ -116,7 +116,7 @@
         }
 
         function requisitionapprovalstatus($requisitionno){
-            $sql="CALL sp_getrequisitionapprovallevelstatus('{$requisitionno}')";
+            $sql="CALL sp_getrequisitionapprovallevelstatus({$this->clientid},'{$requisitionno}')";
             return $this->getJSON($sql);
         }
 
@@ -128,7 +128,7 @@
         }
 
         function getrequisitionnextapprovallevel($requisitionno){
-            $sql="CALL sp_getrequisitionnextapprovallevel('{$requisitionno}')";
+            $sql="CALL sp_getrequisitionnextapprovallevel({$this->clientid},'{$requisitionno}')";
             return $this->getData($sql)->fetch()['hierarchy'];
         }
 
@@ -138,7 +138,7 @@
         }
 
         function getdepartmentpendingporequisitions($departmentid){
-            $sql="CALL sp_getdepartmentpopendingrequisitions({$departmentid})";
+            $sql="CALL sp_getdepartmentpopendingrequisitions({$this->clientid},{$departmentid})";
             return $this->getJSON($sql);
         }
 
@@ -153,7 +153,7 @@
         }
 
         function getpurchaseorderapprovallevels(){
-            $sql="CALL sp_getpurchaseorderapprovallevels()";
+            $sql="CALL sp_getpurchaseorderapprovallevels({$this->clientid},)";
             return $this->getJSON($sql);
         }
 
@@ -168,7 +168,7 @@
         }
 
         function purchaseorderapprovalstatus($purchaseorderno){
-            $sql="CALL sp_getpurchaseorderapprovallevelstatus('{$purchaseorderno}')";
+            $sql="CALL sp_getpurchaseorderapprovallevelstatus({$this->clientid},'{$purchaseorderno}')";
             return $this->getJSON($sql);
         }
 
@@ -180,7 +180,7 @@
         }
 
         function getpurchaseordernextapprovallevel($purchaseorderno){
-            $sql="CALL sp_getpurchaseordernextapprovallevel('{$purchaseorderno}')";
+            $sql="CALL sp_getpurchaseordernextapprovallevel({$this->clientid},'{$purchaseorderno}')";
             return $this->getData($sql)->fetch()['hierarchy'];
         }
 
@@ -230,7 +230,7 @@
         function checkRequisitionApprovalPrivilege($approvallevel,$requisitionno){
             $userid=$this->userid;
             $departmentid=$this->getrequisitiondepartment($requisitionno);
-            $sql="CALL sp_validaterequisitionapproval({$userid},{$approvallevel},{$departmentid})";
+            $sql="CALL sp_validaterequisitionapproval({$this->clientid},{$userid},{$approvallevel},{$departmentid})";
             //echo $sql."<br/>";
             $rst=$this->connect()->query($sql);
             if($rst->rowCount()){
@@ -243,7 +243,7 @@
         function checkPurchaseOrderApprovalPrivilege($approvallevel,$pono){
             $userid=$this->userid;
             $departmentid=$this->getpurchaseorderdepartment($pono);
-            $sql="CALL sp_validatepurchaseorderapproval({$userid},{$approvallevel},{$departmentid})";
+            $sql="CALL sp_validatepurchaseorderapproval({$this->clientid},{$userid},{$approvallevel},{$departmentid})";
             //echo $sql."<br/>";
             $rst=$this->connect()->query($sql);
             if($rst->rowCount()){
@@ -254,7 +254,7 @@
         }
 
         function getmaterialrequestdetails($requisitionno){
-            $sql="CALL sp_getmaterialrequisitiondetails('{$requisitionno}')";
+            $sql="CALL sp_getmaterialrequisitiondetails({$this->clientid},'{$requisitionno}')";
             return $this->getJSON($sql);
         }
 

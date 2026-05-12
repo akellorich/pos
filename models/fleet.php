@@ -9,17 +9,17 @@
         }
 
         public function getvehiclebodytypes(){
-            $sql="CALL sp_getfleetbodytypes()";
+            $sql="CALL sp_getfleetbodytypes({$this->clientid},)";
             return $this->getJSON($sql);
         }
 
         public function getvehiclefueltypes(){
-            $sql="CALL sp_getfleetfueltypes()";
+            $sql="CALL sp_getfleetfueltypes({$this->clientid},)";
             return $this->getJSON($sql);
         }
 
         public function getvehicles(){
-            $sql="CALL sp_getfleetvehicles()";
+            $sql="CALL sp_getfleetvehicles({$this->clientid},)";
             return $this->getJSON($sql);
         }
 

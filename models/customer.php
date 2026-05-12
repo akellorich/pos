@@ -6,7 +6,7 @@ require_once("../fpdf181/fpdf.php");
 class customer extends db{
 
     function checkCustomerName($id,$name){
-        $sql="CALL spcheckcustomername({$id},'{$name}')";
+        $sql="CALL spcheckcustomername({$this->clientid},{$id},'{$name}')";
         //$rst=$this->connect()->query($sql);
         return $this->getData($sql)->rowCount()>0? true:false;
     }
@@ -24,7 +24,7 @@ class customer extends db{
     //         }else if($this->checkcustomerdocuments($customerid,'id',$idno)){
     //             return "id exists";
     //         }else{
-    //             $sql="CALL spsavecustomer({$customerid},'{$customername}','{$physicaladdress}','{$postaladdress}','{$mobile}' ,'{$email}',{$creditlimit},{$_SESSION['userid']},{$category},{$posid},{$onetimecustomer},'{$pinno}','{$idno}',{$subzoneid})";
+    //             $sql="CALL spsavecustomer({$this->clientid},{$customerid},'{$customername}','{$physicaladdress}','{$postaladdress}','{$mobile}' ,'{$email}',{$creditlimit},{$_SESSION['userid']},{$category},{$posid},{$onetimecustomer},'{$pinno}','{$idno}',{$subzoneid})";
     //             echo $sql;
     //             $this->getData($sql);
     //             return  "success";
@@ -42,7 +42,7 @@ class customer extends db{
             // }else if($this->checkcustomerdocuments($customerid,'id',$idno)){
             //     return "id exists";
             // }else{
-            $sql="CALL spsavecustomer({$customerid},'{$customername}','{$tradingname}','{$physicaladdress}','{$postaladdress}','{$mobile}' ,'{$email}',{$creditlimit},{$creditterm},{$_SESSION['userid']},{$category},{$posid},{$onetimecustomer},'{$pinno}','{$idno}',{$subzoneid})";
+            $sql="CALL spsavecustomer({$this->clientid},{$customerid},'{$customername}','{$tradingname}','{$physicaladdress}','{$postaladdress}','{$mobile}' ,'{$email}',{$creditlimit},{$creditterm},{$_SESSION['userid']},{$category},{$posid},{$onetimecustomer},'{$pinno}','{$idno}',{$subzoneid})";
             // echo $sql;
             $this->getData($sql);
             return  "success";
@@ -53,7 +53,7 @@ class customer extends db{
     }
 
     function getCustomerDetails($customerid){
-        $sql="CALL spgetcustomerdetails({$customerid})";
+        $sql="CALL spgetcustomerdetails({$this->clientid},{$customerid})";
         //$rst=$this->connect()->query($sql);
         //echo json_encode($rst->fetch(PDO::FETCH_ASSOC));
         return $this->getJSON($sql);
@@ -61,55 +61,55 @@ class customer extends db{
 
 
     function deleteCustomer($customerid){
-        $sql="CALL spdeletecustomer({$customerid},{$_SESSION['userid']})";
+        $sql="CALL spdeletecustomer({$this->clientid},{$customerid},{$_SESSION['userid']})";
         $this->getData($sql);
         return "success";
     }
 
     function getCustomers($posid,$regularcustomers,$onetimecustomers){
-        $sql="CALL spgetcustomers({$posid},{$regularcustomers},{$onetimecustomers})";
+        $sql="CALL spgetcustomers({$this->clientid},{$posid},{$regularcustomers},{$onetimecustomers})";
         //$rst=$this->connect()->query($sql);
         // echo $sql."<br/>";
         return $this->getJSON($sql);// json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
     }
 
     function getCustomerCategories(){
-        $sql="CALL spgetcustomercategories()";
+        $sql="CALL spgetcustomercategories({$this->clientid},)";
         //$rst=$this->connect()->query($sql);
         return $this->getJSON($sql);// json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
     }
 
     function saveCustomerDiscountDetails($id,$customerid,$productid,$discount,$percentage,$expirydate){
         $expirydate=$this->mySQLDate($expirydate);
-        $sql="CALL spsavecustomerdiscountsettings({$id} ,{$customerid},{$productid},{$discount},{$percentage},{$_SESSION['userid']},'{$expirydate}')";
+        $sql="CALL spsavecustomerdiscountsettings({$this->clientid},{$id} ,{$customerid},{$productid},{$discount},{$percentage},{$_SESSION['userid']},'{$expirydate}')";
         //echo $sql."</br>";
         $this->getData($sql);
         echo "success";
     }
 
     function getCustomerDiscountSettings($customerid){
-        $sql="CALL spgetcustomerdiscountsettings({$customerid})";
+        $sql="CALL spgetcustomerdiscountsettings({$this->clientid},{$customerid})";
         //$rst=$this->connect()->query($sql);
         //echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         return $this->getJSON($sql);
     }
 
     function deleteCustomerDiscount($id){
-        $sql="CALL spdeletecustomerdiscount({$id},{$_SESSION['userid']})";
+        $sql="CALL spdeletecustomerdiscount({$this->clientid},{$id},{$_SESSION['userid']})";
         $this->GetData($sql);
         echo "The customer discount has been deleted successfully.";
     }
 
     function saveTempCustomerReceipt($refno, $possaleid,$amount){
         if($amount!=""){
-            $sql="CALL sptempsavecustomerreceiptdetails('{$refno}',{$possaleid},{$amount})";
+            $sql="CALL sptempsavecustomerreceiptdetails({$this->clientid},'{$refno}',{$possaleid},{$amount})";
             //echo $sql."<br/>";
             $this->GetData($sql);
         }  
     }
 
     function saveCustomerReceipt($refno,$customerid,$paymentmode,$referenceno,$overpay){
-        $sql="CALL spsavecustomerreceipt('{$refno}',{$customerid}, {$paymentmode},'{$referenceno}',{$_SESSION['userid']},{$overpay})";
+        $sql="CALL spsavecustomerreceipt({$this->clientid},'{$refno}',{$customerid}, {$paymentmode},'{$referenceno}',{$_SESSION['userid']},{$overpay})";
         //echo $sql."<br/>";
         $rst=$this->getData($sql);
         if($rst->rowCount()>0){
@@ -124,14 +124,14 @@ class customer extends db{
     }
 
     function getCustomerOpenReceivables($customerid){
-        $sql="CALL spgetcustomeropenreceivables({$customerid})";
+        $sql="CALL spgetcustomeropenreceivables({$this->clientid},{$customerid})";
         //$rst=$this->connect()->query($sql);
         //echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         return $this->getJSON($sql);
     }
 
     function generateReceipt($receiptno){
-        $sql="CALL spgetinstitutiondetails()";
+        $sql="CALL spgetinstitutiondetails({$this->clientid},)";
             $rst=$this->GetData($sql);
             $data=$rst->fetch(PDO::FETCH_ASSOC);
             $lines="----------------------------------------------------------------------------------------------------------------";
@@ -148,7 +148,7 @@ class customer extends db{
             //print a blank line
             $pdf->Cell(70,5,"",0,1);
             // get receipt details
-            $sql="CALL spgetcustomerreceiptdetails('{$receiptno}')";
+            $sql="CALL spgetcustomerreceiptdetails({$this->clientid},'{$receiptno}')";
             $rst=$this->getData($sql);
             $data=$rst->fetch(PDO::FETCH_ASSOC);
             //fetch the first row 
@@ -166,7 +166,7 @@ class customer extends db{
              //print a blank line
              $pdf->Cell(70,5,$lines,0,1);
             // fetch all items in the receipt
-            $sql="CALL spgetcustomerreceiptdetails('{$receiptno}')";
+            $sql="CALL spgetcustomerreceiptdetails({$this->clientid},'{$receiptno}')";
             $rst=$this->getData($sql);
             $data=$rst->fetchAll(PDO::FETCH_ASSOC);
             $overalltotal=0;
@@ -193,7 +193,7 @@ class customer extends db{
     function getCustomerUnbankedReceipts($paymentmode,$startdate,$enddate){
         $startdate=$this->mySQLDate($startdate);
         $enddate=$this->mySQLDate($enddate);
-        $sql="CALL spgetcustomerunbankedreceipts('{$startdate}','{$enddate}',{$paymentmode})";
+        $sql="CALL spgetcustomerunbankedreceipts({$this->clientid},'{$startdate}','{$enddate}',{$paymentmode})";
         return $this->getJSON($sql);
     }
 
@@ -205,7 +205,7 @@ class customer extends db{
     function getsuspenseaccountstatement($customerid,$startdate,$enddate){
         $startdate=$this->mySQLDate($startdate);
         $enddate=$this->mySQLDate($enddate);
-        $sql="CALL spgetcustomesuspenseaccountstatement({$customerid},'{$startdate}','{$enddate}')";
+        $sql="CALL spgetcustomesuspenseaccountstatement({$this->clientid},{$customerid},'{$startdate}','{$enddate}')";
         return $this->getJSON($sql);
     }
 

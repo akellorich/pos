@@ -4,14 +4,14 @@
     class sale extends db{
 
         public function saveTemporarySale($refno,$itemcode,$quantity,$unitprice,$discount,$serialno,$description){
-            $sql="CALL spsavetempsale('{$refno}' ,'{$itemcode}' ,{$quantity},{$unitprice},{$discount},'{$serialno}','{$description}')";
+            $sql="CALL spsavetempsale({$this->clientid},'{$refno}' ,'{$itemcode}' ,{$quantity},{$unitprice},{$discount},'{$serialno}','{$description}')";
             $rst=$this->getData($sql);
             return true;
         }
 
         public function saveSale($refno,$customerid,$posid,$transactiondate,$reference){
             $transactiondate=$this->mySQLDate($transactiondate);
-            $sql="CALL spsavepossale('{$refno}',{$customerid},{$posid},'{$transactiondate}','{$reference}',{$_SESSION['userid']})";
+            $sql="CALL spsavepossale({$this->clientid},'{$refno}',{$customerid},{$posid},'{$transactiondate}','{$reference}',{$_SESSION['userid']})";
             // echo $sql."<br/>";
             $rst=$this->getData($sql);
             if($rst->rowCount()>0){
@@ -27,7 +27,7 @@
         }
 
         public function checkRefNo($modeid,$reference){
-            $sql="CALL spcheckreferenceno({$modeid},'{$reference}')";
+            $sql="CALL spcheckreferenceno({$this->clientid},{$modeid},'{$reference}')";
             $rst=$this->getData($sql);
             if($rst->rowCount()>0){
                 return true;
@@ -37,7 +37,7 @@
         }
 
         public function generateReceipt($receiptno){
-            $sql="CALL spgetinstitutiondetails()";
+            $sql="CALL spgetinstitutiondetails({$this->clientid},)";
             $rst=$this->getData($sql);
             $data=$rst->fetch(PDO::FETCH_ASSOC);
             $lines="----------------------------------------------------------------------------------------------------------------";
@@ -54,7 +54,7 @@
             //print a blank line
             $pdf->Cell(70,5,"",0,1);
             // get receipt details
-            $sql="CALL spgetreceiptdetails('{$receiptno}')";
+            $sql="CALL spgetreceiptdetails({$this->clientid},'{$receiptno}')";
             $rst=$this->connect()->query($sql);
             $data=$rst->fetch(PDO::FETCH_ASSOC);
             //fetch the first row 
@@ -73,7 +73,7 @@
              //print a blank line
              $pdf->Cell(70,5,$lines,0,1);
             // fetch all items in the receipt
-            $sql="CALL spgetreceiptdetails('{$receiptno}')";
+            $sql="CALL spgetreceiptdetails({$this->clientid},'{$receiptno}')";
             $rst=$this->getData($sql);
             $data=$rst->fetchAll(PDO::FETCH_ASSOC);
             $overalltotal=0;
@@ -100,7 +100,7 @@
         public function getUserSalesSummary($startdate,$enddate,$posname,$userid){
             $startdate=$this->mySQLDate($startdate);
             $enddate=$this->mySQLDate($enddate);
-            $sql="CALL spgetsalessummarybyuser('{$startdate}','{$enddate}','{$posname}',{$userid})";
+            $sql="CALL spgetsalessummarybyuser({$this->clientid},'{$startdate}','{$enddate}','{$posname}',{$userid})";
             $rst=$this->getData($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
@@ -108,99 +108,99 @@
         public function getPOSSales($startdate,$enddate,$posid,$paymentmode){
             $startdate=$this->mySQLDate($startdate);
             $enddate=$this->mySQLDate($enddate);
-            $sql="CALL spgetposreceipts('{$startdate}','{$enddate}',{$posid},{$paymentmode})";
+            $sql="CALL spgetposreceipts({$this->clientid},'{$startdate}','{$enddate}',{$posid},{$paymentmode})";
            // echo $sql."<br/>";
             $rst=$this->getData($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function cancelPOSSale($receiptno,$reason){
-            $sql="CALL spcancelpossale('{$receiptno}',{$_SESSION['userid']},'{$reason}')";
+            $sql="CALL spcancelpossale({$this->clientid},'{$receiptno}',{$_SESSION['userid']},'{$reason}')";
             $rst=$this->getData($sql);
             echo "The receipt has been deleted successfully";
         }
 
         public function holdSale($refno,$customerid,$posid){
-            $sql="CALL spsaveheldsale('{$refno}',{$customerid},{$posid},{$_SESSION['userid']})";
+            $sql="CALL spsaveheldsale({$this->clientid},'{$refno}',{$customerid},{$posid},{$_SESSION['userid']})";
             $rst=$this->getData($sql);
             echo "Sale has been held succesfully";
         }
 
         public function getHeldSales(){
-            $sql="CALL spgetheldsales({$_SESSION['userid']})";
+            $sql="CALL spgetheldsales({$this->clientid},{$_SESSION['userid']})";
             $rst=$this->getData($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function getHeldSaleHeader($id){
-            $sql="CALL spgetheldsaleheader({$id})";
+            $sql="CALL spgetheldsaleheader({$this->clientid},{$id})";
             $rst=$this->getData($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function getHeldsaleDetails($id){
-            $sql="CALL spgetheldsaledetails({$id})";
+            $sql="CALL spgetheldsaledetails({$this->clientid},{$id})";
             $rst=$this->getData($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function deleteHeldSale($id){
-            $sql="CALL spdeleteheldsale({$id})";
+            $sql="CALL spdeleteheldsale({$this->clientid},{$id})";
             $rst=$this->getData($sql);
             echo "deleted"; 
         }
 
         public function saveTempPOSSalePayment($refno,$paymentmode,$reference,$amount){
-            $sql="CALL spsavetemppossalepayment('{$refno}',{$paymentmode},'{$reference}',{$amount})";
+            $sql="CALL spsavetemppossalepayment({$this->clientid},'{$refno}',{$paymentmode},'{$reference}',{$amount})";
             //echo $sql."<br/>";
             $rst=$this->getData($sql);
             // echo "deleted" ;
         }
 
         public function getPOSSalesPayments($id){
-            $sql="CALL spgetpossalespayments({$id})";
+            $sql="CALL spgetpossalespayments({$this->clientid},{$id})";
             $rst=$this->getData($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function getDashboardSummary($startdate,$enddate){
-            $sql="CALL spgetdashboardsummary('{$startdate}','{$enddate}')";
+            $sql="CALL spgetdashboardsummary({$this->clientid},'{$startdate}','{$enddate}')";
             $rst=$this->getData($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function getPaymentMethodsSummary($startdate,$enddate){
-            $sql="CALL spgetpaymentmethodsummary('{$startdate}','{$enddate}')";
+            $sql="CALL spgetpaymentmethodsummary({$this->clientid},'{$startdate}','{$enddate}')";
             $rst=$this->getData($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function getTopNCustomers($startdate,$enddate){
-            $sql="CALL spgetbestcustomer('{$startdate}','{$enddate}')";
+            $sql="CALL spgetbestcustomer({$this->clientid},'{$startdate}','{$enddate}')";
             $rst=$this->getData($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function getTopNProducts($startdate,$enddate){
-            $sql="CALL spgetbestproduct('{$startdate}','{$enddate}')";
+            $sql="CALL spgetbestproduct({$this->clientid},'{$startdate}','{$enddate}')";
             $rst=$this->getData($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function getTopNPOS($startdate,$enddate){
-            $sql="CALL spgetbestpos('{$startdate}','{$enddate}')";
+            $sql="CALL spgetbestpos({$this->clientid},'{$startdate}','{$enddate}')";
             $rst=$this->getData($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function savetempbanking($refno, $receiptno,$reference,$amount,$customername,$id){
-            $sql="CALL spsavetempbanking('{$refno}','{$receiptno}','{$reference}',{$amount},'{$customername}',{$id})";
+            $sql="CALL spsavetempbanking({$this->clientid},'{$refno}','{$receiptno}','{$reference}',{$amount},'{$customername}',{$id})";
             //echo $sql."<br/>";
             $rst=$this->getData($sql);
         }
 
         public function savebanking($refno ,$cashbookaccount, $narration,$reference,$postas,$receiptbanked){
-            $sql="CALL  sppostbanking('{$refno}' ,{$cashbookaccount}, '{$narration}','{$reference}','{$postas}',{$_SESSION['userid']},'{$receiptbanked}')";
+            $sql="CALL sppostbanking({$this->clientid},'{$refno}' ,{$cashbookaccount}, '{$narration}','{$reference}','{$postas}',{$_SESSION['userid']},'{$receiptbanked}')";
             //echo $sql."<br/>";
             //echo $sql."<br/>";
             $rst=$this->getData($sql);
@@ -210,7 +210,7 @@
         public function getPOSReceiptsForBanking($startdate,$enddate,$posid,$paymentmode){
             $startdate=$this->mySQLDate($startdate);
             $enddate=$this->mySQLDate($enddate);
-            $sql="CALL spgetposreceiptsforbanking('{$startdate}','{$enddate}',{$posid},{$paymentmode})";
+            $sql="CALL spgetposreceiptsforbanking({$this->clientid},'{$startdate}','{$enddate}',{$posid},{$paymentmode})";
            
             $rst=$this->getData($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
@@ -219,13 +219,13 @@
         public function getCustomerSalesSummary($startdate,$enddate,$posname,$userid){
             $startdate=$this->mySQLDate($startdate);
             $enddate=$this->mySQLDate($enddate);
-            $sql="CALL spgetsalessummarybycustomer('{$startdate}','{$enddate}','{$posname}',{$userid})";
+            $sql="CALL spgetsalessummarybycustomer({$this->clientid},'{$startdate}','{$enddate}','{$posname}',{$userid})";
             $rst=$this->getData($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function getreceiptitems($receiptno){
-            $sql="CALL spgetreceiptitems('{$receiptno}')";
+            $sql="CALL spgetreceiptitems({$this->clientid},'{$receiptno}')";
             return $this->getJSON($sql);
         }
 
@@ -253,34 +253,34 @@
         }
 
         function getreceiptheader(){
-            $sql="CALL spgetinstitutiondetails()";
+            $sql="CALL spgetinstitutiondetails({$this->clientid},)";
             return $this->getJSON($sql);
         }
 
         function getreceiptdetails($receiptno){
-            $sql="CALL spgetreceiptdetails('{$receiptno}')";
+            $sql="CALL spgetreceiptdetails({$this->clientid},'{$receiptno}')";
             return $this->getJSON($sql);
         }
 
         function getreceiptpaymentmethods($receiptno){
-            $sql="CALL spgetpossalespayments('{$receiptno}')";
+            $sql="CALL spgetpossalespayments({$this->clientid},'{$receiptno}')";
             return $this->getJSON($sql);
         }
 
         function getreceiptvatanalysis($receiptno){
-            $sql="CALL spgetreceiptvatanalysis('{$receiptno}')";
+            $sql="CALL spgetreceiptvatanalysis({$this->clientid},'{$receiptno}')";
             return $this->getJSON($sql);
         }
 
         function savetemprefundproduct ($refno,$itemcode,$quantity){
-            $sql="CALL sp_savetemprefundedproducts('{$refno}' ,'{$itemcode}',{$quantity})";
+            $sql="CALL sp_savetemprefundedproducts({$this->clientid},'{$refno}' ,'{$itemcode}',{$quantity})";
             // echo $sql."<br/>";
             $rst=$this->getData($sql);
             return "success";
         }
 
         function refundproducts($refno,$receiptno,$reason,$products){
-            $sql="CALL sp_refundproducts('{$receiptno}','{$reason}','{$refno}',{$_SESSION['userid']})";
+            $sql="CALL sp_refundproducts({$this->clientid},'{$receiptno}','{$reason}','{$refno}',{$_SESSION['userid']})";
             // echo $sql."<br/>";
             $rst=$this->getData($sql);
             if($rst->rowCount()>0){

@@ -4,7 +4,7 @@
     class pointOfSale extends db{
 
         public function checkPointOfSale($id, $description){
-            $sql="CALL spcheckposname({$id},'{$description}')";
+            $sql="CALL spcheckposname({$this->clientid},{$id},'{$description}')";
             $rst=$this->connect()->query($sql);
             if($rst->rowCount()>0){
                 return true;
@@ -15,7 +15,7 @@
 
         public function savePointOfSale($id,$description,$postype,$printkot){
             if(!$this->checkPointOfSale($id,$description)){
-                $sql="CALL spsavepos({$id},'{$description}','{$postype}',{$printkot},{$_SESSION['userid']})";
+                $sql="CALL spsavepos({$this->clientid},{$id},'{$description}','{$postype}',{$printkot},{$_SESSION['userid']})";
                 $posid=$this->getData($sql)->fetch()['posid'];
                 // echo "The point of sale has been saved successfully.";
                 return ["status"=>"success","message"=>"point of sale saved successfully","posid"=>$posid];
@@ -25,43 +25,43 @@
         }
 
         public function deletePointOfSale($id){
-            $sql="CALL spdeletepos({$id},{$_SESSION['userid']})";
+            $sql="CALL spdeletepos({$this->clientid},{$id},{$_SESSION['userid']})";
             $rst=$this->connect()->query($sql);
             echo "The point of sale has been deleted successfully.";
         }
 
         public function getPointOfSales(){
-            $sql="CALL spgetpos()";
+            $sql="CALL spgetpos({$this->clientid},)";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function getposdetails($id){
-            $sql="CALL spgetposdetails({$id})";
+            $sql="CALL spgetposdetails({$this->clientid},{$id})";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function saveuseroutlet($userid,$outletid){
-            $sql="CALL spsaveuseroutlet({$userid},{$outletid},{$_SESSION['userid']})";
+            $sql="CALL spsaveuseroutlet({$this->clientid},{$userid},{$outletid},{$_SESSION['userid']})";
             //echo $sql."<br />";
             $rst=$this->connect()->query($sql);
             return "success";
         }
 
         public function getuseroutlets($userid){
-            $sql="CALL spgetuseroutlets({$userid})";
+            $sql="CALL spgetuseroutlets({$this->clientid},{$userid})";
             echo $this->getJSON($sql);
         }
 
         public function deleteuseroutlet($id){
-            $sql="CALL spdeleteoutlet({$id},{$_SESSION['userid']})";
+            $sql="CALL spdeleteoutlet({$this->clientid},{$id},{$_SESSION['userid']})";
             $rst=$this->getData($sql);
             echo "success";
         }
 
         public function getnonuseroutlets($userid){
-            $sql="CALL spgetnonuseroutlets({$userid})";
+            $sql="CALL spgetnonuseroutlets({$this->clientid},{$userid})";
             echo $this->getJSON($sql);
         }
 

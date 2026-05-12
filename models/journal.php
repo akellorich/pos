@@ -3,7 +3,7 @@
     class journal extends db{
 
         public function checkJournalReferenceNo($referenceno){
-            $sql="CALL spcheckjournalrefereceno('{$referenceno}')";
+            $sql="CALL spcheckjournalrefereceno({$this->clientid},'{$referenceno}')";
             $rst=$this->getData($sql);
             if($rst->rowCount()){
                 return true;
@@ -13,13 +13,13 @@
         }
 
         public function saveTempJournalDetails($refno,$glaccount,$narration,$debit,$credit){
-            $sql="CALL spsavetempjournaldetails({$refno},{$glaccount},'{$narration}',{$debit},{$credit})";
+            $sql="CALL spsavetempjournaldetails({$this->clientid},{$refno},{$glaccount},'{$narration}',{$debit},{$credit})";
             $this->getData($sql);
         }
 
         public function saveJournal($refno,$referenceno,$description){
             if(!$this->checkJournalReferenceNo($referenceno)){
-                $sql="CALL spsavejournaltransaction('{$refno}','{$referenceno}','{$description}',{$_SESSION['userid']},1)";
+                $sql="CALL spsavejournaltransaction({$this->clientid},'{$refno}','{$referenceno}','{$description}',{$_SESSION['userid']},1)";
                 $rst=$this->getData($sql);
                 $data=$rst->fetch(PDO::FETCH_ASSOC);
                 return $data['journalid'];

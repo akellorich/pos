@@ -4,7 +4,7 @@
     class product extends db{
 
         public function checkProduct($id, $value,$field){
-            $sql="CALL spcheckproduct({$id},'{$value}','{$field}')";
+            $sql="CALL spcheckproduct({$this->clientid},{$id},'{$value}','{$field}')";
             $rst=$this->connect()->query($sql);
             return $rst->rowCount()?true:false;
         }
@@ -19,7 +19,7 @@
                 return "name exists";
             }else{
                  // save the product
-                 $sql="CALL spsaveproduct({$id},'{$itemcode}','{$itemname}',{$categoryid},'{$uom}',{$buyingprice},{$sellingprice},{$reorderlevel},
+                 $sql="CALL spsaveproduct({$this->clientid},{$id},'{$itemcode}','{$itemname}',{$categoryid},'{$uom}',{$buyingprice},{$sellingprice},{$reorderlevel},
                  {$_SESSION['userid']},'{$refno}',{$generatecode},{$serializable},{$bundleitem},{$taxtype},{$length},{$width},{$height},
                  {$allownegativesales},'{$saleby}',{$bundleproduct},{$allowreturnexchange})";
                  //echo $sql;
@@ -29,7 +29,7 @@
         }
 
         public function getProductByName($name,$posid){
-            $sql="CALL spfilterproductsbyname('{$name}',$posid)";
+            $sql="CALL spfilterproductsbyname({$this->clientid},'{$name}',$posid)";
             // echo $sql."<br/>";
             $rst=$this->connect()->query($sql);
             // $data =$rst->fetchAll(PDO::FETCH_ASSOC);
@@ -38,7 +38,7 @@
         }
 
         public function getProductDetails($productcode,$customerid,$storeid){
-            $sql="CALL spgetproductdetails('{$productcode}',{$customerid},$storeid)";
+            $sql="CALL spgetproductdetails({$this->clientid},'{$productcode}',{$customerid},$storeid)";
             //echo $sql;
             // $rst=$this->connect()->query($sql);
             // return json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
@@ -46,70 +46,70 @@
         }   
 
         public function deleteProduct($productid){
-            $sql="CALL spdeleteproduct({$productid},{$_SESSION['userid']})";
+            $sql="CALL spdeleteproduct({$this->clientid},{$productid},{$_SESSION['userid']})";
             $rst=$this->connect()->query($sql);
             return "success";
         }
 
         public function saveTempPriceMatrix($refno,$catid,$percentage,$value){
-            $sql="CALL spsavetemppricematrix('{$refno}',{$catid},{$percentage},{$value})";
+            $sql="CALL spsavetemppricematrix({$this->clientid},'{$refno}',{$catid},{$percentage},{$value})";
             $rst=$this->connect()->query($sql);
         }
 
         public function getStockTransferItembalance($sourcetype,$sourceid,$itemcode){
-            $sql="CALL spgetstocktransferbalance('{$sourcetype}',{$sourceid},'{$itemcode}')";
+            $sql="CALL spgetstocktransferbalance({$this->clientid},'{$sourcetype}',{$sourceid},'{$itemcode}')";
             // $rst=$this->connect()->query($sql);
             // return json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
             return $this->getJSON($sql);
         }
 
         public function saveTempStockTransferItems($refno,$itemcode,$quantity,$unitprice,$serialno){
-            $sql="CALL spsavetempstocktransfer('{$refno}','{$itemcode}',{$unitprice},{$quantity},'{$serialno}')";
+            $sql="CALL spsavetempstocktransfer({$this->clientid},'{$refno}','{$itemcode}',{$unitprice},{$quantity},'{$serialno}')";
             //echo $sql."<br/>";
             $rst=$this->connect()->query($sql);
         }
         
         public function saveStockTransfer($refno,$sourcetype,$sourceid,$destinationtype,$destinationid,$issuedto,$storecontroller){
-            $sql="CALL spsavestocktransfer('{$refno}','{$sourcetype}',{$sourceid},'{$destinationtype}',{$destinationid},{$_SESSION['userid']},{$issuedto},{$storecontroller})";
+            $sql="CALL spsavestocktransfer({$this->clientid},'{$refno}','{$sourcetype}',{$sourceid},'{$destinationtype}',{$destinationid},{$_SESSION['userid']},{$issuedto},{$storecontroller})";
             $rst=$this->connect()->query($sql);
             $data=$rst->fetch(PDO::FETCH_ASSOC);
             return $data['transfercode'];
         }
 
         public function getProductDiscountMatrix($itemcode){
-            $sql="CALL spgetproductdiscountmatrix('{$itemcode}')";
+            $sql="CALL spgetproductdiscountmatrix({$this->clientid},'{$itemcode}')";
             // $rst=$this->connect()->query($sql);
             // return json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
             return $this->getJSON($sql);
         }
 
         public function getProductByCategory($categoryid){
-            $sql="CALL spgetproductbycategory({$categoryid})";
+            $sql="CALL spgetproductbycategory({$this->clientid},{$categoryid})";
             // $rst=$this->connect()->query($sql);
             // return json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
             return $this->getJSON($sql);
         }
 
         public function saveSupplierProducts($supplierid,$productid){
-            $sql="CALL spsavesupplierproduct({$supplierid},{$productid},{$_SESSION['userid']})";
+            $sql="CALL spsavesupplierproduct({$this->clientid},{$supplierid},{$productid},{$_SESSION['userid']})";
             $rst=$this->connect()->query($sql);
         }
 
         public function getSupplierProducts($supplierid){
-            $sql="CALL spgetsupplierproducts({$supplierid})";
+            $sql="CALL spgetsupplierproducts({$this->clientid},{$supplierid})";
             // $rst=$this->connect()->query($sql);
             // return json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
             return $this->getJSON($sql);
         }
 
         public function deleteSupplierProduct($id){
-            $sql="CALL spdeletesupplierproduct({$id},{$_SESSION['userid']})";
+            $sql="CALL spdeletesupplierproduct({$this->clientid},{$id},{$_SESSION['userid']})";
             $rst=$this->connect()->query($sql);
             return "success";
         }
 
         public function savetempreconciledstockbalance($refno,$itemid,$quantity,$unitprice){
-            $sql="CALL spsavetempreconcilebalancedetails('{$refno}',{$itemid},{$quantity},{$unitprice})";
+            $sql="CALL spsavetempreconcilebalancedetails({$this->clientid},'{$refno}',{$itemid},{$quantity},{$unitprice})";
             $this->getData($sql);
             return "success";
         }
@@ -121,7 +121,7 @@
         }
 
         public function getavailableserialnumbers($productid){
-            $sql="CALL spgetavailableproductserialnumbers({$productid})";
+            $sql="CALL spgetavailableproductserialnumbers({$this->clientid},{$productid})";
             //echo $sql."<br/>";
             return $this->getJSON($sql);
         }
@@ -142,7 +142,7 @@
         
         public function getcratesummary($asatdate){
             $asatdate=$this->mySQLDate($asatdate);
-            $sql="CALL sp_getcratesummary('{$asatdate}')";
+            $sql="CALL sp_getcratesummary({$this->clientid},'{$asatdate}')";
             return $this->getJSON($sql);
         }
 

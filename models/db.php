@@ -20,6 +20,7 @@
         private $dbname;
         private $charset;
         public $userid;
+        public $clientid;
         // production   
         // private $defaultdb="suncity1_companies";
 
@@ -29,6 +30,7 @@
 
         function __construct(){
             $this->userid=isset($_SESSION['userid'])?$_SESSION['userid']:5;
+            $this->clientid=isset($_SESSION['clientid'])?$_SESSION['clientid']:1;
         }
 
         function connect(){
@@ -61,11 +63,9 @@
             // $this->username="suncity1_app";
             // $this->password="K@r1bun1kenya";
 
-            if(isset($_SESSION['dbname'])){
-                $this->dbname=$_SESSION['dbname'];
-            }else{
-                $this->dbname=$this->defaultdb;
-            }
+            // In multi-client mode, we use a single shared database
+            $this->dbname = $this->defaultdb;
+            
             try{
                 $dsn="mysql:host=".$this->servername.";dbname=".$this->dbname.";charset=".$this->charset;
                 $pdo=new PDO($dsn,$this->username,$this->password);

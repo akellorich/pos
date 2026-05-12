@@ -3,14 +3,14 @@
     class settings extends db{
 
         function getUnitsOfMeasure(){
-            $sql="CALL spgteunitsofmeasure()";
+            $sql="CALL spgteunitsofmeasure({$this->clientid},)";
             //$rst=$this->connect()->query($sql);
             //return json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
             return $this->getJSON($sql);
         }
 
         function getPaymentMethods(){
-            $sql="CALL spgetpaymentmethods()";
+            $sql="CALL spgetpaymentmethods({$this->clientid},)";
             $rst=$this->getData($sql);
             // echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
             $_page = array();
@@ -30,57 +30,57 @@
         }
 
         function getInstitutionDetails(){
-            $sql="CALL spgetinstitutiondetails()";
+            $sql="CALL spgetinstitutiondetails({$this->clientid},)";
             // $rst=$this->connect()->query($sql);
             // echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
             return $this->getJSON($sql);
         }
 
         function getPrivileges($module){
-            $sql="CALL spgetobjects('{$module}')";
+            $sql="CALL spgetobjects({$this->clientid},'{$module}')";
             // $rst=$this->connect()->query($sql);
             // echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
             return $this->getJSON($sql);
         }
 
         function getTodaysDate(){
-            $sql="CALL spgettodaysdate()";
+            $sql="CALL spgettodaysdate({$this->clientid},)";
             // $rst=$this->connect()->query($sql);
             // echo json_encode($rst->fetch(PDO::FETCH_ASSOC)); 
             return $this->getJSON($sql);
         }
 
         function getSalesSettings(){
-            $sql="CALL spgetsalessettings()";
+            $sql="CALL spgetsalessettings({$this->clientid},)";
             // $rst=$this->connect()->query($sql);
             // echo json_encode($rst->fetch(PDO::FETCH_ASSOC));
             return $this->getJSON($sql);
         }
 
         function getSystemModules(){
-            $sql="CALL spgetsystemmodules()";
+            $sql="CALL spgetsystemmodules({$this->clientid},)";
             return $this->getJSON($sql);
         }
 
         function savecrateinventorysettings($productid,$customerid,$glaccountid,$costcenter,$paymentcenter,$paymentaccount){
-            $sql="CALL spsavecrateinventorysettings({$productid},{$customerid},{$glaccountid},{$costcenter},{$paymentcenter},{$paymentaccount})";
+            $sql="CALL spsavecrateinventorysettings({$this->clientid},{$productid},{$customerid},{$glaccountid},{$costcenter},{$paymentcenter},{$paymentaccount})";
             $this->getData($sql);
             return "success";
         }
 
         function getcrateinventorysettings(){
-            $sql="CALL spgetcrateinventorysettings()";
+            $sql="CALL spgetcrateinventorysettings({$this->clientid},)";
             return $this->getJSON($sql);
         }
 
         function getcrateadditionparameters(){
-            $sql="CALL spgetcrateadditionparameters()";
+            $sql="CALL spgetcrateadditionparameters({$this->clientid},)";
             return $this->getJSON($sql);
         }
 
         function savecrateaddition($productid,$quantity,$unitprice,$narration,$reference){
             if(!$this->checkcrateadditionreference($reference)){
-                $sql="CALL spsavecrateaddition({$productid},{$quantity},{$unitprice},'{$narration}','{$reference}',{$_SESSION['userid']})";
+                $sql="CALL spsavecrateaddition({$this->clientid},{$productid},{$quantity},{$unitprice},'{$narration}','{$reference}',{$_SESSION['userid']})";
                 $this->getData($sql);
                 return "success";
             }else{
@@ -89,7 +89,7 @@
         }
 
         function checkcrateadditionreference($reference){
-            $sql="CALL spcheckcrateadditionreference('{$reference}')";
+            $sql="CALL spcheckcrateadditionreference({$this->clientid},'{$reference}')";
             return $this->getData($sql)->rowCount()?true:false;
         }
 
@@ -104,7 +104,7 @@
         }
 
         function getdepartments(){
-            $sql="CALL sp_getdepartments()";
+            $sql="CALL sp_getdepartments({$this->clientid},)";
             return $this->getJSON($sql);
         }
 
@@ -132,7 +132,7 @@
         }
 
         function getwarehouses(){
-            $sql="CALL spgetwarehouses()";
+            $sql="CALL spgetwarehouses({$this->clientid},)";
             return $this->getJSON($sql);
         }
     }

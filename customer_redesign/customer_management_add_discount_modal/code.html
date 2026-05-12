@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#0059bb",
+                        "inverse-on-surface": "#f0f0f3",
+                        "outline": "#717786",
+                        "secondary-container": "#db313f",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#fffbff",
+                        "on-primary-fixed-variant": "#004493",
+                        "tertiary": "#9e3d00",
+                        "surface-container": "#eeeef0",
+                        "on-tertiary-fixed": "#351000",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#c64f00",
+                        "secondary-fixed-dim": "#ffb3b1",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#005bc0",
+                        "surface-dim": "#dadadc",
+                        "primary-fixed": "#d8e2ff",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#7c2e00",
+                        "on-secondary-container": "#fffbff",
+                        "on-background": "#1a1c1e",
+                        "secondary-fixed": "#ffdad8",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed": "#001a41",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-container": "#fefcff",
+                        "surface-bright": "#f9f9fc",
+                        "on-error-container": "#93000a",
+                        "primary-fixed-dim": "#adc7ff",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#1a1c1e",
+                        "outline-variant": "#c1c6d7",
+                        "on-surface-variant": "#414754",
+                        "tertiary-fixed": "#ffdbcc",
+                        "surface": "#f9f9fc",
+                        "secondary": "#b7102a",
+                        "inverse-surface": "#2f3133",
+                        "surface-variant": "#e2e2e5",
+                        "tertiary-fixed-dim": "#ffb695",
+                        "on-secondary-fixed": "#410007",
+                        "surface-container-highest": "#e2e2e5",
+                        "surface-container-low": "#f3f3f6",
+                        "inverse-primary": "#adc7ff",
+                        "surface-container-high": "#e8e8ea",
+                        "on-secondary-fixed-variant": "#92001c",
+                        "primary-container": "#0070ea",
+                        "background": "#f9f9fc"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "gutter": "20px",
+                        "2xl": "48px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "unit": "4px",
+                        "xl": "32px",
+                        "margin": "24px",
+                        "lg": "24px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Manrope"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "h1": ["Manrope"],
+                        "body-lg": ["Inter"],
+                        "h2": ["Manrope"],
+                        "h3": ["Manrope"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "label-md": ["14px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                        "h1": ["32px", {"lineHeight": "1.25", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h2": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "h3": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-manrope {
+            font-family: 'Manrope', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased">
+<div class="fixed inset-0 flex">
+<!-- SideNavBar from JSON -->
+<aside class="fixed left-0 top-0 h-full w-[280px] border-r border-slate-200 bg-white dark:bg-slate-900 shadow-sm flex flex-col gap-2 p-4 z-50">
+<div class="flex items-center gap-3 px-2 py-4 mb-4">
+<div class="h-10 w-10 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+</div>
+<div>
+<h1 class="text-xl font-bold text-slate-900 dark:text-white font-manrope tracking-tight">ProPOS Retail</h1>
+<p class="text-xs text-slate-500 font-manrope">Downtown Branch</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<div class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors active:scale-[0.98] transition-transform duration-150 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-manrope text-sm font-medium">Dashboard</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors active:scale-[0.98] transition-transform duration-150 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-manrope text-sm font-medium">Inventory</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors active:scale-[0.98] transition-transform duration-150 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="point_of_sale">point_of_sale</span>
+<span class="font-manrope text-sm font-medium">Sales</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors active:scale-[0.98] transition-transform duration-150 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-manrope text-sm font-medium">Customers</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors active:scale-[0.98] transition-transform duration-150 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-manrope text-sm font-medium">Reports</span>
+</div>
+</nav>
+<button class="mt-auto bg-primary text-white font-manrope font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+                New Sale
+            </button>
+</aside>
+<main class="ml-[280px] flex-1 flex flex-col min-h-screen">
+<!-- TopAppBar from JSON -->
+<header class="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md flex items-center justify-between px-6 py-3">
+<div class="flex items-center gap-6">
+<h2 class="text-lg font-semibold text-slate-800 font-manrope">Discount Management</h2>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+<input class="pl-9 pr-4 py-2 bg-surface-container-low border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Search discounts..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-slate-200 ml-2">
+<img alt="Administrator Profile" class="w-full h-full object-cover" data-alt="clean professional headshot of a shop administrator in a business casual outfit with a soft gray background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArLbmm98JY9S5aXIrppWEqfvJwVvnqjBbtb3JIZ5zyuLjwn0NQNEijXVyZMSB9FTGFJ5BPQmCVWmHAdWgA3M7P9EnoGDgqtdZYIoeoDODbJR_b5MAqM7xV8d514kKD_vS56TT_oBMR4x062QW-PLQUfxhyADw13_tOdi5shU01MJLTXKsSoxX8ZLcsJm26g0whTfDIBlVEYDFVTVMA9Fb--SoVUpnogJmc-Py3STWAXg6G7h-tfeJ_SimcoY6qSapyWylSXJ2GCgU"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas (Blurred background for modal) -->
+<div class="p-lg space-y-6 opacity-40 select-none pointer-events-none">
+<div class="flex items-center justify-between">
+<div>
+<h3 class="font-h1 text-h1 text-on-surface">Active Discounts</h3>
+<p class="text-body-sm text-on-surface-variant">Manage and monitor current promotional campaigns</p>
+</div>
+</div>
+<!-- Bento Grid Layout for Background Content -->
+<div class="grid grid-cols-12 gap-lg">
+<div class="col-span-8 bg-white p-lg rounded-xl border border-outline-variant shadow-sm">
+<div class="flex items-center justify-between mb-md">
+<h4 class="font-h3 text-h3">Current Promotions</h4>
+<span class="text-label-sm text-primary">12 Active Items</span>
+</div>
+<div class="space-y-md">
+<div class="flex items-center justify-between p-md border border-slate-100 rounded-lg">
+<div class="flex items-center gap-md">
+<div class="h-12 w-12 bg-surface-container rounded-lg overflow-hidden">
+<img alt="product" class="object-cover w-full h-full" data-alt="modern minimalist sneaker on a clean white background with sharp shadows and bright lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzmV4xJ82UJ3TA_uXNla38WeLbPKVM2XmWNAR75aPNw4XeKxYkYU_GEmEYw19503FmMxnNpAkzstybUN0hYr-w6YLejRNqq9gcHSs9FBYq1GEJRekQpFMrEeTfYcT7E4HBvq7_3UjOlCuSVxFFqJG_xIaWhXsIjqKbJhjUPMq9ENidQPaEib1NbMrcmgkQLQOpO48btUiIrFa4wCaloN3tu_ou7f2eApkEYe30q-qoN30QL9UmRIwfHLqo-AOqprYF8AxmxyyDZ8c"/>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Aero-Max Sneakers</p>
+<p class="text-body-sm text-on-surface-variant">SKU: AM-2024-X</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-bold text-secondary text-lg">15% OFF</p>
+<p class="text-xs text-on-surface-variant">Expires: 24 Oct</p>
+</div>
+</div>
+<div class="flex items-center justify-between p-md border border-slate-100 rounded-lg">
+<div class="flex items-center gap-md">
+<div class="h-12 w-12 bg-surface-container rounded-lg overflow-hidden">
+<img alt="product" class="object-cover w-full h-full" data-alt="premium canvas backpack in charcoal gray with leather accents against a neutral minimal background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBv1EmB8ln2v6xB08jSnAt5sJlXLFYBN-FUU0XC0HKbgAUhYkJe7erAHopjPAn1WLwbrb4snjddgWXg4ieDRM103Th8auITalVh5vhCjoA2XM7JNu27QLRAu3alcpVaJE2W31VrmSUx2bJDiz8i4elw7vpTj3amS5w51Vbzv_4a8S9r04PEc4stgVSBaZ9bZbpJDj_eu9VknIxKAwIrs3pBpSOtxqq7MisCuOkmmkgdIDPupHCnW2r3A5g43ZbA1Fv8DOEu0H51Gl4"/>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Venture Pack</p>
+<p class="text-body-sm text-on-surface-variant">SKU: VP-LTD-BL</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-bold text-secondary text-lg">$20 OFF</p>
+<p class="text-xs text-on-surface-variant">Expires: 15 Nov</p>
+</div>
+</div>
+</div>
+</div>
+<div class="col-span-4 bg-primary-container text-white p-lg rounded-xl shadow-lg flex flex-col justify-between">
+<div>
+<span class="material-symbols-outlined mb-sm" data-icon="trending_up">trending_up</span>
+<h4 class="font-h3 text-h3 mb-xs">Sales Boost</h4>
+<p class="text-sm opacity-90">Items with discounts active are seeing a 24% higher conversion rate this week.</p>
+</div>
+<div class="mt-xl">
+<div class="h-2 w-full bg-white/20 rounded-full">
+<div class="h-2 w-[75%] bg-white rounded-full"></div>
+</div>
+<p class="text-xs mt-2">Target goal: 80% reached</p>
+</div>
+</div>
+</div>
+</div>
+<!-- MODAL OVERLAY -->
+<div class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-md">
+<!-- Add Discount Modal -->
+<div class="bg-white w-full max-w-[560px] rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+<!-- Modal Header -->
+<div class="px-xl py-lg border-b border-slate-100 flex items-center justify-between bg-surface-bright">
+<div>
+<h2 class="font-manrope text-h2 text-on-surface">Add Product Discount</h2>
+<p class="text-body-sm text-on-surface-variant">Configure new promotional pricing for an inventory item</p>
+</div>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<!-- Modal Body -->
+<form class="p-xl space-y-lg">
+<div class="grid grid-cols-2 gap-lg">
+<!-- Item Code Search -->
+<div class="col-span-2 space-y-xs">
+<label class="font-label-md text-on-surface-variant block">Item Code</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full h-[48px] pl-[44px] pr-md border border-outline-variant rounded-lg font-body-md focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none" placeholder="Search by SKU or Barcode..." type="text" value="SKU-88291-BL"/>
+</div>
+</div>
+<!-- Readonly Info -->
+<div class="space-y-xs">
+<label class="font-label-md text-on-surface-variant block">Item Name</label>
+<input class="w-full h-[48px] px-md bg-surface-container-low border border-outline-variant rounded-lg font-body-md text-on-surface-variant cursor-not-allowed" readonly="" type="text" value="Premium Leather Tote"/>
+</div>
+<div class="space-y-xs">
+<label class="font-label-md text-on-surface-variant block">Selling Price</label>
+<div class="relative">
+<span class="absolute left-md top-1/2 -translate-y-1/2 font-bold text-on-surface-variant">$</span>
+<input class="w-full h-[48px] pl-8 pr-md bg-surface-container-low border border-outline-variant rounded-lg font-body-md text-on-surface-variant cursor-not-allowed" readonly="" type="text" value="149.00"/>
+</div>
+</div>
+<!-- Expiry & Value -->
+<div class="space-y-xs">
+<label class="font-label-md text-on-surface-variant block">Expiry Date</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute right-md top-1/2 -translate-y-1/2 text-outline">calendar_today</span>
+<input class="w-full h-[48px] px-md border border-outline-variant rounded-lg font-body-md focus:ring-2 focus:ring-primary transition-all outline-none" type="date" value="2024-12-31"/>
+</div>
+</div>
+<div class="space-y-xs">
+<label class="font-label-md text-on-surface-variant block">Discount Value</label>
+<input class="w-full h-[48px] px-md border border-outline-variant rounded-lg font-body-md focus:ring-2 focus:ring-primary transition-all outline-none" placeholder="0.00" type="number"/>
+</div>
+<!-- Toggle Switch -->
+<div class="col-span-2 flex items-center justify-between p-md bg-surface-container-lowest border border-slate-100 rounded-xl">
+<div class="flex items-center gap-md">
+<div class="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="percent">percent</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Discount is a percentage</p>
+<p class="text-xs text-on-surface-variant">Switch off to apply fixed amount discount</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</form>
+<!-- Modal Actions -->
+<div class="px-xl py-lg bg-surface-container-low border-t border-slate-100 flex items-center justify-end gap-md">
+<button class="px-lg h-[48px] font-manrope font-bold text-on-surface-variant hover:bg-surface-variant rounded-xl transition-colors active:scale-95">
+                            Discard
+                        </button>
+<button class="px-xl h-[48px] bg-[#10b981] text-white font-manrope font-bold rounded-xl shadow-lg shadow-green-500/20 hover:bg-[#059669] transition-all active:scale-95 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+                            Apply Discount
+                        </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

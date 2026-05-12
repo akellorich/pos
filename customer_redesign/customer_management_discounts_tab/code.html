@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "outline-variant": "#c1c6d7",
+                  "surface": "#f9f9fc",
+                  "surface-container-low": "#f3f3f6",
+                  "on-primary-container": "#fefcff",
+                  "error": "#ba1a1a",
+                  "surface-tint": "#005bc0",
+                  "outline": "#717786",
+                  "on-tertiary-container": "#fffbff",
+                  "on-tertiary-fixed": "#351000",
+                  "on-primary-fixed": "#001a41",
+                  "on-secondary-fixed-variant": "#92001c",
+                  "tertiary-fixed": "#ffdbcc",
+                  "inverse-surface": "#2f3133",
+                  "on-secondary": "#ffffff",
+                  "inverse-on-surface": "#f0f0f3",
+                  "primary-fixed-dim": "#adc7ff",
+                  "on-primary-fixed-variant": "#004493",
+                  "on-error-container": "#93000a",
+                  "primary": "#0059bb",
+                  "on-primary": "#ffffff",
+                  "on-surface": "#1a1c1e",
+                  "tertiary": "#9e3d00",
+                  "on-background": "#1a1c1e",
+                  "secondary": "#b7102a",
+                  "surface-variant": "#e2e2e5",
+                  "tertiary-container": "#c64f00",
+                  "secondary-fixed-dim": "#ffb3b1",
+                  "on-tertiary": "#ffffff",
+                  "on-error": "#ffffff",
+                  "on-secondary-container": "#fffbff",
+                  "on-tertiary-fixed-variant": "#7c2e00",
+                  "surface-container-lowest": "#ffffff",
+                  "primary-container": "#0070ea",
+                  "surface-container-high": "#e8e8ea",
+                  "on-secondary-fixed": "#410007",
+                  "inverse-primary": "#adc7ff",
+                  "background": "#f9f9fc",
+                  "surface-bright": "#f9f9fc",
+                  "error-container": "#ffdad6",
+                  "surface-dim": "#dadadc",
+                  "surface-container-highest": "#e2e2e5",
+                  "secondary-container": "#db313f",
+                  "primary-fixed": "#d8e2ff",
+                  "tertiary-fixed-dim": "#ffb695",
+                  "secondary-fixed": "#ffdad8",
+                  "on-surface-variant": "#414754",
+                  "surface-container": "#eeeef0"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.25rem",
+                  "lg": "0.5rem",
+                  "xl": "0.75rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "sm": "8px",
+                  "2xl": "48px",
+                  "gutter": "20px",
+                  "xl": "32px",
+                  "xs": "4px",
+                  "md": "16px",
+                  "margin": "24px",
+                  "unit": "4px",
+                  "lg": "24px"
+          },
+          "fontFamily": {
+                  "display-lg": ["Manrope"],
+                  "label-sm": ["Inter"],
+                  "h3": ["Manrope"],
+                  "label-md": ["Inter"],
+                  "body-md": ["Inter"],
+                  "body-sm": ["Inter"],
+                  "h2": ["Manrope"],
+                  "body-lg": ["Inter"],
+                  "h1": ["Manrope"]
+          },
+          "fontSize": {
+                  "display-lg": ["48px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                  "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                  "h3": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                  "label-md": ["14px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                  "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                  "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                  "h2": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                  "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                  "h1": ["32px", {"lineHeight": "1.25", "fontWeight": "700"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+      background-color: #F8FAFC;
+    }
+  </style>
+</head>
+<body class="font-body-md text-on-surface">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-[280px] border-r border-slate-200 bg-white dark:bg-slate-900 shadow-sm flex flex-col p-4 space-y-2 z-50">
+<div class="mb-8 px-4 py-2">
+<h1 class="text-xl font-extrabold tracking-tight text-blue-600 dark:text-blue-400">POS System</h1>
+<p class="text-xs text-slate-500 font-label-sm uppercase tracking-widest mt-1">Management Terminal</p>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200 ease-in-out active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-semibold rounded-lg transition-all duration-200 ease-in-out active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-md">Customers</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200 ease-in-out active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-md">Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200 ease-in-out active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-md">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200 ease-in-out active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto p-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-3">
+<img alt="Business Logo" class="w-10 h-10 rounded-full border border-slate-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQQ_XYGMWtFRNkUfv5uHxaQoaSyN_uBmnCAVc2aTdzcisA4YqDs8MFCCRYJ8-rcqbADbWTdKeQRZGSClOLdGFhUUqjJxqKRgoscJmcy4bkKXfQeiVDZBou_Tc06oNbfPc8mvZ6qi5Oar9emL_8G7BodWrY2QGPdKRBxhszO3Wb4Vt8NF40cCG7KeFZe9pNjlQKxdixzC55m4QqtV4mCWorqzYFba6LJ_vzxy8pxMtfLqepbgSs2JwT-dGX4BKhC-ssl3QoQ2wl1II"/>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Admin Terminal</p>
+<p class="text-xs text-slate-500">v2.4.0-pro</p>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-[280px] min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-40 w-full border-b border-slate-200 bg-white dark:bg-slate-900 flex items-center justify-between px-8 h-16 shadow-none">
+<div class="flex items-center gap-8">
+<h2 class="text-lg font-bold text-slate-900 dark:text-white">Customer Profile</h2>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:text-blue-600 transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-slate-500 hover:text-blue-600 transition-colors">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
+<button class="flex items-center gap-2 p-1 pl-2 pr-3 rounded-full border border-slate-200 hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined text-slate-500" data-icon="account_circle">account_circle</span>
+<span class="text-sm font-semibold text-slate-700">Manager</span>
+</button>
+</div>
+</header>
+<!-- Canvas -->
+<div class="p-8 space-y-8">
+<!-- Inline Tabbed Navigation -->
+<div class="border-b border-slate-200 mb-2">
+<nav class="flex gap-8">
+<a class="text-slate-500 dark:text-slate-400 px-1 py-3 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer font-label-md" href="#">Biodata</a>
+<a class="text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 font-bold px-1 py-3 cursor-pointer font-label-md" href="#">Discounts</a>
+<a class="text-slate-500 dark:text-slate-400 px-1 py-3 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer font-label-md" href="#">Payment</a>
+<a class="text-slate-500 dark:text-slate-400 px-1 py-3 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer font-label-md" href="#">Statement</a>
+</nav>
+</div>
+<!-- Summary Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Total Discounts -->
+<div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-6">
+<div class="w-14 h-14 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+<span class="material-symbols-outlined text-3xl" data-icon="redeem">redeem</span>
+</div>
+<div>
+<p class="text-slate-500 font-label-sm uppercase tracking-wider mb-1">Total Discounts</p>
+<h3 class="text-2xl font-bold text-slate-900">$1,482.00</h3>
+<p class="text-xs text-green-600 font-medium flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-xs" data-icon="trending_up">trending_up</span>
+              +12% from last month
+            </p>
+</div>
+</div>
+<!-- Currently Active -->
+<div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-6">
+<div class="w-14 h-14 rounded-lg bg-green-50 flex items-center justify-center text-green-600">
+<span class="material-symbols-outlined text-3xl" data-icon="check_circle">check_circle</span>
+</div>
+<div>
+<p class="text-slate-500 font-label-sm uppercase tracking-wider mb-1">Currently Active</p>
+<h3 class="text-2xl font-bold text-slate-900">08</h3>
+<p class="text-xs text-slate-400 font-medium mt-1">Across 4 item categories</p>
+</div>
+</div>
+<!-- Expiring Soon -->
+<div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-6">
+<div class="w-14 h-14 rounded-lg bg-secondary-fixed flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-3xl" data-icon="timer">timer</span>
+</div>
+<div>
+<p class="text-slate-500 font-label-sm uppercase tracking-wider mb-1">Expiring Soon</p>
+<h3 class="text-2xl font-bold text-slate-900">03</h3>
+<p class="text-xs text-secondary font-medium mt-1">Within the next 48 hours</p>
+</div>
+</div>
+</div>
+<!-- Active Discounts Table Container -->
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+<div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+<div>
+<h3 class="text-lg font-bold text-slate-900">Active Discounts</h3>
+<p class="text-sm text-slate-500">Manage current price reductions and campaign offers</p>
+</div>
+<div class="flex gap-3">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" data-icon="search">search</span>
+<input class="pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none w-64" placeholder="Search item or code..." type="text"/>
+</div>
+<button class="bg-primary text-white px-4 py-2 rounded-lg font-label-md flex items-center gap-2 hover:bg-primary-container transition-all active:scale-95">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+              Create Discount
+            </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-slate-50 text-slate-500 font-label-sm uppercase tracking-widest text-[11px]">
+<th class="px-6 py-4">Item Code</th>
+<th class="px-6 py-4">Item Name</th>
+<th class="px-6 py-4">Original Price</th>
+<th class="px-6 py-4">Value</th>
+<th class="px-6 py-4">Type</th>
+<th class="px-6 py-4">Final Price</th>
+<th class="px-6 py-4">Expiry Date</th>
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100">
+<!-- Row 1 -->
+<tr class="hover:bg-slate-50/50 transition-colors group">
+<td class="px-6 py-4 font-mono text-xs text-slate-600">SKU-9021-X</td>
+<td class="px-6 py-4">
+<div class="font-semibold text-slate-900">Premium Leather Wallet</div>
+<div class="text-[11px] text-slate-400">Accessories / Leather</div>
+</td>
+<td class="px-6 py-4 text-slate-500">$89.00</td>
+<td class="px-6 py-4 font-bold text-secondary">-$15.00</td>
+<td class="px-6 py-4">
+<span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-medium uppercase">Flat</span>
+</td>
+<td class="px-6 py-4 font-bold text-slate-900">$74.00</td>
+<td class="px-6 py-4 text-sm text-slate-600">Oct 24, 2024</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1 bg-green-50 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                    Active
+                  </span>
+</td>
+<td class="px-6 py-4 text-right relative">
+<button class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors inline-flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+<!-- Dropdown Menu -->
+<div class="absolute right-6 top-12 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden text-left py-1">
+<button class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined text-lg text-slate-400" data-icon="edit">edit</span>
+<span>Edit</span>
+</button>
+<button class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined text-lg text-slate-400" data-icon="analytics">analytics</span>
+<span>View Utilization</span>
+</button>
+<div class="h-px bg-slate-100 dark:bg-slate-700 my-1"></div>
+<button class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="delete">delete</span>
+<span>Delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-slate-50/50 transition-colors group">
+<td class="px-6 py-4 font-mono text-xs text-slate-600">SKU-1142-P</td>
+<td class="px-6 py-4">
+<div class="font-semibold text-slate-900">Noise Cancelling Headsets</div>
+<div class="text-[11px] text-slate-400">Electronics / Audio</div>
+</td>
+<td class="px-6 py-4 text-slate-500">$249.00</td>
+<td class="px-6 py-4 font-bold text-secondary">20% OFF</td>
+<td class="px-6 py-4">
+<span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-medium uppercase">Percentage</span>
+</td>
+<td class="px-6 py-4 font-bold text-slate-900">$199.20</td>
+<td class="px-6 py-4 text-sm text-slate-600 text-secondary font-medium">Tomorrow</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1 bg-secondary-fixed text-secondary px-2.5 py-1 rounded-full text-xs font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+                    Expiring
+                  </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-slate-50/50 transition-colors group">
+<td class="px-6 py-4 font-mono text-xs text-slate-600">SKU-4401-K</td>
+<td class="px-6 py-4">
+<div class="font-semibold text-slate-900">Ergonomic Office Chair</div>
+<div class="text-[11px] text-slate-400">Furniture / Office</div>
+</td>
+<td class="px-6 py-4 text-slate-500">$450.00</td>
+<td class="px-6 py-4 font-bold text-secondary">-$50.00</td>
+<td class="px-6 py-4">
+<span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-medium uppercase">Flat</span>
+</td>
+<td class="px-6 py-4 font-bold text-slate-900">$400.00</td>
+<td class="px-6 py-4 text-sm text-slate-600">Nov 12, 2024</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1 bg-green-50 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                    Active
+                  </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-slate-50/50 transition-colors group">
+<td class="px-6 py-4 font-mono text-xs text-slate-600">SKU-8820-A</td>
+<td class="px-6 py-4">
+<div class="font-semibold text-slate-900">Stainless Steel Water Bottle</div>
+<div class="text-[11px] text-slate-400">Lifestyle / Sports</div>
+</td>
+<td class="px-6 py-4 text-slate-500">$35.00</td>
+<td class="px-6 py-4 font-bold text-secondary">15% OFF</td>
+<td class="px-6 py-4">
+<span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-medium uppercase">Percentage</span>
+</td>
+<td class="px-6 py-4 font-bold text-slate-900">$29.75</td>
+<td class="px-6 py-4 text-sm text-slate-600">Dec 01, 2024</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1 bg-green-50 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                    Active
+                  </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-sm text-slate-500">
+<span>Showing 4 of 32 discounts</span>
+<div class="flex gap-2">
+<button class="px-3 py-1.5 rounded border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50">Previous</button>
+<button class="px-3 py-1.5 rounded border border-blue-200 bg-blue-50 text-blue-600 font-semibold">1</button>
+<button class="px-3 py-1.5 rounded border border-slate-200 bg-white hover:bg-slate-50">2</button>
+<button class="px-3 py-1.5 rounded border border-slate-200 bg-white hover:bg-slate-50">3</button>
+<button class="px-3 py-1.5 rounded border border-slate-200 bg-white hover:bg-slate-50">Next</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

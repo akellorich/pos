@@ -1,0 +1,89 @@
+/*
+ * JavaScript client-side example using jsrsasign
+ */
+
+// #########################################################
+// #             WARNING   WARNING   WARNING               #
+// #########################################################
+// #                                                       #
+// # This file is intended for demonstration purposes      #
+// # only.                                                 #
+// #                                                       #
+// # It is the SOLE responsibility of YOU, the programmer  #
+// # to prevent against unauthorized access to any signing #
+// # functions.                                            #
+// #                                                       #
+// # Organizations that do not protect against un-         #
+// # authorized signing will be black-listed to prevent    #
+// # software piracy.                                      #
+// #                                                       #
+// # -QZ Industries, LLC                                   #
+// #                                                       #
+// #########################################################
+
+/**
+ * Depends:
+ *     - jsrsasign-latest-all-min.js
+ *     - qz-tray.js
+ *
+ * Steps:
+ *
+ *     1. Include jsrsasign 10.9.0 into your web page
+ *        <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/11.1.0/jsrsasign-all-min.js"></script>
+ *
+ *     2. Update the privateKey below with contents from private-key.pem
+ *
+ *     3. Include this script into your web page
+ *        <script src="path/to/sign-message.js"></script>
+ *
+ *     4. Remove or comment out any other references to "setSignaturePromise"
+ *
+ *     5. IMPORTANT: Before deploying to production, copy "jsrsasign-all-min.js"
+ *        to the web server.  Don't trust the CDN above to be available.
+ */
+var privateKey = `-----BEGIN PRIVATE KEY-----
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDlviiB/QNiv1cy
+ODqcEMF3YPUyE6iFsFOrYzADJa1cUtv52HPKsAUmSBsTEr2dfJXQZ0oV9YmSpFFf
+UcQrcdko+089IdykOm2j4fXUbbhgmWk3G6P+5VPCH2en3Qddnl/ZKtkASMozYRon
+buDmoM3ANSXH8TTzKkYvFa3grguuW0PCZiRVmWSJD4jXRTEs+suPPsItKIkBV7I/
+Z71HctBSUVnhEe5pXQhAKemzm3jum9MtsQpALeoWZV8duIHxQNIZkIVVjpvv5Lbv
+h9lIRC5HcU2OtyPNDHIs4JwIdZVuigW5kc2CdRKv4ZqItcuc54H3FAX8E1k0aqFo
+oM5KKCbFAgMBAAECggEAImgrOuSAmE5dqbjAFlVwFAfiUOCe0X7J2RYev6np37TN
+GwrutIFOFCCiZWXeHfLloPOHJejC9MJFKYheX79KLZgNkvM6TyIs/2k83tab0WPI
+XSd3lRoVRDJd3Mb+bmfkpOqE20ULe0xklVlGt2OHzOxovxwBuRUws6aEhuyp9S+P
+LRipnc+b5avtuxozc666jmKpTg4bfAp2vcdneNEegrULrwOlyLGi/sdf4SVInLAT
+N5/J25GuN6tCW1z85oVUtlNVbIxQrMCjDrHeM8yv6IHqUjzF9WKwvBu7yEVtiiq6
+4FWPHCt4qn/JLO/NR227cKg0WFtQo5xe2xPkRIne1QKBgQD9eLUuYWYAl5t2Bo9n
+UURh4M/ofd8DpnAN8Rxn32iN5djZAyHLLWxarmdDBLRCNsnYP/hKLZMT9y/jYsPQ
+Up1Usa07BVKQ97ydsIWMQ4pnEi8L3Ut+lGb8F2a6B0hXOllQc9UsXSuudvI3XoCo
+G2WnfGxThfVUubkiZSZbh1icSwKBgQDoCNqzRk17BNZXiruDIB9PfdXpFK9v9qvJ
+wQcLA2X1A+rddValsKYDB+4+caGNuuf4YV8XkfpUgjtZ6T5Ktfn5M9NwSuumk3Gh
+VgqzvXibBOgKp6nE1EOLWK22L5Jyt/PAidOzb8NiPaube/oVDNb9f2/8GpOSUWeK
+PlO7mSc/LwKBgADvmyuqrGfAJ5DOAWWORURfQiVHobUvviYvB73Sc15ixOQ4QL2x
+Uz8aecMjl07PSPuFcPNFK8/dD841JSf1xiLz7QHUyTND1ux2JGgaL76lsIrIrGix
+P5gatgRl1nyL+Jx1cQoS5gBk7AwMS0lToJJ3wSalzfwcG3TnDrczzr31AoGBAOUD
+uDexb8+3moaU2zY0gjLHFFYUoIN1h2B+MCFinUMTNsCVi4vFqlTbgv4G0Vk93K5+
+DIkK/3RhhYrcdyruKWcZC9uNVsD2TfTbI3z7yQnX8d5yVVF7356tS+bBVV38yYyD
+fHtiGAnirHmuB8q2/Yr+ON0urfCAgB0mHybNprrpAoGBALHwN1q9LHN6E1dF/9rY
+AM8/RJ6uPl7XQ/XdCieaqoNyk94WJEt8VDCM+GMwmjDnVcpORZhA0gcNX5WXbKwh
+iGB63D6Mg28KCdJRkqQ2+9bK7vWGVMx1FGkIULXM6bl70CUtDoyXD9qOOfE4dFxD
+kdk2UpIscobEdjsfwlF1Tuwa
+-----END PRIVATE KEY-----`;
+
+qz.security.setSignatureAlgorithm("SHA512"); // Since 2.1
+qz.security.setSignaturePromise(function(toSign) {
+    return function(resolve, reject) {
+        try {
+            var pk = KEYUTIL.getKey(privateKey);
+            var sig = new KJUR.crypto.Signature({"alg": "SHA512withRSA"});  // Use "SHA1withRSA" for QZ Tray 2.0 and older
+            sig.init(pk); 
+            sig.updateString(toSign);
+            var hex = sig.sign();
+            console.log("DEBUG: \n\n" + stob64(hextorstr(hex)));
+            resolve(stob64(hextorstr(hex)));
+        } catch (err) {
+            console.error(err);
+            reject(err);
+        }
+    };
+});

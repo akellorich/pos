@@ -1,0 +1,243 @@
+.category-list,.productlist {
+    height: calc(100vh - 200px); /* Full viewport height */
+    overflow-y: scroll; 
+    scrollbar-width: thin; /* Thin scrollbar */
+    scrollbar-color: #ff6b6b #f8f9fa; /* Red handle and light gray track */
+}
+
+/* format the scrollbar  */
+/* Style the scrollbar for WebKit browsers (Chrome, Safari, Edge) */
+.category-list::-webkit-scrollbar,.productlist::-webkit-scrollbar {
+    width: 12px; /* Width of the scrollbar */
+}
+
+/* Track (background of the scrollbar) */
+.category-list::-webkit-scrollbar-track, .productlist::-webkit-scrollbar-track{
+    background: #f8f9fa; /* Light gray background */
+    border-radius: 10px; /* Rounded corners */
+}
+
+/* Handle (the draggable part of the scrollbar) */
+.category-list::-webkit-scrollbar-thumb,.productlist::-webkit-scrollbar-thumb {
+    background: #ff6b6b; /* Light red color */
+    border-radius: 10px; /* Rounded corners */
+    border: 3px solid #f8f9fa; /* Padding around the handle */
+}
+
+/* Handle on hover */
+.category-list::-webkit-scrollbar-thumb:hover , .productlist::-webkit-scrollbar-thumb:hover{
+    background: #ff4757; /* Darker red on hover */
+}
+
+.category-btn {
+    width: 100%; /* Full width */
+    margin-bottom: 10px; /* Space between buttons */
+    border: 2px solid red !important; /* Outline red */
+    color: red; /* Red text */
+    background-color: transparent; /* Transparent background */
+    font-size: 0.85rem;
+}
+.category-btn:hover {
+    background-color: red; /* Red background on hover */
+    color: white; /* White text on hover */
+}
+
+.product-btn a{
+    text-decoration: none;
+    color:#555;
+}
+
+.product-card {
+    text-align: center; /* Center align content */
+    margin-bottom: 20px; /* Space between cards */
+    border: 1px solid #ddd; /* Light border */
+    border-radius: 10px; /* Rounded corners */
+    padding: 15px; /* Padding inside the card */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+.product-card img {
+    display:none;
+    width: 100%; /* Full width of the card */
+    height: 100px; /* Fixed image height */
+    object-fit: cover; /* Ensure the image covers the area */
+    border-radius: 10px 10px 0 0; /* Rounded top corners */
+}
+.product-card h5 {
+    margin-top: 10px; /* Space between image and title */
+    font-size: 0.8rem; /* Larger font size */
+}
+.product-card p {
+    margin-bottom: 0; /* Remove default margin */
+    color: #555; /* Subdued text color */
+    font-size: 0.7rem;
+}
+
+/* format table to be scrollable */
+.scrollabletable{
+    height:calc(100vh - 320px);
+    overflow-y:scroll;
+}
+
+/* format product search */
+.searchproduct-list {
+    width:calc(100% - 32px);
+    /* top:0; */
+    /* max-width: 100%; */
+    position: absolute;
+    z-index: 9999;
+    background:white;
+    /* margin: 20px auto;
+    padding: 20px; */
+    /* font-family: Arial, sans-serif; */
+   
+}
+
+.searchproduct-container {
+    height: 450px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px; 
+}
+
+.searchproduct-card {
+    list-style: none;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    padding: 20px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.searchproduct-card:hover{
+    background: #d1cccc;
+}
+
+.searchproduct-info {
+    flex: 2;
+    text-align: left;
+}
+
+.saerchproduct-category {
+    color: #666;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.searchproduct-name {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.searchproduct-price {
+    flex: 1;
+    text-align: right;
+    color: #2c3e50;
+    font-size: 1.4em;
+    font-weight: bold;
+}
+
+.searchproduct-price::before {
+    content: "Ksh.";
+    font-size: 0.8em;
+    margin-right: 2px;
+}
+
+/* format virtual keyboard  */
+.virtual-keyboard {
+    display: none;
+    position: absolute;
+    background: #f5f5f7;
+    padding: 10px;
+    border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(20px);
+    z-index: 1000;
+    margin-top: 10px;
+}
+
+.keyboard-container {
+    position: relative;
+    max-width: 500px;
+    margin: 100px auto 0;
+}
+
+.keyboard-toggle {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #86868b;
+    z-index: 1001;
+    transition: color 0.2s;
+}
+
+/* KEYBOARD KEY STYLES */
+.keyboard-row {
+    display: flex;
+    justify-content: center;
+    margin: 4px 0;
+}
+
+.keyboard-key {
+    background: #ffffff;
+    border: 1px solid #d1d1d6;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 0 3px;
+    font-size: 14px;
+    color: #1d1d1f;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+.keyboard-key:hover {
+    background: #f5f5f5;
+    transform: translateY(-1px);
+}
+
+.keyboard-key:active {
+    background: #e0e0e0;
+    transform: translateY(0);
+}
+
+.special-key {
+    background: #d1d1d6;
+    font-size: 12px;
+}
+
+.space-key {
+    width: 400px;
+    max-width: 40vw;
+}
+
+.delete-key::after {
+    content: "⌫";
+    font-size: 18px;
+}
+
+.return-key::after {
+    content: "⏎";
+    font-size: 16px;
+}
+
+.shift-key.active {
+    background: #007AFF;
+    color: white;
+}
+
+.keyboard-toggle.active {
+    color: #007AFF;
+}

@@ -1,0 +1,24 @@
+{"nodes": [
+  {"id": "design_system", "label": "Botanical Design System", "file_type": "rationale"},
+  {"id": "modern_corporate", "label": "Modern Corporate Aesthetic", "file_type": "rationale"},
+  {"id": "vipingo_meridian", "label": "Vipingo Meridian Project", "file_type": "rationale"},
+  {"id": "primary_blue", "label": "Primary Blue Action Color", "file_type": "rationale"},
+  {"id": "secondary_red", "label": "Secondary Red Alert Color", "file_type": "rationale"},
+  {"id": "fixed_fluid_grid", "label": "Fixed-Fluid Hybrid Grid", "file_type": "rationale"},
+  {"id": "manrope_font", "label": "Manrope Typography (Headlines)", "file_type": "rationale"},
+  {"id": "inter_font", "label": "Inter Typography (Body)", "file_type": "rationale"},
+  {"id": "touch_targets", "label": "44px Touch Targets", "file_type": "rationale"},
+  {"id": "ecopoint_logo", "label": "EcoPoint Logo", "file_type": "image", "source_file": "images/ecopointlogo.jpg"},
+  {"id": "sapio_logo", "label": "Sapio Branding", "file_type": "image", "source_file": "images/sapio.png"},
+  {"id": "mpesa_logo", "label": "M-Pesa Integration Logo", "file_type": "image", "source_file": "images/mpesa.png"}
+], "edges": [
+  {"source": "design_system", "target": "modern_corporate", "relation": "conceptually_related_to", "confidence": "EXTRACTED", "confidence_score": 1.0},
+  {"source": "design_system", "target": "vipingo_meridian", "relation": "rationale_for", "confidence": "EXTRACTED", "confidence_score": 1.0},
+  {"source": "modern_corporate", "target": "primary_blue", "relation": "references", "confidence": "EXTRACTED", "confidence_score": 1.0},
+  {"source": "modern_corporate", "target": "fixed_fluid_grid", "relation": "references", "confidence": "EXTRACTED", "confidence_score": 1.0},
+  {"source": "vipingo_meridian", "target": "ecopoint_logo", "relation": "references", "confidence": "INFERRED", "confidence_score": 0.85},
+  {"source": "design_system", "target": "manrope_font", "relation": "references", "confidence": "EXTRACTED", "confidence_score": 1.0},
+  {"source": "design_system", "target": "inter_font", "relation": "references", "confidence": "EXTRACTED", "confidence_score": 1.0}
+], "hyperedges": [
+  {"id": "branding_assets", "label": "Project Branding Assets", "nodes": ["ecopoint_logo", "sapio_logo", "mpesa_logo"], "relation": "participate_in", "confidence": "INFERRED", "confidence_score": 0.95}
+], "input_tokens": 10000, "output_tokens": 2000}

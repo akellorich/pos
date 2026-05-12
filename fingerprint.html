@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>🔐 BioVault: Fingerprint Identity System</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+        }
+        body {
+            background: linear-gradient(145deg, #e9eef5 0%, #dbe2ec 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            margin: 0;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(2px);
+            border-radius: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 2rem 1.8rem;
+            max-width: 850px;
+            width: 100%;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+        h1 {
+            font-size: 1.9rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #1A2A3F, #1e3a5f);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-top: 0;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .sub {
+            color: #4a627a;
+            border-left: 3px solid #2c7da0;
+            padding-left: 0.75rem;
+            margin-bottom: 2rem;
+            font-weight: 450;
+        }
+        .split-layout {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin: 1.5rem 0 1rem;
+        }
+        .panel {
+            flex: 1;
+            min-width: 250px;
+            background: #f8fafd;
+            border-radius: 1.75rem;
+            padding: 1.3rem 1.2rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+            border: 1px solid #e2edf7;
+        }
+        .panel h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #1e4663;
+            border-bottom: 2px solid #cbdde9;
+            padding-bottom: 0.5rem;
+        }
+        .input-group {
+            margin-bottom: 1.2rem;
+        }
+        label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: block;
+            margin-bottom: 0.3rem;
+            color: #1f3b4c;
+        }
+        input, select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: 1.5rem;
+            border: 1px solid #cbdbe0;
+            background: white;
+            font-size: 0.95rem;
+            transition: 0.2s;
+            outline: none;
+        }
+        input:focus, select:focus {
+            border-color: #2c7da0;
+            box-shadow: 0 0 0 3px rgba(44,125,160,0.2);
+        }
+        button {
+            background: #1f6392;
+            border: none;
+            padding: 0.75rem 1.2rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+            width: 100%;
+            margin-top: 0.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        button:hover {
+            background: #0e4b71;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+        .btn-secondary {
+            background: #4b6f86;
+        }
+        .btn-secondary:hover {
+            background: #2c5a77;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #2c7da0;
+            color: #1f6392;
+            box-shadow: none;
+        }
+        .btn-outline:hover {
+            background: #e2f0f5;
+            color: #0a4b6e;
+        }
+        .status-area {
+            margin-top: 1.5rem;
+            background: #ffffffdd;
+            border-radius: 1.25rem;
+            padding: 0.8rem 1.2rem;
+            font-size: 0.9rem;
+            border-left: 5px solid #2c7da0;
+        }
+        .error-status {
+            border-left-color: #d9534f;
+            background: #fff5f5;
+            color: #b52b27;
+        }
+        .success-status {
+            border-left-color: #2a9d8f;
+            background: #e9f7f5;
+            color: #1e6b5e;
+        }
+        .info-status {
+            border-left-color: #f4a261;
+            background: #fff9ef;
+        }
+        .user-list {
+            background: white;
+            border-radius: 1rem;
+            padding: 0.5rem;
+            margin-top: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e0ecf5;
+        }
+        .user-tag {
+            background: #eef3fc;
+            margin: 0.3rem;
+            padding: 0.4rem 0.7rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            display: inline-block;
+            font-weight: 500;
+        }
+        hr {
+            margin: 1rem 0;
+            border-color: #d4e2ed;
+        }
+        .flex-btns {
+            display: flex;
+            gap: 0.7rem;
+        }
+        .flex-btns button {
+            flex: 1;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #5f7d9c;
+            margin-top: 2rem;
+        }
+        @media (max-width: 680px) {
+            .glass-card {
+                padding: 1.25rem;
+            }
+            .panel {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="glass-card">
+    <h1>🖐️ BioVault</h1>
+    <div class="sub">fingerprint enrollment & verification · WebAuthn biometrics</div>
+
+    <div class="split-layout">
+        <!-- ENROLLMENT PANEL -->
+        <div class="panel">
+            <h2>📝 Enroll fingerprint</h2>
+            <div class="input-group">
+                <label>Full name</label>
+                <input type="text" id="enrollName" placeholder="e.g., Alex Johnson" autocomplete="off">
+            </div>
+            <button id="enrollBtn">➕ Register fingerprint</button>
+            <div class="info-status status-area" style="margin-top: 1rem; font-size:0.85rem" id="enrollHelper">
+                ℹ️ Click register → browser will ask for fingerprint / biometrics.
+            </div>
+        </div>
+
+        <!-- VERIFICATION PANEL -->
+        <div class="panel">
+            <h2>✅ Verify identity</h2>
+            <div class="input-group">
+                <label>Select user</label>
+                <select id="verifyUserSelect">
+                    <option value="">-- no enrolled users --</option>
+                </select>
+            </div>
+            <button id="verifyBtn">🔍 Verify with fingerprint</button>
+            <div class="info-status status-area" style="margin-top: 1rem; font-size:0.85rem" id="verifyHelper">
+                🧩 Choose a name, then place your finger / use biometric sensor.
+            </div>
+        </div>
+    </div>
+
+    <!-- enrolled users summary & logs -->
+    <div class="status-area" style="background:#eef3fa;">
+        <strong>📋 Enrolled identities</strong>
+        <div id="userListContainer" class="user-list" style="margin-top: 8px;">
+            <span style="color:#6c8db0;">No users yet. Enroll someone.</span>
+        </div>
+    </div>
+
+    <div id="globalMessage" class="status-area info-status" style="margin-top: 0.5rem;">
+        ✨ System ready. WebAuthn supported? <span id="webauthnSupportBadge">✅ Yes</span>
+    </div>
+    <footer>🔐 Biometric credentials never leave your device. Uses WebAuthn (fingerprint/faceid).</footer>
+</div>
+
+<script>
+    (function() {
+        // ---------- STORAGE ----------
+        // Structure: we store an array of user objects
+        // each user: { id: string (random), name: string, credentialId: string (base64url), publicKey: object (stored as json) }
+        // For simplicity, we use localStorage key: "biovault_users"
+        // Credential IDs are stored as base64url strings to map challenges.
+        
+        let users = [];   // in-memory representation
+        
+        function loadUsersFromStorage() {
+            const raw = localStorage.getItem("biovault_users");
+            if(raw) {
+                try {
+                    users = JSON.parse(raw);
+                    if(!Array.isArray(users)) users = [];
+                } catch(e) { users = []; }
+            } else {
+                users = [];
+            }
+            renderUserSelect();
+            renderUserList();
+        }
+        
+        function saveUsersToStorage() {
+            localStorage.setItem("biovault_users", JSON.stringify(users));
+            renderUserSelect();
+            renderUserList();
+        }
+        
+        function renderUserSelect() {
+            const select = document.getElementById("verifyUserSelect");
+            if(!select) return;
+            select.innerHTML = '<option value="">-- select user --</option>';
+            if(users.length === 0) {
+                select.innerHTML = '<option value="">-- no enrolled users --</option>';
+                return;
+            }
+            users.forEach(user => {
+                const option = document.createElement("option");
+                option.value = user.id;
+                option.textContent = user.name;
+                select.appendChild(option);
+            });
+        }
+        
+        function renderUserList() {
+            const container = document.getElementById("userListContainer");
+            if(!container) return;
+            if(users.length === 0) {
+                container.innerHTML = '<span style="color:#6c8db0;">✨ No users yet. Enroll someone.</span>';
+                return;
+            }
+            container.innerHTML = "";
+            users.forEach(user => {
+                const chip = document.createElement("div");
+                chip.className = "user-tag";
+                chip.innerText = `${user.name} (${user.id.slice(0,6)}…)`;
+                container.appendChild(chip);
+            });
+        }
+        
+        // helper: generate random ID (for user internal)
+        function generateUserId() {
+            return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36)+Date.now().toString(36);
+        }
+        
+        // ----- WebAuthn helpers -----
+        // Convert buffer to base64url (string)
+        function bufferToBase64URL(buf) {
+            const bytes = new Uint8Array(buf);
+            let str = "";
+            for(let i=0; i<bytes.byteLength; i++) {
+                str += String.fromCharCode(bytes[i]);
+            }
+            return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+        
+        function base64URLToBuffer(base64url) {
+            const padding = '='.repeat((4 - base64url.length % 4) % 4);
+            const base64 = (base64url.replace(/-/g, '+').replace(/_/g, '/')) + padding;
+            const raw = atob(base64);
+            const buffer = new Uint8Array(raw.length);
+            for(let i=0; i<raw.length; i++) {
+                buffer[i] = raw.charCodeAt(i);
+            }
+            return buffer.buffer;
+        }
+        
+        // enrollment: create a new credential (fingerprint / platform auth)
+        async function enrollFingerprint(userName) {
+            if(!userName || userName.trim() === "") {
+                showMessage("❌ Enrollment failed: Please enter a valid name.", "error");
+                return false;
+            }
+            const trimmedName = userName.trim();
+            // check duplicate name? not required but friendly warning
+            if(users.some(u => u.name.toLowerCase() === trimmedName.toLowerCase())) {
+                showMessage(`⚠️ User "${trimmedName}" already exists. Use a different name or delete existing.`, "error");
+                return false;
+            }
+            
+            const userIdBuffer = new TextEncoder().encode(generateUserId());
+            const userIdBase64 = bufferToBase64URL(userIdBuffer);
+            const challengeBuffer = crypto.getRandomValues(new Uint8Array(32));
+            
+            const publicKeyCredentialCreationOptions = {
+                challenge: challengeBuffer,
+                rp: { name: "BioVault App", id: window.location.hostname },
+                user: {
+                    id: userIdBuffer,
+                    name: trimmedName,
+                    displayName: trimmedName,
+                },
+                pubKeyCredParams: [
+                    { type: "public-key", alg: -7 },   // ES256
+                    { type: "public-key", alg: -257 }, // RS256
+                ],
+                authenticatorSelection: {
+                    authenticatorAttachment: "platform",  // prefer fingerprint/faceid built-in (platform)
+                    userVerification: "required",
+                    residentKey: "required",
+                },
+                attestation: "none",
+                timeout: 60000,
+            };
+            
+            try {
+                const credential = await navigator.credentials.create({ publicKey: publicKeyCredentialCreationOptions });
+                if(!credential || !credential.response) throw new Error("No credential response");
+                const response = credential.response;
+                const credId = bufferToBase64URL(credential.rawId);
+                // We need to store the public key (for verification later)
+                // But note: we need to store the credential ID and the public key bytes to allow get() assertion.
+                // However for verification we need to pass allowedCredentials & challenge. We'll store the credentialId and public key.
+                // Not storing full public key for actual verification on server side, but on client side we can store the public key object as JSON.
+                // Actually WebAuthn verification on client side: we perform assertion (get) using credentialId.
+                // We don't need to manually verify signature in this demo, the browser does! We just need to ensure the assertion returns the userHandle
+                // which we will match to our stored user id.
+                // Better approach: In verification: we request assertion using stored credentialId, and we extract userHandle (or credentialId) to match identity.
+                // So we store for each user: credentialId (base64url), userId (internal random id), name.
+                const pubKeyCbor = response.getPublicKey ? response.getPublicKey() : null;
+                let pubKeyJson = null;
+                if(pubKeyCbor) {
+                    // optional: store as base64 for debugging, but not required for verification via WebAuthn get().
+                    pubKeyJson = bufferToBase64URL(pubKeyCbor);
+                }
+                const newUser = {
+                    id: new TextDecoder().decode(userIdBuffer), // keep the raw id string as stored
+                    name: trimmedName,
+                    credentialId: credId,
+                    publicKeyHint: pubKeyJson || "stored",
+                    createdAt: new Date().toISOString()
+                };
+                users.push(newUser);
+                saveUsersToStorage();
+                showMessage(`✅ Success! Fingerprint enrolled for "${trimmedName}". You can now verify.`, "success");
+                return true;
+            } catch (err) {
+                console.error("Enrollment error", err);
+                let friendlyMsg = err.message;
+                if(err.name === "NotAllowedError") friendlyMsg = "User canceled or fingerprint not provided.";
+                else if(err.name === "NotSupportedError") friendlyMsg = "WebAuthn not properly supported. Use HTTPS or modern browser.";
+                showMessage(`❌ Enrollment failed: ${friendlyMsg}`, "error");
+                return false;
+            }
+        }
+        
+        // Verification: given selected user ID, perform fingerprint assertion
+        async function verifyFingerprint(userId) {
+            if(!userId) {
+                showMessage("⚠️ Please select a user from the dropdown before verifying.", "error");
+                return false;
+            }
+            const user = users.find(u => u.id === userId);
+            if(!user) {
+                showMessage("❌ User not found in database. Re-enroll.", "error");
+                return false;
+            }
+            if(!user.credentialId) {
+                showMessage("❌ Corrupted user data: missing credential ID. Delete and re-enroll.", "error");
+                return false;
+            }
+            
+            const allowedCredential = {
+                id: base64URLToBuffer(user.credentialId),
+                type: "public-key",
+                transports: ["internal"],
+            };
+            const challengeBuffer = crypto.getRandomValues(new Uint8Array(32));
+            const getOptions = {
+                challenge: challengeBuffer,
+                allowCredentials: [allowedCredential],
+                timeout: 60000,
+                userVerification: "required",
+                rpId: window.location.hostname,
+            };
+            
+            try {
+                const assertion = await navigator.credentials.get({ publicKey: getOptions });
+                if(!assertion) throw new Error("No assertion received");
+                // Verification success: the browser validated the fingerprint against the stored credential.
+                // Now we need to match that the credential ID matches the expected user AND optionally userHandle matches.
+                const response = assertion.response;
+                const authenticatorData = response.authenticatorData;
+                const clientDataJSON = response.clientDataJSON;
+                const signature = response.signature;
+                const userHandle = response.userHandle ? new TextDecoder().decode(response.userHandle) : null;
+                const returnedCredentialId = bufferToBase64URL(assertion.rawId);
+                
+                if(returnedCredentialId !== user.credentialId) {
+                    showMessage("⚠️ Credential mismatch: fingerprint belongs to different credential. Please retry.", "error");
+                    return false;
+                }
+                // Optional: check userHandle if stored to ensure identity.
+                if(userHandle && userHandle !== user.id) {
+                    showMessage(`⚠️ Verification partial: userHandle mismatch. User might be different.`, "error");
+                    return false;
+                }
+                showMessage(`✅ VERIFIED: Welcome back ${user.name}! Fingerprint matched successfully.`, "success");
+                return true;
+            } catch (err) {
+                console.error("Verification error", err);
+                let friendly = err.message;
+                if(err.name === "NotAllowedError") friendly = "Verification canceled or fingerprint not recognized.";
+                else if(err.name === "InvalidStateError") friendly = "Credential not available on this device.";
+                showMessage(`❌ Verification failed: ${friendly}`, "error");
+                return false;
+            }
+        }
+        
+        // Optional: delete user (admin)
+        function deleteUser(userId) {
+            if(!userId) return;
+            const idx = users.findIndex(u => u.id === userId);
+            if(idx !== -1) {
+                const removed = users[idx];
+                users.splice(idx, 1);
+                saveUsersToStorage();
+                showMessage(`🗑️ User "${removed.name}" removed.`, "info");
+                // re-render select
+                renderUserSelect();
+            }
+        }
+        
+        // UI helpers
+        function showMessage(msg, type = "info") {
+            const msgDiv = document.getElementById("globalMessage");
+            if(msgDiv) {
+                msgDiv.innerHTML = `💬 ${msg}`;
+                msgDiv.classList.remove("error-status", "success-status", "info-status");
+                if(type === "error") msgDiv.classList.add("error-status");
+                else if(type === "success") msgDiv.classList.add("success-status");
+                else msgDiv.classList.add("info-status");
+                setTimeout(() => {
+                    if(document.getElementById("globalMessage") === msgDiv) {
+                        // but don't clear if new message appears, keep for some seconds but not necessary
+                    }
+                }, 5000);
+            } else {
+                alert(msg);
+            }
+            // also log in helper areas for enrollment/verification echo
+            if(type === "error") {
+                const enrollHelper = document.getElementById("enrollHelper");
+                const verifyHelper = document.getElementById("verifyHelper");
+                if(enrollHelper && msg.includes("Enrollment")) enrollHelper.innerHTML = `⚠️ ${msg}`;
+                if(verifyHelper && msg.includes("Verify")) verifyHelper.innerHTML = `⚠️ ${msg}`;
+            } else if(type === "success") {
+                const enrollHelper = document.getElementById("enrollHelper");
+                const verifyHelper = document.getElementById("verifyHelper");
+                if(msg.includes("enrolled") && enrollHelper) enrollHelper.innerHTML = `✅ ${msg}`;
+                if(msg.includes("VERIFIED") && verifyHelper) verifyHelper.innerHTML = `✅ ${msg}`;
+            }
+        }
+        
+        // extra: reset demo / clear all (optional)
+        function clearAllUsers() {
+            if(confirm("⚠️ Delete ALL enrolled users and fingerprints? This action cannot be undone.")) {
+                users = [];
+                saveUsersToStorage();
+                showMessage("🗑️ All users have been deleted. System reset.", "info");
+                renderUserSelect();
+                renderUserList();
+            }
+        }
+        
+        // Check WebAuthn support
+        function checkWebAuthnSupport() {
+            const supported = window.PublicKeyCredential && typeof window.PublicKeyCredential === "function";
+            const badge = document.getElementById("webauthnSupportBadge");
+            if(badge) {
+                if(supported) {
+                    badge.innerHTML = "✅ Supported (WebAuthn)";
+                    badge.style.color = "#2a9d8f";
+                } else {
+                    badge.innerHTML = "❌ Not supported! Upgrade browser / use HTTPS.";
+                    badge.style.color = "#d9534f";
+                    showMessage("Your browser does not support WebAuthn. Fingerprint auth requires HTTPS or localhost.", "error");
+                }
+            }
+            return supported;
+        }
+        
+        // additional: reset form & add 'Delete' buttons per user? Let's create admin row
+        function addAdminControls() {
+            const container = document.querySelector(".status-area:first-of-type");
+            if(!container) return;
+            const btnDiv = document.createElement("div");
+            btnDiv.style.marginTop = "12px";
+            btnDiv.style.display = "flex";
+            btnDiv.style.gap = "8px";
+            const resetBtn = document.createElement("button");
+            resetBtn.innerText = "🗑️ Reset all users";
+            resetBtn.className = "btn-outline";
+            resetBtn.style.width = "auto";
+            resetBtn.style.fontSize = "0.75rem";
+            resetBtn.style.padding = "0.35rem 0.8rem";
+            resetBtn.onclick = () => clearAllUsers();
+            btnDiv.appendChild(resetBtn);
+            container.parentNode.insertBefore(btnDiv, container.nextSibling);
+        }
+        
+        // attach event listeners
+        function bindEvents() {
+            const enrollBtn = document.getElementById("enrollBtn");
+            const verifyBtn = document.getElementById("verifyBtn");
+            const enrollNameInput = document.getElementById("enrollName");
+            
+            if(enrollBtn) {
+                enrollBtn.onclick = async () => {
+                    const name = enrollNameInput.value;
+                    if(!name.trim()) {
+                        showMessage("Please enter a name before enrollment.", "error");
+                        return;
+                    }
+                    await enrollFingerprint(name);
+                    enrollNameInput.value = "";   // clear for next
+                };
+            }
+            
+            if(verifyBtn) {
+                verifyBtn.onclick = async () => {
+                    const select = document.getElementById("verifyUserSelect");
+                    const selectedId = select.value;
+                    if(!selectedId) {
+                        showMessage("Please select a user from the dropdown.", "error");
+                        return;
+                    }
+                    await verifyFingerprint(selectedId);
+                };
+            }
+            
+            // allow enter key on name field
+            if(enrollNameInput) {
+                enrollNameInput.addEventListener("keypress", (e) => {
+                    if(e.key === "Enter") enrollBtn.click();
+                });
+            }
+        }
+        
+        // init
+        function init() {
+            checkWebAuthnSupport();
+            loadUsersFromStorage();
+            bindEvents();
+            addAdminControls();
+            // if no platform authenticator, alert but still work in some hybrid
+            if(window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+                PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(available => {
+                    if(!available) {
+                        showMessage("ℹ️ Note: Your device might not have a built-in fingerprint sensor. External security key might work.", "info");
+                    }
+                }).catch(()=>{});
+            }
+        }
+        
+        init();
+    })();
+</script>
+</body>
+</html>

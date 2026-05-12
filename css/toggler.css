@@ -1,0 +1,37 @@
+.toggle-switch{
+    display: flex;
+    height:30px;
+    width:100%;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-size: 14px;
+}
+
+.toggler{
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width:50px;
+    height:25px;
+    background: blue;
+    border-radius: 25px;
+    margin: 0 1rem;
+    position: relative;
+}
+
+.toggler::before{
+    content: "";
+    width:16px;
+    height: 16px;
+    background:#fff;
+    position: absolute;
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+    right:4px;
+}
+
+.toggler:checked:before{
+    right:55%
+}

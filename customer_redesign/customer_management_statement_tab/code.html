@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Customer Statement - ServicePoint POS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#1a1c1e",
+                        "on-tertiary-fixed-variant": "#7c2e00",
+                        "on-primary-container": "#fefcff",
+                        "inverse-primary": "#adc7ff",
+                        "on-primary-fixed": "#001a41",
+                        "surface-tint": "#005bc0",
+                        "tertiary-fixed-dim": "#ffb695",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed": "#351000",
+                        "secondary-container": "#db313f",
+                        "error": "#ba1a1a",
+                        "secondary-fixed-dim": "#ffb3b1",
+                        "secondary": "#b7102a",
+                        "inverse-on-surface": "#f0f0f3",
+                        "on-secondary-container": "#fffbff",
+                        "surface-variant": "#e2e2e5",
+                        "primary": "#0059bb",
+                        "inverse-surface": "#2f3133",
+                        "surface-container-low": "#f3f3f6",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#d8e2ff",
+                        "on-tertiary-container": "#fffbff",
+                        "primary-fixed-dim": "#adc7ff",
+                        "surface-container-high": "#e8e8ea",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#c64f00",
+                        "surface-bright": "#f9f9fc",
+                        "on-surface-variant": "#414754",
+                        "on-error": "#ffffff",
+                        "surface-container-highest": "#e2e2e5",
+                        "surface": "#f9f9fc",
+                        "on-secondary-fixed": "#410007",
+                        "primary-container": "#0070ea",
+                        "tertiary": "#9e3d00",
+                        "surface-dim": "#dadadc",
+                        "surface-container-lowest": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#eeeef0",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#92001c",
+                        "on-primary-fixed-variant": "#004493",
+                        "background": "#f9f9fc",
+                        "on-background": "#1a1c1e",
+                        "outline": "#717786",
+                        "tertiary-fixed": "#ffdbcc",
+                        "secondary-fixed": "#ffdad8",
+                        "outline-variant": "#c1c6d7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "sm": "8px",
+                        "gutter": "20px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "2xl": "48px",
+                        "xs": "4px",
+                        "margin": "24px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Manrope"],
+                        "h1": ["Manrope"],
+                        "body-lg": ["Inter"],
+                        "h2": ["Manrope"],
+                        "body-sm": ["Inter"],
+                        "h3": ["Manrope"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "h1": ["32px", {"lineHeight": "1.25", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h2": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "h3": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f9f9fc;
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface antialiased">
+<!-- Fixed SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-full w-[280px] border-r border-slate-200 bg-white shadow-sm flex flex-col p-4">
+<div class="mb-8 px-4 flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined">storefront</span>
+</div>
+<div>
+<h1 class="text-xl font-bold tracking-tight text-primary leading-none">ServicePoint POS</h1>
+<p class="text-xs text-slate-500 mt-1">Management Console</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<!-- Navigation Items from JSON -->
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-blue-600 bg-blue-50 font-semibold rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span>
+<span class="font-label-md text-label-md">Customers</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-label-md">Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-label-md text-label-md">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Reports</span>
+</a>
+</nav>
+<div class="border-t border-slate-100 pt-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</aside>
+<!-- Main Canvas Area -->
+<main class="ml-[280px] min-h-screen flex flex-col">
+<!-- TopNavBar Shell -->
+<header class="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md flex justify-between items-center h-16 px-8">
+<div class="flex items-center gap-4">
+<h2 class="text-lg font-bold text-slate-900">Customer Directory</h2>
+<div class="h-6 w-px bg-slate-200"></div>
+<div class="flex items-center bg-slate-100 rounded-lg px-3 py-1.5 w-64">
+<span class="material-symbols-outlined text-slate-400 text-sm">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-slate-400" placeholder="Find customer..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors">
+<span class="material-symbols-outlined">apps</span>
+</button>
+<div class="h-8 w-px bg-slate-200 mx-2"></div>
+<button class="bg-primary text-white font-label-md text-label-md px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-primary-container transition-all">
+<span class="material-symbols-outlined text-sm">person_add</span>
+                    Add Customer
+                </button>
+<img alt="Administrator Profile" class="w-8 h-8 rounded-full border border-slate-200" data-alt="professional portrait of a confident male business administrator with short dark hair and a friendly smile in office lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCX1In9J2ttp4cvhVarQmAbo7YnCIlyDYeS8H3ST6JR6opFUzbpzoHibsH_IJ8PWi5Dxygj4mcZHCcyMKDvdlCFRprpKN1Gl0AHVMy8IFbny3bOgWmeDF4HGLkgMf9FsnaVH3kSJ2RgtzyBtj1UPNnx-i5qM5Blb7J6GlfLipkuq4VByHmSMSEZaT2ZVaakCTyrH06MJ6El65tVv_y4EhTNQ_kxYzxdMwMWCeGmV7KfVkM41o9e5E8-OtLwqS4oPv4ySdcl2E_1_A4"/>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-8 max-w-7xl mx-auto w-full space-y-6">
+<!-- Context Tab Navigation -->
+<div class="flex items-center border-b border-slate-200 mb-6">
+<a class="px-6 py-3 font-label-md text-label-md text-slate-500 border-b-2 border-transparent hover:text-slate-900 transition-all" href="#">Biodata</a>
+<a class="px-6 py-3 font-label-md text-label-md text-slate-500 border-b-2 border-transparent hover:text-slate-900 transition-all" href="#">Discounts</a>
+<a class="px-6 py-3 font-label-md text-label-md text-slate-500 border-b-2 border-transparent hover:text-slate-900 transition-all" href="#">Payment</a>
+<a class="px-6 py-3 font-label-md text-label-md text-primary border-b-2 border-primary font-bold" href="#">Statement</a>
+</div>
+<!-- Report Header Filters -->
+<div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+<div>
+<label class="block font-label-sm text-label-sm text-slate-500 mb-2">Start Date</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">calendar_today</span>
+<input class="w-full pl-10 border-slate-200 rounded-lg text-sm focus:border-primary focus:ring-primary/20" type="date" value="2023-10-01"/>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-slate-500 mb-2">End Date</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">calendar_today</span>
+<input class="w-full pl-10 border-slate-200 rounded-lg text-sm focus:border-primary focus:ring-primary/20" type="date" value="2023-10-31"/>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-slate-500 mb-2">Statement Type</label>
+<select class="w-full border-slate-200 rounded-lg text-sm focus:border-primary focus:ring-primary/20">
+<option>Consolidated Statement</option>
+<option>Outstanding Invoices Only</option>
+<option>Transaction Detailed</option>
+</select>
+</div>
+<div>
+<button class="w-full bg-slate-900 text-white font-label-md text-label-md px-6 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-slate-800 transition-all">
+<span class="material-symbols-outlined text-sm">sync</span>
+                            Generate Report
+                        </button>
+</div>
+</div>
+</div>
+<!-- Customer & Balance Summary Asymmetric Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Customer Info Card -->
+<div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+<div class="p-6 bg-slate-50 border-b border-slate-100 flex justify-between items-start">
+<div>
+<span class="text-[10px] font-bold text-primary tracking-widest uppercase mb-1 block">Account #100293</span>
+<h3 class="text-h2 font-h2 text-slate-900">John Doe Enterprise</h3>
+</div>
+<div class="flex gap-2">
+<button class="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-primary transition-all">
+<span class="material-symbols-outlined text-sm">print</span>
+</button>
+<button class="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-primary transition-all">
+<span class="material-symbols-outlined text-sm">mail</span>
+</button>
+</div>
+</div>
+<div class="p-6 grid grid-cols-2 gap-y-4 gap-x-8">
+<div>
+<label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Billing Address</label>
+<p class="text-body-sm font-body-sm text-slate-600 leading-relaxed">
+                                742 Evergreen Terrace<br/>Vipingo, Kilifi County<br/>Kenya
+                            </p>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Contact Details</label>
+<div class="space-y-1">
+<p class="text-body-sm font-body-sm text-slate-600 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-slate-400">phone</span>
+                                    +254 700 000 000
+                                </p>
+<p class="text-body-sm font-body-sm text-slate-600 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-slate-400">alternate_email</span>
+                                    billing@johndoe.ent
+                                </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Balance Summary Card -->
+<div class="bg-primary text-white rounded-xl border border-primary p-6 shadow-lg shadow-primary/10 flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+<div>
+<h4 class="font-label-md text-label-md text-white/80 mb-6">Current Balance Summary</h4>
+<div class="space-y-3">
+<div class="flex justify-between items-center text-body-sm font-body-sm text-white/70">
+<span>Opening Balance</span>
+<span>$1,240.00</span>
+</div>
+<div class="flex justify-between items-center text-body-sm font-body-sm text-white/70">
+<span>Total Invoices (+)</span>
+<span>$4,500.00</span>
+</div>
+<div class="flex justify-between items-center text-body-sm font-body-sm text-white/70">
+<span>Total Payments (-)</span>
+<span>($3,200.00)</span>
+</div>
+<div class="pt-3 border-t border-white/20 flex justify-between items-end">
+<span class="font-label-md text-label-md text-white/90">Closing Balance</span>
+<span class="text-h2 font-h2">$2,540.00</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Transaction Table -->
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+<div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+<h3 class="font-h3 text-h3 text-slate-900">Transaction History</h3>
+<div class="flex items-center gap-2 text-xs font-medium text-slate-500 bg-slate-50 px-3 py-1 rounded-full">
+<div class="w-2 h-2 rounded-full bg-green-500"></div>
+                        Statement is up to date
+                    </div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-slate-50 border-b border-slate-200">
+<tr>
+<th class="px-6 py-4 font-label-md text-label-md text-slate-600">Date</th>
+<th class="px-6 py-4 font-label-md text-label-md text-slate-600">Reference</th>
+<th class="px-6 py-4 font-label-md text-label-md text-slate-600">Narrative</th>
+<th class="px-6 py-4 font-label-md text-label-md text-slate-600 text-right">Invoice</th>
+<th class="px-6 py-4 font-label-md text-label-md text-slate-600 text-right">Payment</th>
+<th class="px-6 py-4 font-label-md text-label-md text-slate-600 text-right">Balance</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100">
+<tr>
+<td class="px-6 py-4 text-body-sm font-body-sm text-slate-500">Oct 01, 2023</td>
+<td class="px-6 py-4 text-body-sm font-body-sm font-semibold text-slate-900">OB-2023</td>
+<td class="px-6 py-4 text-body-sm font-body-sm text-slate-600">Opening Balance Carried Forward</td>
+<td class="px-6 py-4 text-body-sm font-body-sm text-right">-</td>
+<td class="px-6 py-4 text-body-sm font-body-sm text-right">-</td>
+<td class="px-6 py-4 text-body-sm font-body-sm text-right font-semibold">$1,240.00</td>
+</tr>
+<tr>
+<td class="px-6 py-4 text-body-sm font-body-sm text-slate-500">Oct 05, 2023</td>
+<td class="px-6 py-4 text-body-sm font-body-sm font-semibold text-slate-900">INV-8821</td>
+<td class="px-6 py-4 text-body-sm font-body-sm text-slate-600">Service Fee - Monthly Maintenance</td>
+<td class="px-6 py-4 text-body-sm font-body-sm text-right">$2,500.00</td>
+<td class="px-6 py-4 text-body-sm font-body-sm text-right">-</td>
+<td class="px-6 py-4 text-body-sm font-body-sm text-right font-semibold">$3,740.00</td>
+</tr>
+<tr>
+<td class="px-6 py-4 text-body-sm font-body-sm text-slate-500">Oct 12, 2023</td>
+<td class="px-6 py-4 text-body-sm font-body-sm font-semibold text-slate-900">RCT-5510</td>
+<td class="px-6 py-4 text-body-sm font-body-sm text-slate-600">Bank Transfer - Settlement</td>
+<td class="px-6 py-4 text-body-sm font-body-sm text-right">-</td>
+<td class="px-6 py-4 text-body-sm font-body-sm text-right text-emerald-600">($3,200.00)</td>
+<td class="px-6 py-4 text-body-sm font-body-sm text-right font-semibold">$540.00</td>
+</tr>
+<tr>
+<td class="px-6 py-4 text-body-sm font-body-sm text-slate-500">Oct 28, 2023</td>
+<td class="px-6 py-4 text-body-sm font-body-sm font-semibold text-slate-900">INV-8954</td>
+<td class="px-6 py-4 text-body-sm font-body-sm text-slate-600">Inventory Purchase - Hardware</td>
+<td class="px-6 py-4 text-body-sm font-body-sm text-right">$2,000.00</td>
+<td class="px-6 py-4 text-body-sm font-body-sm text-right">-</td>
+<td class="px-6 py-4 text-body-sm font-body-sm text-right font-semibold">$2,540.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Customer Aging Analysis -->
+<div class="bg-slate-100 rounded-xl border border-slate-200 p-6">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-slate-500">query_stats</span>
+<h3 class="font-h3 text-h3 text-slate-900">Aging Analysis</h3>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+<div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+<label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">0-30 Days</label>
+<p class="text-h3 font-h3 text-slate-900">$2,000.00</p>
+</div>
+<div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+<label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">31-60 Days</label>
+<p class="text-h3 font-h3 text-slate-900">$540.00</p>
+</div>
+<div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+<label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">61-90 Days</label>
+<p class="text-h3 font-h3 text-slate-900">$0.00</p>
+</div>
+<div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+<label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">91-120 Days</label>
+<p class="text-h3 font-h3 text-slate-900">$0.00</p>
+</div>
+<div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+<label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">120+ Days</label>
+<p class="text-h3 font-h3 text-slate-900">$0.00</p>
+</div>
+<div class="bg-primary p-4 rounded-lg border border-primary/20 shadow-md">
+<label class="block text-[10px] font-bold text-white/70 uppercase tracking-wider mb-1">Total Outstanding</label>
+<p class="text-h3 font-h3 text-white">$2,540.00</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

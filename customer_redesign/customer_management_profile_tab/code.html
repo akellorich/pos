@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Customer Management | Vipingo Meridian</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface": "#f9f9fc",
+                    "on-tertiary-fixed": "#351000",
+                    "on-primary": "#ffffff",
+                    "on-tertiary-container": "#fffbff",
+                    "tertiary-fixed": "#ffdbcc",
+                    "surface-container-highest": "#e2e2e5",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-fixed-variant": "#7c2e00",
+                    "on-background": "#1a1c1e",
+                    "on-secondary-fixed-variant": "#92001c",
+                    "tertiary-container": "#c64f00",
+                    "tertiary": "#9e3d00",
+                    "outline-variant": "#c1c6d7",
+                    "surface-tint": "#005bc0",
+                    "primary-fixed": "#d8e2ff",
+                    "inverse-surface": "#2f3133",
+                    "secondary-fixed-dim": "#ffb3b1",
+                    "inverse-on-surface": "#f0f0f3",
+                    "on-surface-variant": "#414754",
+                    "on-error-container": "#93000a",
+                    "primary-container": "#0070ea",
+                    "on-primary-fixed": "#001a41",
+                    "on-primary-container": "#fefcff",
+                    "on-surface": "#1a1c1e",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#e8e8ea",
+                    "secondary": "#b7102a",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed": "#ffdad8",
+                    "on-secondary-fixed": "#410007",
+                    "background": "#f9f9fc",
+                    "tertiary-fixed-dim": "#ffb695",
+                    "secondary-container": "#db313f",
+                    "on-tertiary": "#ffffff",
+                    "surface-variant": "#e2e2e5",
+                    "surface-dim": "#dadadc",
+                    "outline": "#717786",
+                    "error": "#ba1a1a",
+                    "surface-container-low": "#f3f3f6",
+                    "surface-container": "#eeeef0",
+                    "primary": "#0059bb",
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#adc7ff",
+                    "primary-fixed-dim": "#adc7ff",
+                    "on-primary-fixed-variant": "#004493",
+                    "surface-bright": "#f9f9fc",
+                    "on-secondary-container": "#fffbff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.5rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "16px",
+                    "margin": "24px",
+                    "gutter": "20px",
+                    "sm": "8px",
+                    "xl": "32px",
+                    "xs": "4px",
+                    "lg": "24px",
+                    "2xl": "48px",
+                    "unit": "4px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Manrope"],
+                    "label-sm": ["Inter"],
+                    "label-md": ["Inter"],
+                    "h1": ["Manrope"],
+                    "body-sm": ["Inter"],
+                    "h3": ["Manrope"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "h2": ["Manrope"]
+            },
+            "fontSize": {
+                    "display-lg": ["48px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "label-md": ["14px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "h1": ["32px", {"lineHeight": "1.25", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "h3": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "h2": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}]
+          }
+        },
+      }
+    }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .brand-font { font-family: 'Manrope', sans-serif; }
+        .tab-active { border-bottom: 2px solid #0059bb; color: #0059bb; font-weight: 600; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased">
+<!-- SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-full w-[280px] border-r border-slate-200 bg-slate-50 flex flex-col gap-2 p-4 z-50">
+<div class="mb-8 px-4 py-2">
+<h2 class="text-lg font-black text-blue-600">Meridian POS</h2>
+<p class="text-xs text-slate-500 font-medium">Vipingo Branch</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="text-slate-600 px-4 py-3 hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-medium">Dashboard</span>
+</a>
+<a class="text-slate-600 px-4 py-3 hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-medium">Inventory</span>
+</a>
+<a class="text-slate-600 px-4 py-3 hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span class="font-medium">Sales</span>
+</a>
+<a class="bg-blue-50 text-blue-700 font-bold rounded-lg border-l-4 border-blue-600 px-4 py-3 flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="group" style="font-variation-settings: 'FILL' 1;">group</span>
+<span class="font-medium">Customers</span>
+</a>
+<a class="text-slate-600 px-4 py-3 hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-medium">Reports</span>
+</a>
+</nav>
+<div class="mt-auto space-y-1 border-t border-slate-200 pt-4">
+<a class="text-slate-600 px-4 py-3 hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="contact_support">contact_support</span>
+<span class="font-medium">Support</span>
+</a>
+<a class="text-slate-600 px-4 py-3 hover:bg-slate-100 rounded-lg flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-medium">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-[280px] min-h-screen">
+<!-- TopNavBar Shell -->
+<header class="sticky top-0 z-40 flex items-center justify-between px-6 h-16 w-full bg-white border-b border-slate-200 shadow-sm">
+<div class="flex items-center gap-4">
+<h1 class="text-xl font-bold tracking-tight text-slate-900">Vipingo Meridian</h1>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative group">
+<span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+<span class="material-symbols-outlined text-[20px]" data-icon="search">search</span>
+</span>
+<input class="pl-10 pr-4 py-2 bg-slate-50 border-none rounded-full text-sm w-64 focus:ring-2 focus:ring-blue-600/20 transition-all" placeholder="Quick search..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors active:scale-95 duration-150">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors active:scale-95 duration-150">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-slate-200 overflow-hidden border border-slate-300">
+<img alt="Store Manager Avatar" class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBBsU-nh7KWaOb3B3tNcucf4fIOjCEVNlBMQWlnpgcJHrskDNxbNqOI0Icu9NZxVzF5l4zX9WBTwrmP8cWrQiQD2amm8yrqisCkZwKdssbznO1LhVYRIrn_DQla5o4OYuexu28BTBkDkUA0-pXxqnbyZ7FtlWXgRpem9SkqejYEQYGXY4DaoskgneB43f5AF-lqxR2O74m4Ln7ST0SMMIeYWonEk-z3q_nFIAQzbNQFNe2unYzjWkE5ER_TLzARhaFSCJANwg2pXI"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="p-lg">
+<!-- Header -->
+<div class="mb-lg flex justify-between items-end">
+<div>
+<h2 class="font-h2 text-h2 text-slate-900">Customer Management</h2>
+<p class="font-body-sm text-body-sm text-slate-500">Create and manage customer profiles and financial settings</p>
+</div>
+<div class="flex gap-md">
+<button class="flex items-center gap-2 px-md py-2 border border-slate-200 rounded-lg bg-white text-slate-700 font-medium hover:bg-slate-50 active:scale-[0.98] transition-transform shadow-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="cancel">cancel</span>
+                        Discard
+                    </button>
+<button class="flex items-center gap-2 px-xl py-2 bg-primary text-white rounded-lg font-semibold hover:brightness-110 active:scale-[0.98] transition-transform shadow-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="save">save</span>
+                        Save Customer
+                    </button>
+</div>
+</div>
+<!-- Tabbed Interface -->
+<div class="flex border-b border-slate-200 mb-lg">
+<button class="tab-active pb-3 px-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="badge">badge</span>
+                    Biodata
+                </button>
+<button class="text-slate-500 font-medium pb-3 px-6 hover:bg-slate-50 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="percent">percent</span>
+                    Discounts
+                </button>
+<button class="text-slate-500 font-medium pb-3 px-6 hover:bg-slate-50 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="payments">payments</span>
+                    Payment
+                </button>
+<button class="text-slate-500 font-medium pb-3 px-6 hover:bg-slate-50 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="receipt_long">receipt_long</span>
+                    Statement
+                </button>
+</div>
+<!-- Main Form Layout -->
+<div class="grid grid-cols-12 gap-lg">
+<!-- Left Panel -->
+<div class="col-span-8 space-y-lg">
+<!-- General Information -->
+<div class="bg-white border border-slate-200 rounded-xl p-lg shadow-sm">
+<h3 class="font-h3 text-h3 text-slate-800 mb-md flex items-center gap-2">
+<span class="material-symbols-outlined text-blue-600" data-icon="person">person</span>
+                            General Information
+                        </h3>
+<div class="flex gap-lg items-start">
+<!-- Photo Section -->
+<div class="flex-shrink-0">
+<div class="w-32 h-[124px] rounded-xl bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center group hover:border-primary/50 transition-colors cursor-pointer relative overflow-hidden">
+<span class="material-symbols-outlined text-slate-400 text-[32px] group-hover:text-primary" data-icon="add_a_photo">add_a_photo</span>
+<p class="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-tighter">Customer Photo</p>
+</div>
+</div>
+<!-- Form Fields -->
+<div class="flex-1 grid grid-cols-2 gap-md">
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Category</label>
+<select class="w-full border-slate-200 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary h-[48px]">
+<option>Wholesale Customer</option>
+<option>Retail Customer</option>
+<option>Corporate Client</option>
+</select>
+</div>
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Home Outlet</label>
+<select class="w-full border-slate-200 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary h-[48px]">
+<option>Vipingo Meridian Main</option>
+<option>North Coast Branch</option>
+</select>
+</div>
+<div class="col-span-2 space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Customer Name</label>
+<input class="w-full border-slate-200 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary h-[48px]" placeholder="Full legal name" type="text"/>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-md mt-md">
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Trading Name</label>
+<input class="w-full border-slate-200 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary h-[48px]" placeholder="Business or alias name" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-sm">
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">ID Number</label>
+<input class="w-full border-slate-200 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary h-[48px]" type="text"/>
+</div>
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">PIN Number</label>
+<input class="w-full border-slate-200 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary h-[48px]" type="text"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Address & Contact -->
+<div class="bg-white border border-slate-200 rounded-xl p-lg shadow-sm">
+<h3 class="font-h3 text-h3 text-slate-800 mb-md flex items-center gap-2">
+<span class="material-symbols-outlined text-blue-600" data-icon="location_on">location_on</span>
+                            Address &amp; Contact
+                        </h3>
+<div class="grid grid-cols-2 gap-md">
+<div class="col-span-2 space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Physical Address</label>
+<textarea class="w-full border-slate-200 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary" rows="2"></textarea>
+</div>
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Postal Address</label>
+<input class="w-full border-slate-200 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary h-[48px]" type="text"/>
+</div>
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Mobile</label>
+<input class="w-full border-slate-200 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary h-[48px]" placeholder="+254..." type="tel"/>
+</div>
+<div class="col-span-2 space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Email</label>
+<input class="w-full border-slate-200 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary h-[48px]" placeholder="example@domain.com" type="email"/>
+</div>
+</div>
+</div>
+<!-- Associated Contacts -->
+</div>
+<!-- Right Sidebar Panel -->
+<div class="col-span-4">
+<div class="bg-white border border-slate-200 rounded-xl p-lg shadow-sm sticky top-20">
+<h3 class="font-h3 text-h3 text-slate-800 mb-lg flex items-center gap-2 pb-md border-b border-slate-100">
+<span class="material-symbols-outlined text-blue-600" data-icon="account_balance">account_balance</span>
+                            Account &amp; Financial Settings
+                        </h3>
+<div class="space-y-xl">
+<!-- Account Controls -->
+<div class="space-y-md">
+<div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+<div>
+<p class="text-sm font-bold text-slate-700">One-time Customer</p>
+<p class="text-[10px] text-slate-500 uppercase font-semibold">Do not save history</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="grid grid-cols-2 gap-sm">
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Main Zone</label>
+<select class="w-full border-slate-200 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary h-[44px]">
+<option>Coastal Region</option>
+<option>Central Region</option>
+</select>
+</div>
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Sub Zone</label>
+<select class="w-full border-slate-200 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary h-[44px]">
+<option>Kilifi North</option>
+<option>Kilifi South</option>
+</select>
+</div>
+</div>
+</div>
+<hr class="border-slate-100"/>
+<!-- Credit & Finance -->
+<div class="space-y-md">
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Opening Balance</label>
+<div class="relative">
+<span class="absolute left-3 top-3 text-[10px] text-slate-400 font-bold">KES</span>
+<input class="w-full pl-12 border-slate-200 rounded-lg text-body-md font-bold focus:border-primary focus:ring-1 focus:ring-primary h-[44px]" placeholder="0.00" type="number"/>
+</div>
+</div>
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Credit Limit</label>
+<div class="relative">
+<span class="absolute left-3 top-3 text-[10px] text-slate-400 font-bold">KES</span>
+<input class="w-full pl-12 border-slate-200 rounded-lg text-body-md font-bold focus:border-primary focus:ring-1 focus:ring-primary h-[44px]" placeholder="50,000.00" type="number"/>
+</div>
+</div>
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Credit Terms</label>
+<select class="w-full border-slate-200 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary h-[44px]">
+<option>Net 30 Days</option>
+<option>Net 15 Days</option>
+<option>Cash on Delivery</option>
+</select>
+</div>
+</div>
+<div class="pt-4">
+<div class="p-3 bg-blue-50 border border-blue-100 rounded-lg">
+<p class="text-xs font-bold text-blue-700 mb-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="info">info</span>
+                                        Processing Consent
+                                    </p>
+<label class="flex items-start gap-2 cursor-pointer">
+<input checked="" class="mt-1 rounded border-blue-300 text-primary focus:ring-primary" type="checkbox"/>
+<span class="text-[10px] text-blue-800 leading-tight">Customer has consented to the storage and processing of personal data as per our Privacy Policy.</span>
+</label>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mt-lg">
+<div class="p-lg border-b border-slate-100 flex justify-between items-center">
+<h3 class="font-h3 text-h3 text-slate-800 flex items-center gap-2">
+<span class="material-symbols-outlined text-blue-600" data-icon="contacts">contacts</span>
+                                Associated Contacts
+                            </h3>
+<button class="text-primary font-bold text-sm flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-[18px]" data-icon="add_circle">add_circle</span>
+                                Add New Contact
+                            </button>
+</div>
+<!-- Quick Add Row -->
+<div class="p-md bg-slate-50 grid grid-cols-12 gap-2 border-b border-slate-100">
+<div class="col-span-2">
+<select class="w-full text-xs border-slate-200 rounded bg-white h-9"><option>Category</option></select>
+</div>
+<div class="col-span-3">
+<input class="w-full text-xs border-slate-200 rounded h-9" placeholder="Contact Name" type="text"/>
+</div>
+<div class="col-span-2">
+<input class="w-full text-xs border-slate-200 rounded h-9" placeholder="ID Number" type="text"/>
+</div>
+<div class="col-span-2">
+<input class="w-full text-xs border-slate-200 rounded h-9" placeholder="Mobile" type="tel"/>
+</div>
+<div class="col-span-3 flex gap-2">
+<button class="flex-1 bg-primary text-white font-bold rounded text-xs py-2 hover:brightness-110">Quick Add</button>
+</div>
+</div>
+<table class="w-full text-left">
+<thead class="bg-slate-50 border-b border-slate-200">
+<tr>
+<th class="px-md py-3 text-xs font-bold text-slate-500 uppercase">Category</th>
+<th class="px-md py-3 text-xs font-bold text-slate-500 uppercase">Names</th>
+<th class="px-md py-3 text-xs font-bold text-slate-500 uppercase">ID Number</th>
+<th class="px-md py-3 text-xs font-bold text-slate-500 uppercase">Contact Info</th>
+<th class="px-md py-3 text-xs font-bold text-slate-500 uppercase text-center">ID Copy</th>
+<th class="px-md py-3 text-xs font-bold text-slate-500 uppercase text-center">Consent</th>
+<th class="px-md py-3 text-xs font-bold text-slate-500 uppercase text-center">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100">
+<tr>
+<td class="px-md py-4"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">Billing</span></td>
+<td class="px-md py-4 text-sm font-semibold">Jane Doe</td>
+<td class="px-md py-4 text-sm font-mono text-slate-600">12345678</td>
+<td class="px-md py-4">
+<div class="text-xs font-medium text-slate-900">+254 712 345 678</div>
+<div class="text-[10px] text-slate-500">jane.doe@example.com</div>
+</td>
+<td class="px-md py-4 text-center">
+<button class="p-1.5 text-slate-400 hover:text-primary transition-colors border border-slate-200 rounded-md" title="Upload ID Copy">
+<span class="material-symbols-outlined text-[18px]" data-icon="upload_file">upload_file</span>
+</button>
+</td>
+<td class="px-md py-4 text-center">
+<input checked="" class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/>
+</td>
+<td class="px-md py-4"><div class="flex items-center justify-center gap-2 relative">
+<button class="p-1.5 text-slate-400 hover:text-primary transition-colors border border-slate-200 rounded-md" title="Actions">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+<div class="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-xl z-50 overflow-hidden py-1">
+<button class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined text-slate-400 text-[18px]">edit</span>
+<span>Edit</span>
+</button>
+<button class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined text-slate-400 text-[18px]">assignment_turned_in</span>
+<span>Consent Signed</span>
+</button>
+<button class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined text-slate-400 text-[18px]">fingerprint</span>
+<span>Enroll Biometrics</span>
+</button>
+<hr class="my-1 border-slate-100"/>
+<button class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+<span class="material-symbols-outlined text-red-400 text-[18px]">delete</span>
+<span class="font-medium">Delete</span>
+</button>
+</div></div></td>
+</tr>
+<tr>
+<td class="px-md py-4"><span class="bg-amber-50 text-amber-700 px-2 py-1 rounded text-xs font-bold">Receiving</span></td>
+<td class="px-md py-4 text-sm font-semibold">John Smith</td>
+<td class="px-md py-4 text-sm font-mono text-slate-600">87654321</td>
+<td class="px-md py-4">
+<div class="text-xs font-medium text-slate-900">+254 723 456 789</div>
+<div class="text-[10px] text-slate-500">j.smith@procurement.co.ke</div>
+</td>
+<td class="px-md py-4 text-center">
+<button class="p-1.5 text-primary border border-primary/20 bg-primary/5 rounded-md" title="ID Copy Uploaded">
+<span class="material-symbols-outlined text-[18px]" data-icon="file_present">file_present</span>
+</button>
+</td>
+<td class="px-md py-4 text-center">
+<input class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/>
+</td>
+<td class="px-md py-4"><div class="flex items-center justify-center gap-2 relative">
+<button class="p-1.5 text-primary bg-primary/10 border border-primary/20 rounded-md" title="Actions">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</body></html>

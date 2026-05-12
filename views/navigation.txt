@@ -1,0 +1,146 @@
+ <nav class="navbar navbar-icon-top navbar-expand-lg navbar-dark bg-dark">
+  <a class="navbar-brand" href="#">
+    <span id='companyname'></span>
+  </a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="main.php">
+          <i class="fa fa-home"></i>Home
+          <span class="sr-only">(current)</span>
+          </a>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <i class="fa fa-users"></i>
+          People
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item validation" href="customerdetails.php" id="1">Customers</a><!--  -->
+          <a class="dropdown-item validation" href="supplierdetails.php" id="3">Suppliers</a>
+          <!-- <div class="dropdown-divider"></div> -->
+          <a class="dropdown-item validation" href="usersmanager.php" id="5">Users</a>
+        </div>
+      </li>
+
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <i class="fa fa-hand-holding-usd"></i>
+          Transact
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item validation" href="makesales.php" id="9">Sales</a>
+          <a class="dropdown-item validation" href="purchaseslist.php" id="11">Purchases</a>
+          <a class="dropdown-item validation" href="receiveitems.php" id="12">Receive Items</a>
+          <a class="dropdown-item validation" href="invoicedetails.php" id="30">Supplier Invoice</a>
+          <a class="dropdown-item validation" href="quotations.php" id="11">Quotations</a>
+          <a class="dropdown-item validation" href="transferslist.php" id="13">Transfers</a>
+          <a class="dropdown-item validation" href="creditnotedetails.php" id="20">Credit Notes</a>
+          <a class="dropdown-item validation" href="returninwards.php" id="46">Return Inwards</a>
+          <a class="dropdown-item validation" href="returnoutwards.php" id="47">Return Outwards</a>
+          <a class="dropdown-item validation" href="addcrates.php" id="41">Add Crates</a> 
+          <a class="dropdown-item validation" href="stockreconciliation.php" id="45">Stock Reconciliation</a> 
+          <a class="dropdown-item validation" href="fuelrequisitions.php">Fuel Requisition</a> 
+          <a class="dropdown-item validation" href="spoilage.php" id="20">Spoilage</a>
+        </div>
+      </li>
+
+      
+       <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <i class="fa fa-money-check-alt"></i>
+          Finance
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item validation" href="chartofaccounts.php" id="28">Chart of Accounts</a>
+            <a class="dropdown-item validation" href="banking.php" id="27">Banking</a>
+            <a class="dropdown-item validation" href="paymentslist.php" id="29">Payments</a> 
+            <a class="dropdown-item validation" href="pettycashvouchers.php" id="38">Petty Cash</a>
+            <a class="dropdown-item validation" href="journalentry.php" id="37">Journal Entry</a>
+            <a class="dropdown-item validation" href="cashbooktransfers.php" id="39">Cashbook Transfers</a>
+            <a class="dropdown-item validation" href="customercraterefund.php" id="42">Refund Crate Deposit</a> 
+        </div>
+      </li>
+  
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <i class="fa fa-chart-bar"></i>
+          Reports
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item validation" href="managementdashboard.php">Management Dashboard</a>
+            <a class="dropdown-item validation" href="viewpossales.php" id="21">POS Receipts</a>
+            <a class="dropdown-item validation" href="dailysalesreport.php" id="22">Daily Sales</a>
+             <a class="dropdown-item validation" href="productsummaryreport.php" id="0">Product Summaries</a>
+            <a class="dropdown-item validation" href="productsalessummary.php" id="23">Product Sales</a>
+            <a class="dropdown-item validation" href="productstatement.php" id="49">Product Statement</a>
+             <a class="dropdown-item validation" href="producttransfersreport.php" id="49">Product Transfers</a>
+            <a class="dropdown-item validation" href="masterstocksheetreport.php" id="44">Master Stocksheet</a>
+            <a class="dropdown-item validation" href="profitabilityreport.php" id="24">Profitability </a>
+            <a class="dropdown-item validation" href="discountreport.php" id="43">Discount Report</a>
+            <a class="dropdown-item validation" href="posstocksummary.php" id="25">POS Stock Summary</a>
+            <a class="dropdown-item validation" href="stocklistreport.php" id="26">Stock List</a>
+            <a class="dropdown-item validation" href="glaccountstatement.php" id="31">GL Statement</a>
+            <a class="dropdown-item validation" href="accountspayableaginganalysis.php" id="32">AP Aging Analysis</a>
+            <a class="dropdown-item validation" href="accountsreceivableaginganalysis.php" id="33">AR Aging Analysis</a>
+            <a class="dropdown-item validation" href="trialbalance.php" id="34">Trial Balance</a>
+            <a class="dropdown-item validation" href="profitandlossaccount.php" id="35">P&amp;L Account</a>
+            <a class="dropdown-item validation" href="balancesheet.php" id="36">Balance Sheet Account</a>
+        </div>
+      </li>
+
+
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <i class="fa fa-cogs"></i>
+          Settings
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item validation" href="poslist.php" id="14">Points of Sale</a>
+            <a class="dropdown-item validation" href="categorylist.php" id="16">Product Categories</a>
+            <a class="dropdown-item validation" href="productslist.php" id="18">Products</a>
+            <a class="dropdown-item validation" href="vehicles.php">Vehicles</a>
+            <a class="dropdown-item validation" href="zones.php" id="40">Zones</a>
+            <a class="dropdown-item validation" href="crateinventorysettings.php" id="40">Crate Inventory</a>
+        </div>
+      </li>
+
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <i class="fa fa-user-alt"></i>
+           <span id='loggedinusername'></span>
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="#">Your Profile</a>
+          <a class="dropdown-item" href="changepassword.php">Change Password</a>
+          <a class="dropdown-item" href="../controllers/useroperations.php?logout">Logout</a>
+        </div>
+      </li>
+    </ul>
+    <ul class="navbar-nav ">
+      <li class="nav-item">
+        <a class="nav-link" href="#">
+          <i class="fa fa-bell">
+            <span class="badge badge-info">0</span>
+          </i>
+          Notifications
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">
+          <i class="fa fa-globe">
+          </i>
+          Help
+        </a>
+      </li>
+    </ul>
+    <form class="form-inline my-2 my-lg-0">
+      <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
+      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+    </form>
+  </div>
+</nav>

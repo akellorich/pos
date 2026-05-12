@@ -1,0 +1,43 @@
+
+.ui-icon-myapp-save:after {
+	background-image: url("jqm-custom-icons/svg/save.svg") !important ;
+	background-size: 18px 18px;
+}
+
+.wide{
+	width:88%!important;
+	margin-left:10px!important;
+}
+.narrow{
+	width:8%!important;/**/
+	margin-top:12px!important;
+}
+
+.paymentmode{
+	/*width:15%!important;*/
+	padding-top:15px!important;
+}
+
+.amount{
+	/*margin-right:10px!important;*/
+	margin-right:0px;
+
+}
+
+.reference{
+	/*margin-right:10px!important;*/
+}
+
+.totaltext{
+	margin-top:10px!important;
+	text-align: right!important;
+	font-size: 1.35rem!important;
+}
+
+#amountdue{
+	color: red;
+}
+
+#amountpaid{
+	color:green;
+}

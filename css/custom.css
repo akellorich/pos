@@ -1,0 +1,713 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+.navbar .dropdown-menu {
+  background-color:  rgb(52, 58, 64);
+}
+
+/* and this styles the dropdwon trigger link, when open */
+.navbar .dropdown.show a { 
+  background-color: rgb(52, 58, 64);
+}
+
+.dropdown-menu a:hover { 
+  color: whitesmoke;
+}
+
+.navbar {
+    margin-top: 0px;
+    padding-top: 0px;
+  }
+
+#header h1{
+    margin:0px;
+}
+
+.loginform{
+    width: 450px;
+    margin:auto;
+    padding-top: 50px;
+}
+
+body {
+    padding-top: 0em;
+    font-size: 0.8rem;
+}
+
+.card-body-list{
+  height:calc(100vh - 90px);
+  /*overflow-y:scroll;*/
+}
+
+.card-body-list-withheader{
+  height:calc(100vh - 195px);
+  overflow-y:scroll;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 5px;
+}
+
+.scrollable-y{
+  overflow-y:scroll;
+}
+
+
+.dropdown-menu a{
+  color:rgb(153, 156, 159) !important;
+}
+
+.dropdown-menu a:hover{
+  color:white !important;
+  font-size:0.85rem;
+}
+.dropdown-menu {
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.dropdown-item{
+  font-size: 0.8rem;
+}
+
+ul.searchresults{
+    
+    list-style: none;
+    padding:3px;
+    border: 1px solid lightslategray;
+    margin-top:0px;
+    width:100%;
+   
+}
+
+ul.searchresults li:hover{
+    color:white;
+    background:green;
+}
+
+.scrollable{
+    height:400px;
+    overflow-y:scroll;
+}
+
+#searchproducts{
+    position:absolute; top:60px;
+    background:white;
+    width:93%;
+
+}
+
+.input-prepend input[type=text]{
+   padding-left:40px; 
+}
+
+.input-prepend input[type=password]{
+    padding-left:40px; 
+ }
+
+.input-prepend{
+    position:relative;
+}
+
+.input-prepend i{
+    position:absolute;
+    left:0px;
+    top:4px;
+    padding:9px 8px;
+    color:#aaaa;
+}
+
+.dropdown-menu {
+    max-height: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* format menu with icons */
+.navbar-icon-top .navbar-nav .nav-link > .fa {
+  position: relative;
+  width: 36px;
+  font-size: 24px;
+}
+
+.navbar-icon-top .navbar-nav .nav-link > .fa > .badge {
+  font-size: 0.75rem;
+  position: absolute;
+  right: 0;
+  font-family: sans-serif;
+}
+
+.navbar-icon-top .navbar-nav .nav-link > .fa {
+  top: 3px;
+  line-height: 12px;
+}
+
+.navbar-icon-top .navbar-nav .nav-link > .fa > .badge {
+  top: -10px;
+}
+
+.container-fluid{
+  /* padding-left:0; */
+}
+
+@media (min-width: 576px) {
+  .navbar-icon-top.navbar-expand-sm .navbar-nav .nav-link {
+    text-align: center;
+    display: table-cell;
+    height: 70px;
+    vertical-align: middle;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .navbar-icon-top.navbar-expand-sm .navbar-nav .nav-link > .fa {
+    display: block;
+    width: 48px;
+    margin: 2px auto 4px auto;
+    top: 0;
+    line-height: 24px;
+  }
+
+  .navbar-icon-top.navbar-expand-sm .navbar-nav .nav-link > .fa > .badge {
+    top: -7px;
+  }
+}
+
+@media (min-width: 768px) {
+  .navbar-icon-top.navbar-expand-md .navbar-nav .nav-link {
+    text-align: center;
+    display: table-cell;
+    height: 70px;
+    vertical-align: middle;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .navbar-icon-top.navbar-expand-md .navbar-nav .nav-link > .fa {
+    display: block;
+    width: 48px;
+    margin: 2px auto 4px auto;
+    top: 0;
+    line-height: 24px;
+  }
+
+  .navbar-icon-top.navbar-expand-md .navbar-nav .nav-link > .fa > .badge {
+    top: -7px;
+  }
+}
+
+@media (min-width: 992px) {
+  .navbar-icon-top.navbar-expand-lg .navbar-nav .nav-link {
+    text-align: center;
+    display: table-cell;
+    height: 70px;
+    vertical-align: middle;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .navbar-icon-top.navbar-expand-lg .navbar-nav .nav-link > .fa {
+    display: block;
+    width: 48px;
+    margin: 2px auto 4px auto;
+    top: 0;
+    line-height: 24px;
+  }
+
+  .navbar-icon-top.navbar-expand-lg .navbar-nav .nav-link > .fa > .badge {
+    top: -7px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .navbar-icon-top.navbar-expand-xl .navbar-nav .nav-link {
+    text-align: center;
+    display: table-cell;
+    height: 70px;
+    vertical-align: middle;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .navbar-icon-top.navbar-expand-xl .navbar-nav .nav-link > .fa {
+    display: block;
+    width: 48px;
+    margin: 2px auto 4px auto;
+    top: 0;
+    line-height: 24px;
+  }
+
+  .navbar-icon-top.navbar-expand-xl .navbar-nav .nav-link > .fa > .badge {
+    top: -7px;
+  }
+}
+/* end format menu with icons */
+
+/* format checkbox */ 
+@keyframes check {0% {height: 0;width: 0;}
+25% {height: 0;width: 10px;}
+50% {height: 20px;width: 10px;}
+}
+.checkbox{background-color:#fff;display:inline-block;height:22px;margin:0 .25em;width:22px;border-radius:4px;border:1px solid #ccc;float:right}
+.checkbox span{display:block;height:22px;position:relative;width:22px;padding:0}
+.checkbox span:after{
+  -moz-transform:scaleX(-1) rotate(135deg);
+  -ms-transform:scaleX(-1) rotate(135deg);
+  -webkit-transform:scaleX(-1) rotate(135deg);
+  transform:scaleX(-1) rotate(135deg);
+  -moz-transform-origin:left top;
+  -ms-transform-origin:left top;
+  -webkit-transform-origin:left top;
+  transform-origin:left top;border-right:4px solid #fff;
+  border-top:4px solid #fff;
+  content:'';display:block;
+  height:18px;
+  left:1px;
+  position:absolute;
+  top:10px;
+  width:10px
+}
+.checkbox span:hover:after{border-color:#999}
+.checkbox input{display:none}
+.checkbox input:checked + span:after{-webkit-animation:check .8s;-moz-animation:check .8s;-o-animation:check .8s;animation:check .8s;border-color:#555}
+.checkbox input:checked + .default:after{border-color:#444}
+.checkbox input:checked + .primary:after{border-color:#2196F3}
+.checkbox input:checked + .success:after{border-color:#8bc34a}
+.checkbox input:checked + .info:after{border-color:#3de0f5}
+.checkbox input:checked + .warning:after{border-color:#FFC107}
+.checkbox input:checked + .danger:after{border-color:#f44336}
+
+.list-group-item {
+  padding: 0.5rem 0.5rem;
+}
+
+.scrollableprivilege{
+  height:300px;
+  overflow-y:scroll;
+}
+
+/* end format checkbox */ 
+
+table, select, text, .dropdown-menu, .form-control{
+  font-size:0.9rem;
+  line-height: 1.35rem;
+}
+.navbar-brand{
+  font-size:1rem;
+}
+
+.thumbnail{
+  width:50px;
+  height:30px;
+}
+
+#paymentoptions.table td{
+  border-top: 0px;
+}
+
+.saleamountsummary{
+     display: flex;
+    justify-content: space-between;
+}
+
+.daterangetab ul li{
+  margin:5px;
+  padding-top:5px;
+  display: inline-block;
+  font-size: 1rem;
+  font-weight: 200;
+  width:100px;
+  text-align:center;
+}
+.daterangetab ul{
+  list-style-type: none;
+}
+
+.daterangetab ul li.active{
+  background:rgb(52,58,64);
+  border: 1px solid;
+  border-color: rgb(52,58,64);
+  color:white;
+  font-weight:bold;
+  border-radius:5px;
+}
+
+.dashboard{
+  margin-left:5px;
+}
+
+#dashboardsummary div{
+  display: inline-block;
+}
+.container-fluid .row .card-heading{
+  padding:10px
+}
+.container-fluid .row .card-heading h2{
+  font-size:48px;
+  color: white;
+}
+
+.container-fluid .row .card-heading h4{
+  font-size:0.8rem;
+  font-weight:bold;
+  color: blue;
+  text-align:left;
+  margin: 0px;
+  padding-bottom:10px;
+}
+
+
+.container-fluid .row .card-heading {
+  height:30px;
+  background-color: white; 
+}
+
+.container-fluid .row .card-body h2{
+  font-size:2rem;
+  color: white;
+  text-align:center;
+  margin: 0px;
+}
+
+.container-fluid .row .card-footer {
+  height:30px;
+  background-color: white; 
+  font-size: 0.7rem;
+  border: 0px;
+}
+
+.summarytable-heading{
+  margin-top:20px;
+  font-size:0.8rem;
+  font-weight:bold;
+  color: blue;
+}
+
+.banking h5, .invoice h5{
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.groupedcheckbox{
+  margin-top:2rem;
+}
+
+.parentgroupname{
+  padding-left: 10px;
+}
+
+.subgroupname{
+  padding-left:20px;
+}
+
+.glaccount{
+  padding-left:30px;
+}
+
+.bootbox .modal-header h4 {
+  float: none;
+  font-size: 1.2rem;
+}
+
+.bootbox .modal-header .close {
+  position: absolute;
+  right: 15px;
+}
+
+/* formatting the chart of accounts accordion */
+.myaccordion {
+  max-width: 500px;
+  margin: 10px auto;
+  box-shadow: 0 0 1px rgba(0,0,0,0.1);
+}
+ 
+.myaccordion .card,
+.myaccordion .card:last-child .card-header {
+  border: none;
+}
+ 
+.myaccordion .card-header {
+  border-bottom-color: #EDEFF0;
+  background: transparent;
+  outline: none;
+}
+ 
+.myaccordion .fa-stack {
+  font-size: 15px;
+}
+ 
+.myaccordion .btn {
+  width: 100%;
+  font-weight: bold;
+  color: #004987;
+  padding: 0;
+}
+ 
+.myaccordion .btn-link:hover,
+.myaccordion .btn-link:focus {
+  text-decoration: none;
+}
+ 
+.myaccordion li + li {
+  margin-top: 10px;
+}
+
+#salesbyvalue,#salesbyquantity{
+  width:100%;
+  height:100%;
+}
+
+/* Dashboard gradients */
+#dashboard{
+    color: white;
+    text-align: left;
+}
+
+#dashboard table{
+  color:#000;
+}
+
+#dashboard .blue{
+    /* margin-top:5px;
+    margin-left:5px; */
+    height: 60px;
+    /* width:23%; */
+    background-image: linear-gradient(to right, #a3e0fc, #6387ba); 
+}
+
+#dashboard .image{
+  font-size: 2rem;
+  padding-top: 15px;
+  padding-right: 10px;
+  padding-left: 20px;
+  padding-bottom: 10px
+}
+
+#dashboard .heading{
+  text-align: left;
+  font-size: 1.5em;
+  padding-top: 5px;
+  padding-left: 5px;
+}
+
+#dashboard .subheading{
+  text-align: left;
+  padding-top:5px;
+  font-size:0.7em;
+}
+
+#dashboard .number{
+  padding-left:10px;
+  font-size:1.8rem;
+  text-align: right;
+}
+
+#dashboard .green{
+  /* margin-top:5px; */
+  /* margin-left:5px; */
+  height: 60px;
+  /* width:23%; */
+  background-image: linear-gradient(to right, #9cf1ca, #09b365);
+}
+
+#dashboard .red{
+  /* margin-top:5px; */
+  /* margin-left:5px; */
+  height: 60px;
+  /* width:23%; */
+  background-image: linear-gradient(to right, #fcc5e7, #f00c97);
+}
+
+#dashboard .purple{
+  /* margin-top:5px;
+  margin-left:5px; */
+  height: 60px;
+  /* width:23%; */
+  background-image: linear-gradient(to right, #e7c5f7, #6e288f);
+  /* margin-right:5px; */
+}
+
+#dashboard .sales{
+    margin-top:5px;
+    margin-left:-10px;/**/
+}
+
+#dashboard .card-header{
+  height:30px;
+  padding:5px 5px;
+  color:black;
+}
+
+#dashboard .card-body{
+  height:220px;
+}
+
+.btn-group-xs > .btn, .btn-xs {
+  padding: .25rem .4rem;
+  font-size: .75rem;
+  line-height: .5;
+  border-radius: .2rem;
+}
+#dashboard .col{
+  /* margin-left:5px; */
+  padding-left:10px;
+}
+
+#bestsellingproduct, #bestsellingcategory {
+  color: #444;
+}
+
+#bestsellingproduct .table, #bestsellingcategory .table{
+  font-size: 0.75rem;
+}
+
+#bestsellingproduct .col,#bestsellingcategory .col{
+  margin-top: -15px;
+}
+
+/*format card header to make it small and more attractive*/
+.containergroup .card-header{
+  height:30px;
+  padding:5px 5px;
+}
+
+.containergroup .card-body{
+  padding:0.9rem;
+}
+
+#receiptlist{
+  margin-left:-25px!important;
+}
+
+.containergroup .table{
+  margin-bottom: 0rem;
+  margin-top:0rem;
+}
+
+.containergroup h5{
+  font-size: 0.9rem;
+  font-weight: bolder;
+  color: #09b365;
+}
+
+.table{
+  font-size:0.75rem;
+}
+
+.table-borderless > tbody > tr > td,
+.table-borderless > tbody > tr > th,
+.table-borderless > tfoot > tr > td,
+.table-borderless > tfoot > tr > th,
+.table-borderless > thead > tr > td,
+.table-borderless > thead > tr > th {
+    border: none;
+}
+
+.table-borderless{
+  line-height:0.8rem;
+  font-size:0.8rem;
+}
+
+.scrollablefullheight{
+  height:calc(100vh - 200px);
+  overflow-y:scroll;
+}
+
+/* Center font awesome icons in tables */
+i {
+  font-size:30px;
+}
+
+.block {
+  background-color:#f1f1f1;
+  padding:10px;
+  max-width:400px;
+  text-align:center;
+}
+
+.block-number {
+  background-color:#000;
+  color:#fff;
+  padding:10px;
+  display:inline-block;
+  font-size:20px;
+}
+
+.block > * {
+  vertical-align: middle;
+}
+
+/* End Center font awesome icons in tables */
+
+/* Change background colour of active button group */
+label.active
+{
+  /*color: #333;*/
+  background-color:rgb(220,53,69)!important;
+  border-color:rgb(220,53,69)!important;
+}
+/*
+.list{
+  height:300px;
+}
+*/
+
+.list-small{
+  height: 150px;
+}
+
+/* .list-big{
+  height:100%!important;
+} */
+.filters{
+  height:100px!important
+}
+
+#customerslist, #supplierslist, #materiallist{
+  height:calc(100vh - 230px)!important;
+  outline: none!important;
+  box-shadow: none!important;
+} 
+
+.scrollable-3{
+  height:calc(30vh - 240px)!important;
+  overflow-y:scroll;
+}
+
+
+.scrollable-2{
+  height:calc(50vh - 240px)!important;
+  overflow-y:scroll;
+}
+
+.scrollable-medium{
+  height:calc(100vh - 330px)!important;
+  overflow-y:scroll;
+}
+
+.scrollable-big{
+  height:calc(100vh - 240px)!important;
+  overflow-y:scroll;
+}
+
+.scrollable-report{
+  height:calc(100vh - 180px)!important;
+  overflow-y: scroll;
+  border:1px solid rgb(200, 198, 198);
+  border-radius: 5px;
+}
+
+/* Format Flex Container for heading of customer orders header */
+.flex-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.flex-item-70 {
+  flex: 0 0 80%;
+}
+
+.flex-item-30 {
+  flex: 0 0 20%;
+  display: flex;
+  justify-content:flex-end;
+  align-items: center;
+}

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Program - The Global Forum</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:ital,wght@0,700;1,500&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #0c4ea2;
+            --primary-green: #1e8e4e;
+            --text-dark: #1a1c1e;
+            --text-muted: #64748b;
+            --bg-light: #ffffff;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: #f1f5f9;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 3rem 1rem;
+        }
+
+        .document-page {
+            background: white;
+            width: 100%;
+            max-width: 700px;
+            min-height: 800px;
+            position: relative;
+            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 4px;
+        }
+
+        /* Decorative Header Curves */
+        .header-bg-decoration {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 250px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .curve-blue {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 40%;
+            height: 80%;
+            background: linear-gradient(135deg, #0c4ea2, #1e40af);
+            clip-path: ellipse(100% 120% at 120% 0%);
+            opacity: 0.95;
+        }
+
+        .curve-green {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 42%;
+            height: 90%;
+            background: #1e8e4e;
+            clip-path: ellipse(100% 120% at 120% 0%);
+            opacity: 0.8;
+            z-index: -1;
+        }
+
+        /* Footer Decoration */
+        .footer-decoration {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 200px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .footer-curve-1 {
+            position: absolute;
+            bottom: -150px;
+            left: -100px;
+            width: 600px;
+            height: 500px;
+            background: #0c4ea2;
+            border-radius: 50%;
+            opacity: 0.9;
+        }
+
+        .footer-curve-2 {
+            position: absolute;
+            bottom: -100px;
+            left: -50px;
+            width: 450px;
+            height: 400px;
+            background: #3b82f6;
+            border-radius: 50%;
+            opacity: 0.7;
+        }
+
+        .footer-curve-3 {
+            position: absolute;
+            bottom: -50px;
+            left: 0px;
+            width: 400px;
+            height: 300px;
+            background: #93c5fd;
+            border-radius: 50%;
+            opacity: 0.5;
+        }
+
+        /* Content Wrapper */
+        .content {
+            position: relative;
+            z-index: 10;
+            padding: 2.5rem 3rem 1rem 3rem;
+            flex-grow: 1;
+        }
+
+        /* Header Section */
+        header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 5rem;
+        }
+
+        .logo-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: white;
+            padding: 4px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border: 3px solid #0c4ea2;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-circle img {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+        }
+
+        .header-titles h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #1e293b;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-titles p {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            color: #475569;
+            font-size: 1.15rem;
+            font-weight: 500;
+        }
+
+        /* Program Heading */
+        .program-heading {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .program-heading h2 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #0c4ea2;
+            text-transform: uppercase;
+            margin-bottom: 0;
+            letter-spacing: 3px;
+            line-height: 1;
+        }
+
+        .program-heading h3 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #1e8e4e;
+            text-transform: uppercase;
+            margin-top: -5px;
+            letter-spacing: 1px;
+        }
+
+        .leaf-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .line {
+            height: 2.5px;
+            width: 180px;
+            background: linear-gradient(to right, transparent, #1e8e4e, transparent);
+        }
+
+        .leaf-divider .material-symbols-outlined {
+            color: #6b8e23; /* Olive Green */
+            font-size: 1.75rem;
+            font-variation-settings: 'FILL' 1;
+        }
+
+        /* Schedule List */
+        .schedule-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .schedule-card {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 10px;
+            padding: 0.6rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid #f1f5f9;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .schedule-card:hover {
+            transform: translateX(15px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+        }
+
+        /* Ribbon Shape */
+        .time-ribbon {
+            width: 120px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 0.75rem;
+            position: relative;
+            margin-right: 1.25rem;
+            clip-path: polygon(0% 0%, 88% 0%, 100% 50%, 88% 100%, 0% 100%);
+            flex-shrink: 0;
+        }
+
+        .schedule-card.blue .time-ribbon { background: #0c4ea2; }
+        .schedule-card.green .time-ribbon { background: #1e8e4e; }
+
+        .time-ribbon::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 5px;
+            height: 100%;
+            background: rgba(0,0,0,0.15);
+        }
+
+        /* Icon Circle */
+        .icon-circle {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1.25rem;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .schedule-card:hover .icon-circle {
+            transform: rotate(10deg);
+        }
+
+        .schedule-card.blue .icon-circle .material-symbols-outlined { color: #0c4ea2; }
+        .schedule-card.green .icon-circle .material-symbols-outlined { color: #1e8e4e; }
+
+        .material-symbols-outlined {
+            font-size: 1.4rem;
+        }
+
+        .separator {
+            width: 2px;
+            height: 28px;
+            background-color: #cbd5e1;
+            margin-right: 1.5rem;
+            opacity: 0.6;
+        }
+
+        /* Title */
+        .event-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+
+        .schedule-card.blue .event-title { color: #0c4ea2; }
+        .schedule-card.green .event-title { color: #1e8e4e; }
+
+        /* Animation Keyframes */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .schedule-card {
+            animation: slideIn 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        .schedule-card:nth-child(1) { animation-delay: 0.1s; }
+        .schedule-card:nth-child(2) { animation-delay: 0.2s; }
+        .schedule-card:nth-child(3) { animation-delay: 0.3s; }
+        .schedule-card:nth-child(4) { animation-delay: 0.4s; }
+        .schedule-card:nth-child(5) { animation-delay: 0.5s; }
+        .schedule-card:nth-child(6) { animation-delay: 0.6s; }
+        .schedule-card:nth-child(7) { animation-delay: 0.7s; }
+
+        /* Print Settings */
+        @media print {
+            body { background: white; padding: 0; }
+            .document-page { box-shadow: none; border-radius: 0; width: 100%; max-width: none; }
+            .schedule-card { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="document-page">
+        <!-- Background Ornaments -->
+        <div class="header-bg-decoration">
+            <div class="curve-green"></div>
+            <div class="curve-blue"></div>
+        </div>
+
+        <div class="footer-decoration">
+            <div class="footer-curve-1"></div>
+            <div class="footer-curve-2"></div>
+            <div class="footer-curve-3"></div>
+        </div>
+
+        <div class="content">
+            <section class="program-heading">
+                <h2>Program</h2>
+                <div class="leaf-divider">
+                    <div class="line"></div>
+                    <span class="material-symbols-outlined">eco</span>
+                    <div class="line"></div>
+                </div>
+            </section>
+
+            <div class="schedule-list">
+                <!-- Item 1 -->
+                <div class="schedule-card blue">
+                    <div class="time-ribbon">5:00 – 5:30 PM</div>
+                    <div class="icon-circle">
+                        <span class="material-symbols-outlined">how_to_reg</span>
+                    </div>
+                    <div class="separator"></div>
+                    <div class="event-title">Arrival & Registration</div>
+                </div>
+
+                <!-- Item 2 -->
+                <div class="schedule-card green">
+                    <div class="time-ribbon">5:30 – 5:45 PM</div>
+                    <div class="icon-circle">
+                        <span class="material-symbols-outlined">campaign</span>
+                    </div>
+                    <div class="separator"></div>
+                    <div class="event-title">Opening Remarks</div>
+                </div>
+
+                <!-- Item 3 -->
+                <div class="schedule-card blue">
+                    <div class="time-ribbon">5:45 – 6:15 PM</div>
+                    <div class="icon-circle">
+                        <span class="material-symbols-outlined">mic</span>
+                    </div>
+                    <div class="separator"></div>
+                    <div class="event-title">Keynote Perspectives</div>
+                </div>
+
+                <!-- Item 4 -->
+                <div class="schedule-card green">
+                    <div class="time-ribbon">6:15 – 8:15 PM</div>
+                    <div class="icon-circle">
+                        <span class="material-symbols-outlined">groups</span>
+                    </div>
+                    <div class="separator"></div>
+                    <div class="event-title">Roundtable Discussion</div>
+                </div>
+
+                <!-- Item 5 -->
+                <div class="schedule-card blue">
+                    <div class="time-ribbon">8:15 – 9:15 PM</div>
+                    <div class="icon-circle">
+                        <span class="material-symbols-outlined">forum</span>
+                    </div>
+                    <div class="separator"></div>
+                    <div class="event-title">Interactive Dialogue</div>
+                </div>
+
+                <!-- Item 6 -->
+                <div class="schedule-card green">
+                    <div class="time-ribbon">9:15 – 9:45 PM</div>
+                    <div class="icon-circle">
+                        <span class="material-symbols-outlined">campaign</span>
+                    </div>
+                    <div class="separator"></div>
+                    <div class="event-title">Closing Remarks</div>
+                </div>
+
+                <!-- Item 7 -->
+                <div class="schedule-card blue">
+                    <div class="time-ribbon">9:45 – 10:00 PM</div>
+                    <div class="icon-circle">
+                        <span class="material-symbols-outlined">handshake</span>
+                    </div>
+                    <div class="separator"></div>
+                    <div class="event-title">Networking & Departure</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Interactive highlight effect
+        document.querySelectorAll('.schedule-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                const icon = card.querySelector('.material-symbols-outlined');
+                icon.style.transform = 'scale(1.2) rotate(5deg)';
+                icon.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            });
+            card.addEventListener('mouseleave', () => {
+                const icon = card.querySelector('.material-symbols-outlined');
+                icon.style.transform = 'scale(1) rotate(0deg)';
+            });
+        });
+    </script>
+</body>
+</html>

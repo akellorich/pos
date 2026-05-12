@@ -38,7 +38,7 @@
         }
 
         public function getSuppliers(){
-            $sql="CALL spgetsuppliers({$this->clientid},)";
+            $sql="CALL spgetsuppliers({$this->clientid})";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }

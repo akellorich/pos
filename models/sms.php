@@ -40,17 +40,17 @@
         }
 
         public function savesmslog($mobileno,$customerid,$message,$messageid,$messagestatus){
-            $sql="CALL `spsavesmslog`('{$mobileno}','{$customerid}','{$message}','{$messageid}','{$messagestatus}')";
+            $sql="CALL `spsavesmslog`({$this->clientid},'{$mobileno}','{$customerid}','{$message}','{$messageid}','{$messagestatus}')";
             $this->getData($sql);
         }
 
         public function getmenuname($menuid){
-            $sql="CALL `spgetobjectdetails`({$menuid})";
+            $sql="CALL `spgetobjectdetails`({$this->clientid},{$menuid})";
             return $this->getData($sql)->fetch()['description'];
         }
 
         public function checkifmenuisrestricted($menuid){
-            $sql="CALL `spgetobjectdetails`({$menuid})";
+            $sql="CALL `spgetobjectdetails`({$this->clientid},{$menuid})";
             return $this->getData($sql)->fetch()['restricted']==1?true:false;
         }
     }

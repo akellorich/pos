@@ -115,7 +115,7 @@
         }
 
         public function savereconciledstockbalance($refno,$narration,$posid,$category){
-            $sql="CALL `spsavestockreconciledbalance`('{$refno}','{$narration}',$posid,'{$category}',{$_SESSION['userid']})";
+            $sql="CALL `spsavestockreconciledbalance`({$this->clientid},'{$refno}','{$narration}',$posid,'{$category}',{$_SESSION['userid']})";
             $this->getData($sql);
             return "success";
         }
@@ -127,14 +127,14 @@
         }
 
         public function getbundleitems(){
-            $sql="CALL `spgetbundleitems`()";
+            $sql="CALL `spgetbundleitems`({$this->clientid})";
             return $this->getJSON($sql);
         }
 
         public function getproductstatement($itemcode,$startdate,$enddate){
             $startdate=$this->mySQLDate($startdate);
             $enddate=$this->mySQLDate($enddate);
-            $sql="CALL `spgetitemstatement`('{$itemcode}','{$startdate}','{$enddate}')";
+            $sql="CALL `spgetitemstatement`({$this->clientid},'{$itemcode}','{$startdate}','{$enddate}')";
             
             return $this->getJSON($sql);
         }
@@ -148,12 +148,12 @@
 
         function getwarehousestockbalance($warehouseid,$asat){
             $asat=$this->mySQLDate($asat);
-            $sql="CALL `sp_getwarehousestocksummaryasat`({$warehouseid},'{$asat}')";
+            $sql="CALL `sp_getwarehousestocksummaryasat`({$this->clientid},{$warehouseid},'{$asat}')";
             return $this->getJSON($sql);
         }
 
         function getreturnableproducts(){
-            $sql="CALL `sp_getreturnableproducts`()";
+            $sql="CALL `sp_getreturnableproducts`({$this->clientid})";
             return $this->getJSON($sql);
         }
     }

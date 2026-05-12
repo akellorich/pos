@@ -32,7 +32,7 @@ class category extends db{
     }
 
     public function getCategories(){
-        $sql="CALL spgetcategories({$this->clientid},)";
+        $sql="CALL spgetcategories({$this->clientid})";
         $rst=$this->connect()->query($sql);
         $data=$rst->fetchAll(PDO::FETCH_ASSOC);
         echo json_encode($data);

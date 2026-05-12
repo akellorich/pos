@@ -45,7 +45,7 @@
         }
 
         public function getgrnitemdetails($grnno,$productid){
-            $sql="CALL `spgetgrnitemdetails`('{$grnno}',{$productid})";
+            $sql="CALL `spgetgrnitemdetails`({$this->clientid},'{$grnno}',{$productid})";
             return $this->getJSON($sql);
         }
            

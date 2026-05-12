@@ -84,7 +84,7 @@
         }
 
         public function getglaccountclasses(){
-            $sql="CALL spgetglaccountclasses({$this->clientid},)";
+            $sql="CALL spgetglaccountclasses({$this->clientid})";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
@@ -102,7 +102,7 @@
         }
 
         public function getCashBookAccounts(){
-            $sql="CALL spgetcashbookaccounts({$this->clientid},)";
+            $sql="CALL spgetcashbookaccounts({$this->clientid})";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }

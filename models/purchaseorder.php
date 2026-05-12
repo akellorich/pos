@@ -21,7 +21,7 @@
         }
 
         public function getPurchaseOrders(){
-           $sql="CALL spgetpurchaseorders({$this->clientid},)";
+           $sql="CALL spgetpurchaseorders({$this->clientid})";
            $rst=$this->connect()->query($sql);
            echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }

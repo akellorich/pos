@@ -31,7 +31,7 @@
         }
 
         public function getPointOfSales(){
-            $sql="CALL spgetpos({$this->clientid},)";
+            $sql="CALL spgetpos({$this->clientid})";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
@@ -66,19 +66,19 @@
         }
 
         function getposproductcategories($posid){
-            $sql="CALL `sp_getposproductcategories`({$posid})";
+            $sql="CALL `sp_getposproductcategories`({$this->clientid},{$posid})";
             return $this->getJSON($sql);
         }
 
         function saveposproductcategory($posid,$categoryid,$status){
-            $sql="CALL `sp_saveposproductcategory`({$posid},{$categoryid},{$status},{$this->userid})";
+            $sql="CALL `sp_saveposproductcategory`({$this->clientid},{$posid},{$categoryid},{$status},{$this->userid})";
             $this->getData($sql);
             return ["status"=>"success","message"=>"pos product category saved successfully"];
         }
 
 
         function checktable($tableid,$posid,$tablename){
-            $sql="CALL `sp_checktable`({$tableid},{$posid},'{$tablename}')";
+            $sql="CALL `sp_checktable`({$this->clientid},{$tableid},{$posid},'{$tablename}')";
             return $this->getData($sql)->rowCount();
         }
 
@@ -86,24 +86,24 @@
             if($this->checktable($tableid,$posid,$tablename)){
                 return ["status"=>"exists","message"=>"table exists in the point of sale"];
             }else{
-                $sql="CALL `sp_savetable`({$tableid},{$posid},'{$tablename}',{$this->userid})";
+                $sql="CALL `sp_savetable`({$this->clientid},{$tableid},{$posid},'{$tablename}',{$this->userid})";
                 $this->getData($sql);
                 return ["status"=>"success","message"=>"point of sale table save successfully"];
             }
         }
 
         function gettables($posid){
-            $sql="CALL `sp_gettables`({$posid})";
+            $sql="CALL `sp_gettables`({$this->clientid},{$posid})";
             return $this->getJSON($sql);
         }
 
         function gettabledetails($tableid){
-            $sql="CALL `sp_gettabledetails`({$tableid})";
+            $sql="CALL `sp_gettabledetails`({$this->clientid},{$tableid})";
             return $this->getJSON($sql);
         }
 
         function deletetable($tableid){
-            $sql="CALL `sp_deletetable`({$tableid},{$this->userid})";
+            $sql="CALL `sp_deletetable`({$this->clientid},{$tableid},{$this->userid})";
             $this->getData($sql);
             return ["status"=>"success","message"=>"point of sale table deleted successfully"];
         }

@@ -3,14 +3,14 @@
     class settings extends db{
 
         function getUnitsOfMeasure(){
-            $sql="CALL spgteunitsofmeasure({$this->clientid},)";
+            $sql="CALL spgteunitsofmeasure({$this->clientid})";
             //$rst=$this->connect()->query($sql);
             //return json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
             return $this->getJSON($sql);
         }
 
         function getPaymentMethods(){
-            $sql="CALL spgetpaymentmethods({$this->clientid},)";
+            $sql="CALL spgetpaymentmethods({$this->clientid})";
             $rst=$this->getData($sql);
             // echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
             $_page = array();
@@ -30,7 +30,7 @@
         }
 
         function getInstitutionDetails(){
-            $sql="CALL spgetinstitutiondetails({$this->clientid},)";
+            $sql="CALL spgetinstitutiondetails({$this->clientid})";
             // $rst=$this->connect()->query($sql);
             // echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
             return $this->getJSON($sql);
@@ -44,21 +44,21 @@
         }
 
         function getTodaysDate(){
-            $sql="CALL spgettodaysdate({$this->clientid},)";
+            $sql="CALL spgettodaysdate({$this->clientid})";
             // $rst=$this->connect()->query($sql);
             // echo json_encode($rst->fetch(PDO::FETCH_ASSOC)); 
             return $this->getJSON($sql);
         }
 
         function getSalesSettings(){
-            $sql="CALL spgetsalessettings({$this->clientid},)";
+            $sql="CALL spgetsalessettings({$this->clientid})";
             // $rst=$this->connect()->query($sql);
             // echo json_encode($rst->fetch(PDO::FETCH_ASSOC));
             return $this->getJSON($sql);
         }
 
         function getSystemModules(){
-            $sql="CALL spgetsystemmodules({$this->clientid},)";
+            $sql="CALL spgetsystemmodules({$this->clientid})";
             return $this->getJSON($sql);
         }
 
@@ -69,12 +69,12 @@
         }
 
         function getcrateinventorysettings(){
-            $sql="CALL spgetcrateinventorysettings({$this->clientid},)";
+            $sql="CALL spgetcrateinventorysettings({$this->clientid})";
             return $this->getJSON($sql);
         }
 
         function getcrateadditionparameters(){
-            $sql="CALL spgetcrateadditionparameters({$this->clientid},)";
+            $sql="CALL spgetcrateadditionparameters({$this->clientid})";
             return $this->getJSON($sql);
         }
 
@@ -94,45 +94,45 @@
         }
 
         function gettaxtypes(){
-            $sql="CALL `spgettaxtypes`()";
+            $sql="CALL `spgettaxtypes`({$this->clientid})";
             return $this->getJSON($sql);
         }
 
         function getcurrencies(){
-            $sql="CALL `sp_getcurrencies`()";
+            $sql="CALL `sp_getcurrencies`({$this->clientid})";
             return $this->getJSON($sql);
         }
 
         function getdepartments(){
-            $sql="CALL sp_getdepartments({$this->clientid},)";
+            $sql="CALL sp_getdepartments({$this->clientid})";
             return $this->getJSON($sql);
         }
 
         function gettaxdetails($taxid){
-            $sql="CALL `sp_gettaxdetails`({$taxid})";
+            $sql="CALL `sp_gettaxdetails`({$this->clientid},{$taxid})";
             return $this->getJSON($sql);
         }
 
         function getpapergrammage(){
-            $sql="CALL `sp_getpapergrammage`()";
+            $sql="CALL `sp_getpapergrammage`({$this->clientid})";
             return $this->getJSON($sql);
         }
 
         function getdefaultterms(){
-            $sql="CALL `sp_getdefaultterms`()";
+            $sql="CALL `sp_getdefaultterms`({$this->clientid})";
             return $this->getJSON($sql);
         }
 
         function saveinstitutiondetails($companyname,$physicaladdress,$postaladdress,$landline,$email,$mobile,$pinno,
         $autoinvoicegrn,$postalcode,$tagline,$website,$receiptfooter,$defaultcustomer,$mainbusinesstype,$logo,$town){
-            $sql="CALL `sp_saveinstitutiondetails`('{$companyname}','{$physicaladdress}','{$postaladdress}','{$landline}','{$email}','{$mobile}','{$pinno}',
+            $sql="CALL `sp_saveinstitutiondetails`({$this->clientid},'{$companyname}','{$physicaladdress}','{$postaladdress}','{$landline}','{$email}','{$mobile}','{$pinno}',
            {$autoinvoicegrn},'{$postalcode}','{$tagline}','{$website}','{$receiptfooter}',{$defaultcustomer},'{$mainbusinesstype}','{$logo}','{$town}')";
            $this->getData($sql);
            return ["status"=>"success","message"=>"institution details save dsuccessfully"];
         }
 
         function getwarehouses(){
-            $sql="CALL spgetwarehouses({$this->clientid},)";
+            $sql="CALL spgetwarehouses({$this->clientid})";
             return $this->getJSON($sql);
         }
     }

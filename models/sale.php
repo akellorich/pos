@@ -37,7 +37,7 @@
         }
 
         public function generateReceipt($receiptno){
-            $sql="CALL spgetinstitutiondetails({$this->clientid},)";
+            $sql="CALL spgetinstitutiondetails({$this->clientid})";
             $rst=$this->getData($sql);
             $data=$rst->fetch(PDO::FETCH_ASSOC);
             $lines="----------------------------------------------------------------------------------------------------------------";
@@ -230,30 +230,30 @@
         }
 
         public function getreceiptitemdetails($receiptno,$productid){
-            $sql="CALL `spgetreceiptitemsdetails`('{$receiptno}',{$productid})";
+            $sql="CALL `spgetreceiptitemsdetails`({$this->clientid},'{$receiptno}',{$productid})";
             return $this->getJSON($sql);
         }
 
         public function getmpesapayment($amount,$reference=''){
-            $sql="CALL `spgetmpesatransaction`({$amount},'{$reference}')";
+            $sql="CALL `spgetmpesatransaction`({$this->clientid},{$amount},'{$reference}')";
             //echo $sql;
             return $this->getJSON($sql);
         }
 
         public function printreceipt($receiptno){
-            $sql="CALL `spupdatereceiptasprinted`('{$receiptno}')";
+            $sql="CALL `spupdatereceiptasprinted`({$this->clientid},'{$receiptno}')";
             echo $sql."<br/>";
             $this->getData($sql);
             return "success";
         }
 
         public function getpossalereceipt($receiptno){
-            $sql="CALL `spgetpossalereceipt`('$receiptno')";
+            $sql="CALL `spgetpossalereceipt`({$this->clientid},'$receiptno')";
             return $this->getJSOn($sql);
         }
 
         function getreceiptheader(){
-            $sql="CALL spgetinstitutiondetails({$this->clientid},)";
+            $sql="CALL spgetinstitutiondetails({$this->clientid})";
             return $this->getJSON($sql);
         }
 

@@ -12,7 +12,7 @@ class customer extends db{
     }
 
     function checkcustomerdocuments($customerid,$document,$docno){
-        $sql="CALL `spcheckcustomerdocuments`({$customerid},'{$document}','{$docno}')";
+        $sql="CALL `spcheckcustomerdocuments`({$this->clientid},{$customerid},'{$document}','{$docno}')";
         return $this->getData($sql)->rowCount()?true:false;
     }
 
@@ -74,7 +74,7 @@ class customer extends db{
     }
 
     function getCustomerCategories(){
-        $sql="CALL spgetcustomercategories({$this->clientid},)";
+        $sql="CALL spgetcustomercategories({$this->clientid})";
         //$rst=$this->connect()->query($sql);
         return $this->getJSON($sql);// json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
     }
@@ -131,7 +131,7 @@ class customer extends db{
     }
 
     function generateReceipt($receiptno){
-        $sql="CALL spgetinstitutiondetails({$this->clientid},)";
+        $sql="CALL spgetinstitutiondetails({$this->clientid})";
             $rst=$this->GetData($sql);
             $data=$rst->fetch(PDO::FETCH_ASSOC);
             $lines="----------------------------------------------------------------------------------------------------------------";
@@ -198,7 +198,7 @@ class customer extends db{
     }
 
     function getinsertedcustomer(){
-        $sql="CALL `spgetinsertedcustomer`()";
+        $sql="CALL `spgetinsertedcustomer`({$this->clientid})";
         return $this->getJSON($sql);
     }
 
@@ -210,7 +210,7 @@ class customer extends db{
     }
 
     function checkcustomercontact($id,$customerid,$contactname){
-        $sql="CALL `sp_checkcustomercontact`({$id},{$customerid},'{$contactname}')";
+        $sql="CALL `sp_checkcustomercontact`({$this->clientid},{$id},{$customerid},'{$contactname}')";
         return $this->getData($sql)->rowCount();
     }
 
@@ -218,25 +218,25 @@ class customer extends db{
         if($this->checkcustomercontact($id,$customerid,$contactname)){
             return "exists";
         }else{
-            $sql="CALL `sp_savecustomercontact`({$id},{$customerid},{$categoryid},'{$contactname}','{$mobile}','{$email}',{$_SESSION['userid']})";
+            $sql="CALL `sp_savecustomercontact`({$this->clientid},{$id},{$customerid},{$categoryid},'{$contactname}','{$mobile}','{$email}',{$_SESSION['userid']})";
             $this->getData($sql);
             return "success";
         }
     }
 
     function deletecustomercontact($id){
-        $sql="CALL `sp_deletecustomercontact`({$id},{$_SESSION['userid']})";
+        $sql="CALL `sp_deletecustomercontact`({$this->clientid},{$id},{$_SESSION['userid']})";
         $this->getData($sql);
         return "success";
     }
 
     function getcustomercontacts($customerid){
-        $sql="CALL `sp_getcustomercontacts`({$customerid})";
+        $sql="CALL `sp_getcustomercontacts`({$this->clientid},{$customerid})";
         return $this->getJSON($sql);
     }
 
     function getcontactcategories(){
-        $sql="CALL `sp_getcontactscategories`()";
+        $sql="CALL `sp_getcontactscategories`({$this->clientid})";
         return $this->getJSON($sql);
     }
 }

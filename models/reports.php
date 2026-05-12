@@ -197,7 +197,7 @@
         function gettransfers($source,$sourceid,$destination,$destinationid,$startdate,$enddate){
             $startdate=$this->mySQLDate($startdate);
             $enddate=$this->mySQLDate($enddate);
-            $sql="CALL `spfilterstocktransfer`('{$source}',{$sourceid},'{$destination}',{$destinationid},'{$startdate}','{$enddate}')";
+            $sql="CALL `spfilterstocktransfer`({$this->clientid},'{$source}',{$sourceid},'{$destination}',{$destinationid},'{$startdate}','{$enddate}')";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
@@ -265,7 +265,7 @@
         function gettransferitemsreport($cat,$id,$startdate,$enddate){
             $startdate=$this->mySQLDate($startdate);
             $enddate=$this->mySQLDate($enddate);
-            $sql="CALL `sp_gettransferreportbyitems`('{$cat}',{$id},'{$startdate}','{$enddate}')";
+            $sql="CALL `sp_gettransferreportbyitems`({$this->clientid},'{$cat}',{$id},'{$startdate}','{$enddate}')";
             return $this->getJSON($sql);
         }
 

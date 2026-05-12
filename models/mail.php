@@ -14,7 +14,7 @@
 
         public function __construct(){
             // fetch email settings
-            $sql="CALL sp_getemailconfiguration({$this->clientid},)";
+            $sql="CALL sp_getemailconfiguration({$this->clientid})";
             $row=$this->getData($sql)->fetch(PDO::FETCH_ASSOC);
             $this->smtpserver=$row['smtpserver'];
             $this->smtpport=$row['smtpport'];
@@ -56,12 +56,12 @@
         }
 
         public function getemailparameters(){
-            $sql="CALL sp_getemailconfiguration({$this->clientid},)";
+            $sql="CALL sp_getemailconfiguration({$this->clientid})";
             return $this->getJSON($sql);
         }
 
         public function saveemailparameters($emailaddress,$emailpassword,$smtpserver,$smtpport,$usessl){
-            $sql="CALL `sp_saveemailconfiguration`('{$emailaddress}','{$emailpassword}','{$smtpserver}',{$smtpport},{$usessl})";
+            $sql="CALL `sp_saveemailconfiguration`({$this->clientid},'{$emailaddress}','{$emailpassword}','{$smtpserver}',{$smtpport},{$usessl})";
             $this->getData($sql);
             return "success";
         }

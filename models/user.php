@@ -144,7 +144,7 @@
         }
 
         function getUsers(){
-            $sql="CALL spgetallusers({$this->clientid},)";
+            $sql="CALL spgetallusers({$this->clientid})";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
@@ -200,7 +200,7 @@
         }
 
         function getUsersList(){
-            $sql="CALL spgetallusers({$this->clientid},)";
+            $sql="CALL spgetallusers({$this->clientid})";
             return $this->getJSON($sql);
         }
 
@@ -215,7 +215,7 @@
         }
 
         function getRoles(){
-            $sql="CALL spgetroles({$this->clientid},)";
+            $sql="CALL spgetroles({$this->clientid})";
             echo $this->getJSON($sql);
         }
 
@@ -230,7 +230,7 @@
         }
 
         function getRolesForAssignment(){
-            $sql="CALL spgetrolesforuserassignment({$this->clientid},)";
+            $sql="CALL spgetrolesforuserassignment({$this->clientid})";
             echo $this->addUserToRolegetJSON($sql);
 
         }
@@ -335,7 +335,7 @@
         }
 
         function getuserrequisitionapprovalprivileges($userid){
-            $sql="CALL `sp_getuserrequisitionapprovalprivileges`({$userid})";
+            $sql="CALL `sp_getuserrequisitionapprovalprivileges`({$this->clientid},{$userid})";
             return $this->getJSON($sql);
         }
 
@@ -351,12 +351,12 @@
         }
 
         function getuserpurchaseorderapprovalprivileges($userid){
-            $sql="CALL `sp_getuserpurchaseorderapprovalprivileges`({$userid})";
+            $sql="CALL `sp_getuserpurchaseorderapprovalprivileges`({$this->clientid},{$userid})";
             return $this->getJSON($sql);
         }
 
         function saveusersignature($userid,$documentname){
-            $sql="CALL `sp_saveusersignature`({$userid},'{$documentname}')";
+            $sql="CALL `sp_saveusersignature`({$this->clientid},{$userid},'{$documentname}')";
             $this->getData($sql);
             return "success";
         }
@@ -369,7 +369,7 @@
 
         function resetuserpin($userid,$pin,$pinsalt){
             $pin=hash('SHA256',$pin.$pinsalt);
-            $sql="CALL `sp_resetuserpin`({$userid},'{$pin}','{$pinsalt}')";
+            $sql="CALL `sp_resetuserpin`({$this->clientid},{$userid},'{$pin}','{$pinsalt}')";
             $this->getData($sql);
             return ["status"=>"success","message"=>"user PIN reset successfully"];
         }
@@ -414,7 +414,7 @@
 
         function checkuserprivilegewithcode($code){
             $userid=$this->userid;
-            $sql="CALL `sp_checkuserprivilegewithcode`({$userid},'{$code}')";
+            $sql="CALL `sp_checkuserprivilegewithcode`({$this->clientid},{$userid},'{$code}')";
             return ["status"=>$this->getData($sql)->fetch()['allowed']==1?true:false];
         }
     }

@@ -173,12 +173,12 @@
         }
 
         public function getmpesaconfiguration(){
-            $sql="CALL spgetmpesaconfiguration({$this->clientid},)";
+            $sql="CALL spgetmpesaconfiguration({$this->clientid})";
             return $this->getJSON($sql);
         }
     
         public function getmpesaconfigurationasobject(){
-            $sql="CALL spgetmpesaconfiguration({$this->clientid},)";
+            $sql="CALL spgetmpesaconfiguration({$this->clientid})";
             return $this->getData($sql);
         }
     }

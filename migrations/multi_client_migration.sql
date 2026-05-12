@@ -4,7 +4,10 @@
 -- Logic: Exclude detail and temp tables from multi-tenancy columns (they inherit via parents).
 
 -- 1. Create Packages Table (Subscription Tiers)
-CREATE TABLE IF NOT EXISTS `packages` (
+DROP TABLE IF EXISTS `clients`; -- Drop child first due to FK
+DROP TABLE IF EXISTS `packages`;
+
+CREATE TABLE `packages` (
   `packageid` INT AUTO_INCREMENT PRIMARY KEY,
   `package_name` VARCHAR(50) NOT NULL,
   `price` DECIMAL(18,2) NOT NULL,
@@ -16,7 +19,7 @@ CREATE TABLE IF NOT EXISTS `packages` (
 );
 
 -- 2. Create Clients Table with extended details
-CREATE TABLE IF NOT EXISTS `clients` (
+CREATE TABLE `clients` (
   `clientid` INT AUTO_INCREMENT PRIMARY KEY,
   `client_name` VARCHAR(100) NOT NULL,
   `subdomain` VARCHAR(50) UNIQUE,
@@ -30,11 +33,11 @@ CREATE TABLE IF NOT EXISTS `clients` (
   `due_date` DATE,
   `status` ENUM('active', 'inactive', 'suspended') DEFAULT 'active',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`packageid`) REFERENCES `packages`(`packageid`)
+  CONSTRAINT `fk_client_package` FOREIGN KEY (`packageid`) REFERENCES `packages`(`packageid`)
 );
 
--- Insert Default Package
-INSERT IGNORE INTO `packages` (`package_name`, `price`, `description`) VALUES 
+-- Insert Default Packages
+INSERT INTO `packages` (`package_name`, `price`, `description`) VALUES 
 ('Basic', 5000.00, 'Single outlet, up to 5 users'),
 ('Standard', 15000.00, 'Up to 3 outlets, up to 15 users'),
 ('Premium', 35000.00, 'Unlimited outlets, unlimited users');

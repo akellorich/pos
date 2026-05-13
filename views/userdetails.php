@@ -32,33 +32,46 @@
     
                 <div id="errors"></div>
                 <div class="row mt-3 mb-3">
-                    <div class="col">
+                    <div class="col-md-2 text-center">
                         <div class="form-group">
-                            <label for="username">Username:</label>
-                            <input type="text" id="username" name="username" class="form-control">
+                            <label>Profile Photo</label>
+                            <div class="mb-2">
+                                <img id="profile_preview" src="../images/blankavatar.jpg" class="img-thumbnail" style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%;">
+                            </div>
+                            <input type="file" id="profilephoto" name="profilephoto" style="display: none;" accept="image/*">
+                            <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('profilephoto').click();">Select Photo</button>
                         </div>
                     </div>
+                    <div class="col-md-10">
+                        <div class="row">
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="username">Username:</label>
+                                    <input type="text" id="username" name="username" class="form-control">
+                                </div>
+                            </div>
 
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="firstname">First Name:</label>
-                            <input type="text" id="firstname" name="firstname"  class="form-control">
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="middlename">Middle Name:</label>
-                            <input type="text" id="middlename" name="middlename"  class="form-control">
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="firstname">First Name:</label>
+                                    <input type="text" id="firstname" name="firstname"  class="form-control">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="middlename">Middle Name:</label>
+                                    <input type="text" id="middlename" name="middlename"  class="form-control">
+                                    </div>
+                                </div>
+                        
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="othernames">Last Name:</label>
+                                    <input type="text" id="othernames" name="othernames"  class="form-control">
+                                </div>
                             </div>
                         </div>
-                
-                    <div class="col">
-                        <div class="form-group">
-                            <label for="othernames">Last Name:</label>
-                            <input type="text" id="othernames" name="othernames"  class="form-control">
-                        </div>
                     </div>
-
                 </div>
                     
                 <div class="row">

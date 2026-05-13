@@ -169,7 +169,7 @@ const fetchData = async (url, params) => {
 
 let validationanchor=$(".validation")
   fullscreen=false,
-  defaultcustomer=0,
+  defaultcustomerid=0,
   userid=0,
   printreceipt=0,
   showwaiterlogin=0
@@ -601,14 +601,18 @@ function getCustomers (selectBox,option='all', regularcustomers=1,onetimecustome
      onetimecustomers
    },
    function(data){
-     let results=''
-     defaultcustomer=data[0].defaultcustomer
-     option=='all'?results="<option value='0'>&lt;All&gt;</option>":results="<option value=''>&lt;Choose&gt;</option>"
-     for(var i=0;i<data.length;i++){
-       results+="<option value='"+data[i].customerid+"'>"+data[i].customername+"</option>"
+     if(data.length > 0){
+       defaultcustomerid=data[0].defaultcustomerid
+       option=='all'?results="<option value='0'>&lt;All&gt;</option>":results="<option value=''>&lt;Choose&gt;</option>"
+       for(var i=0;i<data.length;i++){
+         results+="<option value='"+data[i].customerid+"'>"+data[i].customername+"</option>"
+       }
+       selectBox.html(results)
+       selectBox.val(defaultcustomerid)
+     }else{
+        option=='all'?results="<option value='0'>&lt;All&gt;</option>":results="<option value=''>&lt;Choose&gt;</option>"
+        selectBox.html(results)
      }
-     selectBox.html(results)
-     selectBox.val(defaultcustomer)
      dfd.resolve()
    }
  )

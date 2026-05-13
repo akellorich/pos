@@ -3,21 +3,25 @@
     $user=new user();
 
     if(isset($_GET['loginuser'])){
-        $database=$_GET['company'];
-        $username=$_GET['username'];
-        $password=$_GET['password'];
-        $_SESSION['dbname']=$database;
-        echo json_encode($user->logUserIn($username,$password));
-        //echo json_encode($result);
+        header('Content-Type: application/json');
+        try {
+            $username=$_GET['username'];
+            $password=$_GET['password'];
+            echo json_encode($user->logUserIn($username,$password));
+        } catch (Exception $e) {
+            echo json_encode(["status" => "error", "message" => $e->getMessage()]);
+        }
     }
 
     if(isset($_POST['loginuser'])){
-        $database=$_POST['company'];
-        $username=$_POST['username'];
-        $password=$_POST['password'];
-        $_SESSION['dbname']=$database;
-        echo json_encode($user->logUserIn($username,$password));
-        //echo json_encode($result);
+        header('Content-Type: application/json');
+        try {
+            $username=$_POST['username'];
+            $password=$_POST['password'];
+            echo json_encode($user->logUserIn($username,$password));
+        } catch (Exception $e) {
+            echo json_encode(["status" => "error", "message" => $e->getMessage()]);
+        }
     }
 
     if(isset($_GET['getuserdetails'])){
@@ -42,6 +46,7 @@
     if(isset($_POST['saveuserprivileges'])){
         $pattern='::';
         $userid=$_POST['userid'];
+        $branchid=$_POST['branchid'];
         $privileges=explode(",",json_decode($_POST['privileges']));
         if(count($privileges)>0){
             // the array is not empty
@@ -50,7 +55,7 @@
                 $privilegedetail=explode($pattern,$privilege);
                 $objectid=$privilegedetail[0];
                 $valid=$privilegedetail[1];
-                $user-> saveUserPrivilege($userid,$objectid,$valid);
+                $user-> saveUserPrivilege($userid,$objectid,$valid,$branchid);
             }
             echo "Success";
         }
@@ -156,13 +161,14 @@
 
     if(isset($_GET['getuserprivileges'])){
         $userid=$_GET['userid'];
-        echo $user->getUserPrivileges($userid);
+        $branchid=isset($_GET['branchid']) ? $_GET['branchid'] : null;
+        echo $user->getUserPrivileges($userid,$branchid);
     }
 
     if(isset($_POST['saveuser'])){
         $userid=$_POST['userid'];
         $username=$_POST['username'];
-        $password=md5($_POST['password']);
+        $password=$_POST['password'];
         $email=$_POST['email'];
         $mobile=$_POST['mobile'];
         $firstname=$_POST['firstname'];
@@ -174,24 +180,26 @@
         $refno=$user->generateid();
         $category='user';
         $pin=$_POST['pin'];
-        $pinsalt=generate_random_no(20);
+        $defaultbranchid=$_POST['defaultbranchid'];
+        
+        $pinsalt=$user->generateSalt();
 
-        $tableData = stripcslashes($_POST['TableData']);
-        // Decode the JSON array
-        $tableData = json_decode($tableData,TRUE);
-        // save the user and return user id
-        $userid= $user->saveUser($userid,$username,$password,$firstname,$middlename,$lastname,$mobile,
-        $email,$systemadmin,$accountactive,$changepasswordonlogon,$pin,$pinsalt);
+        $saveResult = $user->saveUser($userid,$username,$password,$firstname,$middlename,$lastname,$mobile,$email,$systemadmin,$accountactive,$changepasswordonlogon,$pin,$pinsalt,$defaultbranchid);
     
-        if(is_numeric($userid)){
+        if(is_numeric($saveResult)){
+            $newuserid = $saveResult;
+            $tableData = stripcslashes($_POST['TableData']);
+            // Decode the JSON array
+            $tableData = json_decode($tableData,TRUE);
             foreach($tableData as $userprivilege){
                 $objectid=$userprivilege['id'];
                 $valid=$userprivilege['valid'];
-                $user->saveTempPrivileges($refno,$userid,$objectid,$valid);
+                // For initial save, we use the default branch for privileges
+                $user->saveUserPrivilege($newuserid,$objectid,$valid,$defaultbranchid);
             }
-            echo $user->savePrivileges($refno,$userid,$category);
+            echo "Success";
         }else{
-            echo $userid;
+            echo $saveResult;
         } 
     }
    
@@ -217,7 +225,9 @@
             echo json_encode(array(
                 "status"=>"success",
                 "username"=>$_SESSION['username'],
-                "userimage"=>$_SESSION['userimage']
+                "userimage"=>$_SESSION['userimage'],
+                "branchid"=>$_SESSION['branchid'],
+                "branchname"=>isset($_SESSION['branchname']) ? $_SESSION['branchname'] : ""
             ));
         }else{
             echo json_encode(array(
@@ -295,8 +305,6 @@
     if(isset($_GET['loginuserbypin'])){
         $username=$_GET['username'];
         $pin=$_GET['pin'];
-        $database=$_GET['company'];
-        $_SESSION['dbname']=$database;
         echo json_encode($user->loginuserbypin($username,$pin));
     }
 

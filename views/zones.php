@@ -8,9 +8,7 @@
     <?php require_once("sidebar.html") ?>
 
     <section class="home-section">
-        <div class="home-content">
-            <i class='bx bx-menu' ></i>
-            <span class="text">Zones</span>
+        <?php $pagename = "Zones"; require_once("topbar.php"); ?>
             <div class="container-fluid">
                 <p  class="lead text-center mt-3">Zones In The System</p>
                 <div id="errors"></div>

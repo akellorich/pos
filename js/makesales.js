@@ -338,20 +338,27 @@ $(document).ready(function(){
                 },
                 function(data){
                     // generate receipt
-                    str=$.trim(data.toString())
-                    // console.log(printlargeformat.prop("checked"))
-                    if(str.length==7 || str.length==8 || str.length==9){
-                        let url=printlargeformat.prop("checked")?"../controllers/printcustomerreceipt.php":"../printreceipt.php"
-                        url+="?receiptno="+data.toString()//+"&amountpaid="+amountpaidfield.val() 
-                        window.open(url, '_blank');
-                        //win.focus();
-                        errordiv.html("")
-                        clearForm()
-                        errors="Transaction completed successfully. ReceiptNo is : <strong>"+str+"</strong>"
-                        errordiv.html(showAlert("success",errors))
-                    }else{
-                        // return value stored in msg variable
-                        errordiv.html(showAlert("warning",str))
+                    try {
+                        let response = JSON.parse(data);
+                        if(response.status == "success" || response.receiptno){
+                            let str = response.receiptno;
+                            let printreceipt = response.printreceipt;
+
+                            if(printreceipt == 1) {
+                                let url = printlargeformat.prop("checked") ? "../controllers/printcustomerreceipt.php" : "../printreceipt.php"
+                                url += "?receiptno=" + str;
+                                window.open(url, '_blank');
+                            }
+                            
+                            errordiv.html("")
+                            clearForm()
+                            errors = "Sale finalized successfully! <br/> Receipt Number: <strong>" + str + "</strong>"
+                            errordiv.html(showAlert("success", errors))
+                        } else {
+                            errordiv.html(showAlert("warning", data.toString()))
+                        }
+                    } catch(e) {
+                        errordiv.html(showAlert("warning", data.toString()))
                     }
                     // hide payment details
                     paymentsmodal.modal("hide")
@@ -412,7 +419,7 @@ $(document).ready(function(){
                         errors=`<strong>${data[0].itemname}</strong> has <strong>${data[0].itembalance}</strong> quantities in stock hence can't be sold.`
                         errordiv.html(showAlert("info",errors))
                     }else{
-                        let sellingprice=data[0].sellingprice-data[0].discount,
+                        let sellingprice=data[0].sellingprice,
                             randomno=randomId()
                         productdetails+=`<tr class='clickable-row' data-id='${randomno}' data-productid='${data[0].productid}' data-serializable='${data[0].serializable}' data-serial-nos=''><td>${data[0].itemcode}</td>`
                         productdetails+=`<td>${data[0].itemname}</td>`

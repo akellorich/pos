@@ -7,9 +7,7 @@
 <body>
     <?php require_once("sidebar.html") ?>
     <section class="home-section">
-        <div class="home-content">
-            <i class='bx bx-menu' ></i>
-            <span class="text">Stock Adjustment</span>
+        <?php $pagename = "Stock Adjustment"; require_once("topbar.php"); ?>
             <!-- Page Content -->
             <div class="container-fluid">
                 <input type="hidden" id="id" name="id" value="0">

@@ -404,10 +404,7 @@
     <?php require_once("sidebar.html") ?>
     <section class="home-section min-vh-100">
         <!-- Page Header -->
-        <div class="home-content bg-white border-bottom px-4 py-2 d-flex align-items-center">
-            <i class='bx bx-menu cursor-pointer font-size-lg mr-3' style="font-size: 24px;"></i>
-            <span class="h5 mb-0 font-manrope font-weight-bold">Dashboard</span>
-        </div>
+        <?php $pagename = "Dashboard"; require_once("topbar.php"); ?>
 
         <div id="dashboard-v2-container">
             <!-- Filter Row -->

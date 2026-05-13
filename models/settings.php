@@ -3,14 +3,14 @@
     class settings extends db{
 
         function getUnitsOfMeasure(){
-            $sql="CALL spgteunitsofmeasure({$this->clientid})";
+            $sql="CALL spgteunitsofmeasure({$this->branchid})";
             //$rst=$this->connect()->query($sql);
             //return json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
             return $this->getJSON($sql);
         }
 
         function getPaymentMethods(){
-            $sql="CALL spgetpaymentmethods({$this->clientid})";
+            $sql="CALL spgetpaymentmethods({$this->clientid},{$this->branchid})";
             $rst=$this->getData($sql);
             // echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
             $_page = array();
@@ -31,56 +31,54 @@
 
         function getInstitutionDetails(){
             $sql="CALL spgetinstitutiondetails({$this->clientid})";
-            // $rst=$this->connect()->query($sql);
-            // echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
             return $this->getJSON($sql);
         }
 
         function getPrivileges($module){
-            $sql="CALL spgetobjects({$this->clientid},'{$module}')";
+            $sql="CALL spgetobjects({$this->branchid},'{$module}')";
             // $rst=$this->connect()->query($sql);
             // echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
             return $this->getJSON($sql);
         }
 
         function getTodaysDate(){
-            $sql="CALL spgettodaysdate({$this->clientid})";
+            $sql="CALL spgettodaysdate({$this->branchid})";
             // $rst=$this->connect()->query($sql);
             // echo json_encode($rst->fetch(PDO::FETCH_ASSOC)); 
             return $this->getJSON($sql);
         }
 
         function getSalesSettings(){
-            $sql="CALL spgetsalessettings({$this->clientid})";
+            $sql="CALL spgetsalessettings({$this->branchid})";
             // $rst=$this->connect()->query($sql);
             // echo json_encode($rst->fetch(PDO::FETCH_ASSOC));
             return $this->getJSON($sql);
         }
 
         function getSystemModules(){
-            $sql="CALL spgetsystemmodules({$this->clientid})";
+            $sql="CALL spgetsystemmodules({$this->branchid})";
             return $this->getJSON($sql);
         }
 
         function savecrateinventorysettings($productid,$customerid,$glaccountid,$costcenter,$paymentcenter,$paymentaccount){
-            $sql="CALL spsavecrateinventorysettings({$this->clientid},{$productid},{$customerid},{$glaccountid},{$costcenter},{$paymentcenter},{$paymentaccount})";
+            $sql="CALL spsavecrateinventorysettings({$this->branchid},{$productid},{$customerid},{$glaccountid},{$costcenter},{$paymentcenter},{$paymentaccount})";
             $this->getData($sql);
             return "success";
         }
 
         function getcrateinventorysettings(){
-            $sql="CALL spgetcrateinventorysettings({$this->clientid})";
+            $sql="CALL spgetcrateinventorysettings({$this->branchid})";
             return $this->getJSON($sql);
         }
 
         function getcrateadditionparameters(){
-            $sql="CALL spgetcrateadditionparameters({$this->clientid})";
+            $sql="CALL spgetcrateadditionparameters({$this->branchid})";
             return $this->getJSON($sql);
         }
 
         function savecrateaddition($productid,$quantity,$unitprice,$narration,$reference){
             if(!$this->checkcrateadditionreference($reference)){
-                $sql="CALL spsavecrateaddition({$this->clientid},{$productid},{$quantity},{$unitprice},'{$narration}','{$reference}',{$_SESSION['userid']})";
+                $sql="CALL spsavecrateaddition({$this->branchid},{$productid},{$quantity},{$unitprice},'{$narration}','{$reference}',{$_SESSION['userid']})";
                 $this->getData($sql);
                 return "success";
             }else{
@@ -89,37 +87,37 @@
         }
 
         function checkcrateadditionreference($reference){
-            $sql="CALL spcheckcrateadditionreference({$this->clientid},'{$reference}')";
+            $sql="CALL spcheckcrateadditionreference({$this->branchid},'{$reference}')";
             return $this->getData($sql)->rowCount()?true:false;
         }
 
         function gettaxtypes(){
-            $sql="CALL `spgettaxtypes`({$this->clientid})";
+            $sql="CALL `spgettaxtypes`({$this->branchid})";
             return $this->getJSON($sql);
         }
 
         function getcurrencies(){
-            $sql="CALL `sp_getcurrencies`({$this->clientid})";
+            $sql="CALL `sp_getcurrencies`({$this->branchid})";
             return $this->getJSON($sql);
         }
 
         function getdepartments(){
-            $sql="CALL sp_getdepartments({$this->clientid})";
+            $sql="CALL sp_getdepartments({$this->branchid})";
             return $this->getJSON($sql);
         }
 
         function gettaxdetails($taxid){
-            $sql="CALL `sp_gettaxdetails`({$this->clientid},{$taxid})";
+            $sql="CALL `sp_gettaxdetails`({$this->branchid},{$taxid})";
             return $this->getJSON($sql);
         }
 
         function getpapergrammage(){
-            $sql="CALL `sp_getpapergrammage`({$this->clientid})";
+            $sql="CALL `sp_getpapergrammage`({$this->branchid})";
             return $this->getJSON($sql);
         }
 
         function getdefaultterms(){
-            $sql="CALL `sp_getdefaultterms`({$this->clientid})";
+            $sql="CALL `sp_getdefaultterms`({$this->branchid})";
             return $this->getJSON($sql);
         }
 
@@ -128,12 +126,50 @@
             $sql="CALL `sp_saveinstitutiondetails`({$this->clientid},'{$companyname}','{$physicaladdress}','{$postaladdress}','{$landline}','{$email}','{$mobile}','{$pinno}',
            {$autoinvoicegrn},'{$postalcode}','{$tagline}','{$website}','{$receiptfooter}',{$defaultcustomer},'{$mainbusinesstype}','{$logo}','{$town}')";
            $this->getData($sql);
-           return ["status"=>"success","message"=>"institution details save dsuccessfully"];
+           return ["status"=>"success","message"=>"institution details saved successfully"];
         }
 
         function getwarehouses(){
-            $sql="CALL spgetwarehouses({$this->clientid})";
+            $sql="CALL spgetwarehouses({$this->branchid})";
             return $this->getJSON($sql);
+        }
+        function getBranches(){
+            $sql="CALL sp_getbranches({$this->clientid})";
+            return $this->getJSON($sql);
+        }
+
+        function saveBranch($branchid, $branchname, $location){
+            $sql="CALL sp_savebranch($branchid, '$branchname', '$location', {$this->clientid}, {$this->userid})";
+            $this->getData($sql);
+            return "success";
+        }
+
+        function deleteBranch($branchid){
+            $sql="CALL sp_deletebranch($branchid, {$this->userid})";
+            $this->getData($sql);
+            return "success";
+        }
+
+        function checkBranch($branchid, $branchname){
+            $sql="CALL sp_checkbranch($branchid, '$branchname', {$this->clientid})";
+            return $this->getData($sql)->rowCount() ? "exists" : "available";
+        }
+
+        function getCountries(){
+            $sql="CALL spgetcountries()";
+            return $this->getJSON($sql);
+        }
+
+        function saveCountry($countryid, $countryname, $countrycode, $currency, $currencysymbol, $dialingcode, $isdefault){
+            $sql="CALL spsavecountry($countryid, '$countryname', '$countrycode', '$currency', '$currencysymbol', '$dialingcode', $isdefault)";
+            $this->getData($sql);
+            return "success";
+        }
+
+        function deleteCountry($countryid){
+            $sql="CALL spdeletecountry($countryid)";
+            $this->getData($sql);
+            return "success";
         }
     }
 ?>

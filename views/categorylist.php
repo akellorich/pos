@@ -7,9 +7,7 @@
 <body>
     <?php require_once("sidebar.html") ?>
     <section class="home-section">
-        <div class="home-content">
-            <i class='bx bx-menu' ></i>
-            <span class="text">Product Categories</span>
+        <?php $pagename = "Product Categories"; require_once("topbar.php"); ?>
             <!-- Page Content -->
             <div class="container-fluid">
                 <p class="lead text-center mt-2">Categories In The System</p>

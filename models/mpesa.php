@@ -167,18 +167,18 @@
         }
 
         public function savempesaconfiguration($consumerkey,$consumersecret,$validationurl,$confirmationurl,$paybillnumber){
-            $sql="CALL spsavempesaconfiguration({$this->clientid},'{$consumerkey}','{$consumersecret}','{$validationurl}','{$confirmationurl}',{$paybillnumber})";
+            $sql="CALL spsavempesaconfiguration({$this->branchid},'{$consumerkey}','{$consumersecret}','{$validationurl}','{$confirmationurl}',{$paybillnumber})";
             $this->getData($sql);
             return "success";
         }
 
         public function getmpesaconfiguration(){
-            $sql="CALL spgetmpesaconfiguration({$this->clientid})";
+            $sql="CALL spgetmpesaconfiguration({$this->branchid})";
             return $this->getJSON($sql);
         }
     
         public function getmpesaconfigurationasobject(){
-            $sql="CALL spgetmpesaconfiguration({$this->clientid})";
+            $sql="CALL spgetmpesaconfiguration({$this->branchid})";
             return $this->getData($sql);
         }
     }

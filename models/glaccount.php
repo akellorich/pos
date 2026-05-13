@@ -4,7 +4,7 @@
     class glaccount extends db{
 
         public function checkglgroup($id,$groupname){
-            $sql="CALL spcheckglaccountgroup({$this->clientid},{$id},'{$groupname}')";
+            $sql="CALL spcheckglaccountgroup({$this->branchid},{$id},'{$groupname}')";
             $rst=$this->connect()->query($sql);
             if($rst->rowCount()>0){
                 return true;
@@ -18,7 +18,7 @@
                 echo "exists";
             }else{
                  $userid=$_SESSION['userid'];
-                $sql="CALL spsaveglgroupname({$this->clientid},{$id},{$glaccountclass},'{$groupname}',{$subcategoryof},{$cashbookaccount},{$userid})";
+                $sql="CALL spsaveglgroupname({$this->branchid},{$id},{$glaccountclass},'{$groupname}',{$subcategoryof},{$cashbookaccount},{$userid})";
                 //echo $sql.'<br/>';
                 $rst=$this->connect()->query($sql);
                 echo 'success';
@@ -27,19 +27,19 @@
         }
 
         public function getglgroups($category){
-            $sql="CALL spgetglgroups({$this->clientid},{$category})";
+            $sql="CALL spgetglgroups({$this->branchid},{$category})";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function deleteglgroup($id){
-            $sql="CALL spdeleteglgroup({$this->clientid},{$id},{$_SESSION['userid']})";
+            $sql="CALL spdeleteglgroup({$this->branchid},{$id},{$_SESSION['userid']})";
             $rst=$this->connect()->query($sql);
             echo 'success';
         }
 
         public function checkglaccountcode($id,$accountcode){
-            $sql="CALL spcheckglaccount({$this->clientid},{$id},'{$accountcode}')";
+            $sql="CALL spcheckglaccount({$this->branchid},{$id},'{$accountcode}')";
             $rst=$this->connect()->query($sql);
             if($rst->rowCount()>0){
                 return true;
@@ -49,7 +49,7 @@
         }
 
         public function checkglaccountname($id,$accountname){
-            $sql="CALL spcheckglaccount({$this->clientid},{$id},'{$accountname}')";
+            $sql="CALL spcheckglaccount({$this->branchid},{$id},'{$accountname}')";
             $rst=$this->connect()->query($sql);
             if($rst->rowCount()>0){
                 return true;
@@ -64,7 +64,7 @@
             }else if($this->checkglaccountname($id,$accountname)){
                 echo "account name exists";
             }else{
-                $sql="CALL spsaveglaccount({$this->clientid},{$id},{$groupid},'{$accountcode}','{$accountname}',{$_SESSION['userid']})";
+                $sql="CALL spsaveglaccount({$this->branchid},{$id},{$groupid},'{$accountcode}','{$accountname}',{$_SESSION['userid']})";
                 //echo $sql."<br/>";
                 $rst=$this->connect()->query($sql);
                 echo 'success';
@@ -72,43 +72,43 @@
         }
 
         public function deleteglaccount($id){
-            $sql="CALL spdeleteglaccount({$this->clientid},{$id},{$_SESSION['userid']})";
+            $sql="CALL spdeleteglaccount({$this->branchid},{$id},{$_SESSION['userid']})";
             $rst=$this->connect()->query($sql);
             echo 'success';
         }
 
         public function getglaccounts($groupid){
-            $sql="CALL spgetglaccounts({$this->clientid},{$groupid})";
+            $sql="CALL spgetglaccounts({$this->branchid},{$groupid})";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function getglaccountclasses(){
-            $sql="CALL spgetglaccountclasses({$this->clientid})";
+            $sql="CALL spgetglaccountclasses({$this->branchid})";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function getglparentgroups($classid){
-            $sql="CALL spgetparentgroups({$this->clientid},{$classid})";
+            $sql="CALL spgetparentgroups({$this->branchid},{$classid})";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function getsubgroups($groupid){
-            $sql="CALL spgetglsubgroups({$this->clientid},{$groupid})";
+            $sql="CALL spgetglsubgroups({$this->branchid},{$groupid})";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function getCashBookAccounts(){
-            $sql="CALL spgetcashbookaccounts({$this->clientid})";
+            $sql="CALL spgetcashbookaccounts({$this->branchid})";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function getGLAccountDetails($id){
-            $sql="CALL spgetglaccountdetails({$this->clientid},{$id})";
+            $sql="CALL spgetglaccountdetails({$this->branchid},{$id})";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }

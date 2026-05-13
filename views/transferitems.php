@@ -7,9 +7,7 @@
 <body>
     <?php require_once("sidebar.html") ?>
     <section class="home-section">
-        <div class="home-content">
-            <i class='bx bx-menu' ></i>
-            <span class="text">Stock Transfer</span>
+        <?php $pagename = "Stock Transfer"; require_once("topbar.php"); ?>
             <div class="container-fluid containergroup">
                 <!-- <p class="lead fornt-weight-bold text-center mt-3 font-weight-bold">Stock Movement Details</p> -->
                 <div class="row mt-2">

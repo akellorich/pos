@@ -9,7 +9,7 @@
         public function __construct(){
             $this->apikey='ftrdghDvbi0mOntRQVsTLmEeEnG7XVrEs8XRHUDB5MM=';
             $this->senderid='ADRIANKE';
-            $this->clientid='76102296-1a96-4f09-9c73-6353033321b7';
+            $this->branchid='76102296-1a96-4f09-9c73-6353033321b7';
             $this->url='https://api.uwaziimobile.com/api/v2/SendSMS';
         }
 
@@ -17,7 +17,7 @@
             // encode message to replace spaces with %20
             $message=urlencode($message);
             $redirecturl  =$this->url."?ApiKey=".$this->apikey;
-            $redirecturl .="&ClientId=".$this->clientid;
+            $redirecturl .="&ClientId=".$this->branchid;
             $redirecturl .="&SenderId=".$this->senderid;
             $redirecturl .="&Message=".$message;
             $redirecturl .="&MobileNumbers=".$recipient;
@@ -40,17 +40,17 @@
         }
 
         public function savesmslog($mobileno,$customerid,$message,$messageid,$messagestatus){
-            $sql="CALL `spsavesmslog`({$this->clientid},'{$mobileno}','{$customerid}','{$message}','{$messageid}','{$messagestatus}')";
+            $sql="CALL `spsavesmslog`({$this->branchid},'{$mobileno}','{$customerid}','{$message}','{$messageid}','{$messagestatus}')";
             $this->getData($sql);
         }
 
         public function getmenuname($menuid){
-            $sql="CALL `spgetobjectdetails`({$this->clientid},{$menuid})";
+            $sql="CALL `spgetobjectdetails`({$this->branchid},{$menuid})";
             return $this->getData($sql)->fetch()['description'];
         }
 
         public function checkifmenuisrestricted($menuid){
-            $sql="CALL `spgetobjectdetails`({$this->clientid},{$menuid})";
+            $sql="CALL `spgetobjectdetails`({$this->branchid},{$menuid})";
             return $this->getData($sql)->fetch()['restricted']==1?true:false;
         }
     }

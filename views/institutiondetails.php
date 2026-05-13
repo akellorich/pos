@@ -7,9 +7,7 @@
 <body>
     <?php require_once("sidebar.html") ?>
     <section class="home-section">
-        <div class="home-content">
-            <i class='bx bx-menu' ></i>
-            <span class="text">Institution Details</span>
+        <?php $pagename = "Institution Details"; require_once("topbar.php"); ?>
             <!-- Page Content -->
             <div class="container-fluid">
                 <div class="card containergroup mt-4">

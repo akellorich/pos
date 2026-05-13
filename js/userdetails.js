@@ -13,7 +13,9 @@ $(document).ready(function(){
         mobilefield=$("#mobile"),
         emailfield=$('#email'),
         accoutexpiresfield=$("#accountexpires"),
-        accountexpiresdatefield=$("#accountexpirydate")
+        accountexpiresdatefield=$("#accountexpirydate"),
+        profilephoto_input=$("#profilephoto"),
+        profile_preview=$("#profile_preview")
         accountexpires=0,
         accountexpirydate='',
         errors='',
@@ -27,6 +29,18 @@ $(document).ready(function(){
     // get privileges
     getPrivileges('')
     
+    // profile photo preview
+    profilephoto_input.on("change", function(){
+        const file = this.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function(event){
+                profile_preview.attr('src', event.target.result);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
     savebutton.on("click",function(){
         errors=''
         // validate blank fields
@@ -76,35 +90,32 @@ $(document).ready(function(){
         }else{
             // save the user   
             errordiv.html("<p class='alert alert-info'>Saving user. Please wait ...</p>")
-            var  id=idfield.val()
-                username=usernamefield.val(),
-                firstname=firstnamefield.val(),
-                middlename=middlenamefield.val(),
-                othernames=othernamesfield.val(),
-                password=passwordfield.val(),
-                accountexpireson=accountexpirydate,
-                password=passwordfield.val(),
-                email=emailfield.val(),
-                mobile=mobilefield.val() 
+            
+            var formData = new FormData();
+            formData.append('id', idfield.val());
+            formData.append('username', usernamefield.val());
+            formData.append('firstname', firstnamefield.val());
+            formData.append('middlename', middlenamefield.val());
+            formData.append('othernames', othernamesfield.val());
+            formData.append('password', passwordfield.val());
+            formData.append('changepassswordonlogon', changepasswordonlogon);
+            formData.append('accountexpires', accountexpires);
+            formData.append('accountexpireson', acountexpirydate);
+            formData.append('email', emailfield.val());
+            formData.append('mobile', mobilefield.val());
+            formData.append('saveuser', 'POST');
+            
+            if(profilephoto_input[0].files.length > 0){
+                formData.append('profilephoto', profilephoto_input[0].files[0]);
+            }
 
-            $.post( 
-                "../controllers/saveuser.php", 
-                {
-                    id:id,
-                    username:username,
-                    firstname:firstname,
-                    middlename:middlename,
-                    othernames :othernames,
-                    password:password,
-                    changepassswordonlogon:changepasswordonlogon,
-                    accountexpires:accountexpires,
-                    accountexpireson:acountexpirydate,
-                    password:password,
-                    email:email,
-                    mobile:mobile,
-                    saveuser:"POST"
-                },                 
-                function(data){
+            $.ajax({
+                url: "../controllers/saveuser.php",
+                type: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(data){
                     if($.trim(data.toString())=="Success"){
                         errors="<div class='alert alert-success'>The User has been saved in the system successfully<button type='button' class='close' data-dismiss='alert'>&times;</button></div>"
                         // clear the form
@@ -114,7 +125,7 @@ $(document).ready(function(){
                     }                        
                     errordiv.html(errors)
                 }
-            )
+            });
         }
     })
 
@@ -136,6 +147,11 @@ $(document).ready(function(){
                 //data.password=passwordfield.val(),
                 emailfield.val(data[0].email)
                 mobilefield.val(data[0].mobile)
+                if(data[0].profilephoto && data[0].profilephoto != ''){
+                    profile_preview.attr('src', '../images/user_profiles/' + data[0].profilephoto)
+                }else{
+                    profile_preview.attr('src', '../images/blankavatar.jpg')
+                }
            }
         )
     }
@@ -151,6 +167,8 @@ $(document).ready(function(){
         password1field.val("")
         emailfield.val("")
         mobilefield.val("") 
+        profile_preview.attr('src', '../images/blankavatar.jpg')
+        profilephoto_input.val('')
         usernamefield.focus()
     }
 

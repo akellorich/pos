@@ -51,7 +51,12 @@ $(document).ready(function(){
         resetpinnotifications=$("#resetpinnotifications"),
         newpinfield=$("#userresetpin"),
         inputfield=$("input"),
-        selectfield=$("select")
+        selectfield=$("select"),
+        defaultbranchidfield=$("#defaultbranchid"),
+        privilegebranchidfield=$("#privilegebranchid"),
+        localusernotifications=$("#localusernotifications"),
+        profilephoto_input=$("#profilephoto"),
+        profile_preview=$("#profile_preview");
 
     inputfield.on("input",()=>{
         errordiv.html("")
@@ -63,6 +68,18 @@ $(document).ready(function(){
         inputfield.trigger("input")
     })
 
+    // profile photo preview
+    profilephoto_input.on("change", function(){
+        const file = this.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function(event){
+                profile_preview.attr('src', event.target.result);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
     // get system modules
     getSystemModules()
     // set logged in user
@@ -72,7 +89,8 @@ $(document).ready(function(){
     //get all users
     getUsers()
     // get existing roles
-    getRoles()
+    getBranches()
+
     // get all objects
     $.getJSON(
         "../controllers/useroperations.php",
@@ -113,7 +131,7 @@ $(document).ready(function(){
                 userid:userid
             },
             function(data){
-                useridfield.val(data[0].id)
+                useridfield.val(data[0].userid)
                 usernamefield.val(data[0].username)
                 firstnamefield.val(data[0].firstname)
                 middlenamefield.val(data[0].middlename)
@@ -146,6 +164,14 @@ $(document).ready(function(){
                     changepasswordonlogonbutton.prop("checked",true)
                 }else{
                     changepasswordonlogonbutton.prop("checked",false)
+                }
+                defaultbranchidfield.val(data[0].defaultbranchid)
+                privilegebranchidfield.val(data[0].defaultbranchid).trigger("change")
+
+                if(data[0].profilephoto && data[0].profilephoto != ''){
+                    profile_preview.attr('src', '../images/user_profiles/' + data[0].profilephoto)
+                }else{
+                    profile_preview.attr('src', '../images/blankavatar.jpg')
                 }
             }
         )
@@ -198,10 +224,23 @@ $(document).ready(function(){
         }
        
         // get users privileges
+        loadUserPrivileges(userid)
+    })
+
+    privilegebranchidfield.on("change", function(){
+        var userid = userslist.val();
+        if(userid != ""){
+            loadUserPrivileges(userid);
+        }
+    })
+
+    function loadUserPrivileges(userid){
+        var branchid = privilegebranchidfield.val();
         $.getJSON(
             "../controllers/useroperations.php",
             {
                 userid:userid,
+                branchid:branchid,
                 getuserprivileges:true
             },
             function(data){
@@ -221,7 +260,7 @@ $(document).ready(function(){
                 }
             }
         )
-    })
+    }
 
     saveuserbutton.on("click",function(){
         // check for blank fields
@@ -238,7 +277,8 @@ $(document).ready(function(){
             email=sanitizestring(emailfield.val()),
             systemadmin=systemadminbutton.prop("checked")?1:0,
             accountactive=accountactivefield.val()==1?1:0,
-            changepasswordonlogon=changepasswordonlogonbutton.prop("checked")?1:0
+            changepasswordonlogon=changepasswordonlogonbutton.prop("checked")?1:0,
+            defaultbranchid=defaultbranchidfield.val()
 
         let errors='',data=[]
         if(username==""){
@@ -283,39 +323,47 @@ $(document).ready(function(){
         if(errors==""){ 
             // save the user  
             errordiv.html("<p class='alert alert-info'>Processing...</p>")
-           $.post(
-               "../controllers/useroperations.php",
-               {
-                   saveuser:true,
-                   userid:userid,
-                   username:username,
-                   password:password,
-                   firstname:firstname,
-                   middlename:middlename, 
-                   lastname:lastname,
-                   email:email,
-                   mobile:mobile,
-                   systemadmin:systemadmin,
-                   changepasswordonlogon: changepasswordonlogon,
-                   accountactive:accountactive,
-                   pin:pin,
-                   TableData:TableData
-               },
-               function(data){
-                   data=$.trim(data)
-                   if(data=="Success"){
-                    errors="<div class='alert alert-success font-weight-bold' role='alert'><i class='far fa-check-circle fa-lg'></i> User has been saved sucessfully.</div>"
-                        //errors="<p class='alert alert-success'>The User has been saved successfully.</p>"
-                        // clear the form
+            
+            var formData = new FormData();
+            formData.append('saveuser', 'POST');
+            formData.append('id', userid);
+            formData.append('userid', userid);
+            formData.append('username', username);
+            formData.append('password', password);
+            formData.append('firstname', firstname);
+            formData.append('middlename', middlename);
+            formData.append('lastname', lastname);
+            formData.append('email', email);
+            formData.append('mobile', mobile);
+            formData.append('systemadmin', systemadmin);
+            formData.append('changepassswordonlogon', changepasswordonlogon);
+            formData.append('accountactive', accountactive);
+            formData.append('pin', pin);
+            formData.append('defaultbranchid', defaultbranchid);
+            formData.append('TableData', TableData);
+
+            if(profilephoto_input[0].files.length > 0){
+                formData.append('profilephoto', profilephoto_input[0].files[0]);
+            }
+
+            $.ajax({
+                url: "../controllers/saveuser.php",
+                type: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(data){
+                    data=$.trim(data)
+                    if(data=="Success"){
+                        errors="<div class='alert alert-success font-weight-bold' role='alert'><i class='far fa-check-circle fa-lg'></i> User has been saved sucessfully.</div>"
                         clearUserForm()
-                        // refresh the list
                         getUsers()
-                   }else{
-                    errors="<div class='alert alert-danger font-weight-bold' role='alert'><i class='far fa-times-circle fa-lg'></i> "+data+"</div>"
-                   }
-                   errordiv.html(errors)
-               }
-           )
+                    }else{
+                        errors="<div class='alert alert-danger font-weight-bold' role='alert'><i class='far fa-times-circle fa-lg'></i> "+data+"</div>"
+                    }
+                    errordiv.html(errors)
+                }
+            });
         }else{
             errors="<div class='alert alert-info' role='alert'><i class='fas fa-info-circle fa-lg'></i> "+errors+"</div>"
             errordiv.html(errors)
@@ -341,6 +389,8 @@ $(document).ready(function(){
         $(".checkoption").prop("checked",false)
         passwordfield.prop("disabled",false)
         confirmpasswordfiel.prop("disabled",false)
+        profile_preview.attr('src', '../images/blankavatar.jpg')
+        profilephoto_input.val('')
         usernamefield.focus()
     }
 
@@ -354,7 +404,7 @@ $(document).ready(function(){
             function(data){
                 var results="<option value=''>&lt;Choose One&gt;</option>"
                 for(var i=0;i<data.length;i++){
-                    results+="<option value='"+data[i].id+"'>"+data[i].firstname+" "+data[i].middlename+" "+data[i].lastname+"</option>"
+                    results+="<option value='"+data[i].userid+"'>"+data[i].firstname+" "+data[i].middlename+" "+data[i].lastname+"</option>"
                 }
                 userslist.html(results)
             }
@@ -1264,8 +1314,6 @@ $(document).ready(function(){
     const localuserdetailsmodal=$("#localuserdetailsmodal"),
         addlocaluserbutton=$("#addlocaluser"),
         selectlocaluserfield=$("#localusername"),
-        selectlocaluserdatabase=$("#defaultdatabase"),
-        localusernotifications=$("#localusernotifications"),
         savelocaluserbutton=$("#savelocaluser"),
         localuserslist=$("#localuserslist")
 
@@ -1276,7 +1324,6 @@ $(document).ready(function(){
 
         localusernotifications.html("")
         localuserdetailsmodal.modal("show")
-        getdatabases(selectlocaluserdatabase)
 
         // get system users
         $.getJSON(
@@ -1306,17 +1353,14 @@ $(document).ready(function(){
 
     // Save local user
     savelocaluserbutton.on("click",()=>{
-        const username=selectlocaluserfield.val(),
-            defaultdatabase=selectlocaluserdatabase.val()
+        const username=selectlocaluserfield.val()
         let errors=""
         if(username==""){
             errors="Please select a user from the list first"
-        }else if(defaultdatabase==""){
-            errors="Please select user branch first"
         }
 
         if(errors==""){            
-            const user={"username":username,"company":defaultdatabase}
+            const user={"username":username}
             //  get locally stored users
             const users = JSON.parse(localStorage.getItem('users')) || []            
             if(users.length==0){
@@ -1394,4 +1438,21 @@ $(document).ready(function(){
             }
         })
     })
+
+    function getBranches(){
+        $.getJSON(
+            "../controllers/settingoperations.php",
+            {
+                getbranches:true
+            },
+            function(data){
+                var results="<option value=''>&lt;Choose One&gt;</option>"
+                for(var i=0;i<data.length;i++){
+                    results+="<option value='"+data[i].branchid+"'>"+data[i].branchname+"</option>"
+                }
+                defaultbranchidfield.html(results)
+                privilegebranchidfield.html(results)
+            }
+        )
+    }
 })

@@ -8,9 +8,7 @@
 <body>
     <?php require_once("sidebar.html") ?>
     <section class="home-section">
-        <div class="home-content">
-            <i class='bx bx-menu' ></i>
-            <span class="text">Sessions</span>
+        <?php $pagename = "Sessions"; require_once("topbar.php"); ?>
             <!-- Page Content -->
             <div class="container-fluid">
                 <div class="card containergroup">

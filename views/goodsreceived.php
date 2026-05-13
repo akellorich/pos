@@ -7,9 +7,7 @@
 <body>
     <?php require_once("sidebar.html") ?>
     <section class="home-section">
-        <div class="home-content">
-            <i class='bx bx-menu' ></i>
-            <span class="text">Purchase Receipts</span>
+        <?php $pagename = "Purchase Receipts"; require_once("topbar.php"); ?>
             <div class="container-fluid">
                 <div class="row">
                     <div class="col col-md-3">

@@ -11,10 +11,10 @@ $db=new db();
 $receiptno=$_GET['receiptno'];
 
 // get institutional details
-$sql="CALL spgetinstitutiondetails()";
+$sql="CALL spgetinstitutiondetails({$db->clientid})";
 $rst=$db->getData($sql)->fetch();
 
-$sql="CALL spgetreceiptdetails('{$receiptno}')";
+$sql="CALL spgetreceiptdetails({$db->clientid},{$db->branchid},'{$receiptno}')";
 $rst2=$db->getData($sql)->fetch();
 
 $customername=$rst2['customername'];

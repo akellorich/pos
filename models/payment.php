@@ -3,7 +3,7 @@
     class payment extends db{
 
         public function checkvoucherno($id,$voucherno){
-            $sql="CALL spcheckpaymentvoucherno({$this->clientid},{$id},'{$voucherno}')";
+            $sql="CALL spcheckpaymentvoucherno({$this->branchid},{$id},'{$voucherno}')";
             $rst=$this->connect()->query($sql);
             if($rst->rowCount()>0){
                 return true;
@@ -13,7 +13,7 @@
         }
 
         public function savetemppaymentvoucherdetails($refno,$itemcode,$description,$quantity,$unitprice,$accountcharged,$invoicenumber){
-            $sql="CALL spsavetepmpaymentvoucherdetails({$this->clientid},'{$refno}','{$itemcode}','{$description}',{$quantity},{$unitprice},{$accountcharged},'{$invoicenumber}')";
+            $sql="CALL spsavetepmpaymentvoucherdetails({$this->branchid},'{$refno}','{$itemcode}','{$description}',{$quantity},{$unitprice},{$accountcharged},'{$invoicenumber}')";
            // echo $sql.";<br/>";
             $rst=$this->connect()->query($sql);
         }
@@ -23,7 +23,7 @@
             if($generatevoucherno==0 && $this->checkvoucherno($id,$voucherno)){
                 echo "voucher number exists";
             }else{
-                $sql="CALL spsavepaymentvoucher({$this->clientid},'{$refno}',{$id},'{$voucherdate}','{$voucherno}',{$pos},{$supplier},{$paymentmode},{$cashbookaccount},'{$reference}',{$generatevoucherno},{$_SESSION['userid']},{$pettycash},{$craterefund})";
+                $sql="CALL spsavepaymentvoucher({$this->branchid},'{$refno}',{$id},'{$voucherdate}','{$voucherno}',{$pos},{$supplier},{$paymentmode},{$cashbookaccount},'{$reference}',{$generatevoucherno},{$_SESSION['userid']},{$pettycash},{$craterefund})";
                 //echo $sql."<br/>";
                 $rst=$this->connect()->query($sql);
                 if($rst->rowCount()>0){
@@ -36,7 +36,7 @@
         public function getpaymentvouchers($supplierid,$posid, $stat,$paymentmode, $startdate,$enddate,$pettycashvouchers){
             $startdate=$this->mySQLDate($startdate);
             $enddate=$this->mySQLDate($enddate);
-            $sql="CALL spgetpaymentvouchers({$this->clientid},{$supplierid},{$posid},'{$stat}',{$paymentmode}, '{$startdate}','{$enddate}',{$pettycashvouchers})";
+            $sql="CALL spgetpaymentvouchers({$this->branchid},{$supplierid},{$posid},'{$stat}',{$paymentmode}, '{$startdate}','{$enddate}',{$pettycashvouchers})";
             //echo $sql."<br/>";
             $rst=$this->connect()->query($sql);
             $data=$rst->fetchAll(PDO::FETCH_ASSOC);
@@ -44,14 +44,14 @@
         }
 
         public function getVoucherDetails($id){
-            $sql="CALL spgetpaymentvoucherdetails({$this->clientid},'{$id}')";
+            $sql="CALL spgetpaymentvoucherdetails({$this->branchid},'{$id}')";
             $rst=$this->connect()->query($sql);
             $data=$rst->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode($data);  
         }
 
         public function getVoucherItems($id){
-            $sql="CALL spgetvoucheritems({$this->clientid},'{$id}')";
+            $sql="CALL spgetvoucheritems({$this->branchid},'{$id}')";
             $rst=$this->connect()->query($sql);
             $data=$rst->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode($data); 
@@ -59,7 +59,7 @@
 
         public function approvePaymentVoucher($id){
             if(!$this->checkVoucherApproved($id)){
-                $sql="CALL spapprovepaymentvoucher({$this->clientid},{$id},{$_SESSION['userid']})";
+                $sql="CALL spapprovepaymentvoucher({$this->branchid},{$id},{$_SESSION['userid']})";
                 $rst=$this->connect()->query($sql);
                 echo "success";
             }else{
@@ -69,7 +69,7 @@
 
         public function deletePaymentVoucher($id,$reason){
             if(!$this->checkVoucherApproved($id)){
-                $sql="CALL spcancelpaymentvoucher({$this->clientid},{$id},'{$reason}',{$_SESSION['userid']})";
+                $sql="CALL spcancelpaymentvoucher({$this->branchid},{$id},'{$reason}',{$_SESSION['userid']})";
                 $rst=$this->connect()->query($sql);
                 echo "success";
             }else{
@@ -78,7 +78,7 @@
         }
 
         public function checkVoucherApproved($id){
-            $sql="CALL spgetpaymentvoucherdetails({$this->clientid},{$id})";
+            $sql="CALL spgetpaymentvoucherdetails({$this->branchid},{$id})";
             $rst=$this->connect()->query($sql);
             $data=$rst->fetch(PDO::FETCH_ASSOC);
             if($rst->rowCount()>0){
@@ -91,7 +91,7 @@
         }
 
         public function getPaymentVoucherStatus($id){
-            $sql="CALL spgetpaymentvoucherstatus({$this->clientid},{$id})";
+            $sql="CALL spgetpaymentvoucherstatus({$this->branchid},{$id})";
             $rst=$this->connect()->query($sql);
             $data=$rst->fetch(PDO::FETCH_ASSOC);
             if($rst->rowCount()>0){
@@ -102,7 +102,7 @@
         }
 
         public function getPaymentVoucher($id){
-            $sql="CALL spgetpaymentvoucher({$this->clientid},{$id})";
+            $sql="CALL spgetpaymentvoucher({$this->branchid},{$id})";
             $rst=$this->connect()->query($sql);
             $data=$rst->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode($data);

@@ -3,6 +3,10 @@
     
     class User extends db{
 
+        private function generateSalt($length = 30) {
+            return bin2hex(random_bytes($length / 2));
+        }
+
         function checkUser($userid,$field,$searchvalue){ 
             $sql="CALL spcheckuser({$this->clientid},{$userid},'{$field}','{$searchvalue}')";
             $rst=$this->getData($sql);   
@@ -13,7 +17,7 @@
             }         
         }
 
-        function saveUser($userid,$username,$password,$firstname,$middlename,$lastname,$mobile,$email,$systemadmin,$accountactive,$changepasswordonlogon,$pin,$pinsalt){
+        function saveUser($userid,$username,$password,$firstname,$middlename,$lastname,$mobile,$email,$systemadmin,$accountactive,$changepasswordonlogon,$pin,$pinsalt,$profilephoto='',$defaultbranchid=1){
             // check username
             if($this->checkUser($userid,'username',$username)){
                 return "Sorry, the username is already in use.";
@@ -24,10 +28,14 @@
                 // check mobile
                 return "Sorry, the mobile phone number is already in use.";
             }else{
+                // Generate salt for password
+                $salt = $this->generateSalt();
+                $password = hash('sha256', $password . $salt);
+
                 // hash the pin
                 $pin=hash('SHA256',$pin.$pinsalt);
                 // blank is for salt
-                $sql="CALL sp_saveuser({$this->clientid},{$userid},'{$password}','',{$systemadmin},'{$username}','{$firstname}','{$middlename}','{$lastname}','{$email}','{$mobile}',
+                $sql="CALL sp_saveuser({$this->clientid},{$defaultbranchid},{$userid},'{$password}','{$salt}','{$profilephoto}',{$systemadmin},'{$username}','{$firstname}','{$middlename}','{$lastname}','{$email}','{$mobile}',
                 {$changepasswordonlogon},{$accountactive},'{$pin}','{$pinsalt}',{$this->userid})";
                 //echo $sql."<br/>";
                 $rst=$this->getData($sql);   
@@ -53,7 +61,7 @@
             $rst=$this->connect()->query($sql);
             if($rst->rowCount()>0){
                 while ($row = $rst->fetch()) {
-                    if($row['password'] == md5($password)){
+                    if($row['password'] === hash('sha256', $password . $row['salt'])){
                         return "ok";
                     }else{
                         return "invalid password";
@@ -91,8 +99,9 @@
             $username=$this->getUserNameFromId($id);
             // echo $this->validateLoginDetails($username,$password);
             if($this->validateLoginDetails($username,$oldpassword)=="ok"){
-                $newpassword=md5($newpassword);
-                $sql="CALL spchangeuserpassword ({$id},'{$newpassword}',{$changepasswordonlogon})";
+                $salt = $this->generateSalt();
+                $newpassword = hash('sha256', $newpassword . $salt);
+                $sql="CALL spchangeuserpassword ({$this->clientid},{$id},'{$newpassword}','{$salt}',{$changepasswordonlogon})";
                 $rst=$this->connect()->query($sql);
                 return "Success";
             }else{
@@ -101,17 +110,18 @@
         }
 
         function logUserIn($username,$password){
-            $sql="CALL spgetuserdetails ('{$username}')";
+            $sql="CALL spgetuserdetails('{$username}')";
             //echo $sql."<br/>";
             $rst=$this->connect()->query($sql);
             if($rst->rowCount()){
                 $row = $rst->fetch();
                 // echo md5($password);
-                if($row['password'] === md5($password)){
+                if($row['password'] === hash('sha256', $password . $row['salt'])){
                     if($row['accountactive']==true){
                         if($row['changepasswordonlogon']==true){
-                            $this->userid=$row['id'];
-                            $_SESSION['userid']=$row['id'];
+                            $this->userid=$row['userid'];
+                            $_SESSION['userid']=$row['userid'];
+                            $_SESSION['clientid']=$row['clientid'];
                             return ["status"=>"change password"];
                             $_SESSION['username']=$row['firstname'].' '.$row['middlename'];
                             $_SESSION['userfirstname']=$row['firstname'];
@@ -119,8 +129,13 @@
                             $_SESSION['systemadmin']=$row['systemadmin'];
                             $_SESSION['userimage']='../../images/blankavatar.jpg';   
                         }else{
-                            $this->userid=$row['id'];
-                            $_SESSION['userid']=$row['id'];
+                            $this->userid=$row['userid'];
+                            $_SESSION['userid']=$row['userid'];
+                            $_SESSION['clientid']=$row['clientid'];
+                            $branchid = isset($row['defaultbranchid']) ? $row['defaultbranchid'] : 1;
+                            $_SESSION['branchid']=$branchid;
+                            $_SESSION['branchname'] = isset($row['branchname']) ? $row['branchname'] : "Default Branch";
+
                             $_SESSION['username']=$row['firstname'].' '.$row['middlename'];
                             $_SESSION['userfirstname']=$row['firstname'];
                             $_SESSION['userothernames']=$row['middlename'].' '.$row['lastname'];
@@ -151,7 +166,7 @@
 
         function getUserDetails($userid){
             $username=$this->getUserNameFromId($userid);
-            $sql="CALL spgetuserdetails({$this->clientid},'{$username}')";
+            $sql="CALL spgetuserdetails('{$username}')";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
@@ -178,14 +193,16 @@
             session_unset();
         }
 
-        function saveUserPrivilege($userid,$object,$valid){
-            $sql="CALL spsaveuserprivilege ({$userid},{$object},{$valid},{$this->userid})";
+        function saveUserPrivilege($userid,$object,$valid,$branchid=null){
+            $branchid = $branchid ?? $this->branchid;
+            $sql="CALL spsaveuserprivilege ({$this->clientid},{$userid},{$branchid},{$object},{$valid},{$this->userid})";
             $rst=$this->connect()->query($sql); 
         }
 
-        function checkUserPrivilege($objectid){
+        function checkUserPrivilege($objectid,$branchid=null){
             $userid=$this->userid;
-            $sql="CALL spvalidateuserprivilege({$this->clientid},{$userid},{$objectid})";
+            $branchid = $branchid ?? $this->branchid;
+            $sql="CALL spvalidateuserprivilege({$branchid},{$userid},{$objectid})";
             $rst=$this->connect()->query($sql);
             if($rst->rowCount()){
                 $row=$rst->fetch();
@@ -250,8 +267,9 @@
             return $this->getData($sql);
         }
 
-        function  getUserPrivileges($userid){
-            $sql="CALL spgetuserprivileges({$this->clientid},{$userid})";
+        function  getUserPrivileges($userid, $branchid = null){
+            $branchid = $branchid ?? $this->branchid;
+            $sql="CALL spgetuserprivileges({$this->clientid},{$userid},{$branchid})";
             return $this->getJSON($sql);
         }
 
@@ -307,13 +325,11 @@
             }
         } 
 
-        function resetUserPassword($id,$newpassword){
-            //$username=$this->getUserNameFromId($id);
-            // echo $this->validateLoginDetails($username,$password);
-            $newpassword=md5($newpassword);
-            $sql="CALL spchangeuserpassword ({$id},'{$newpassword}',1)";
+        function resetUserPassword($userid,$newpassword){
+            $salt = $this->generateSalt();
+            $newpassword = hash('sha256', $newpassword . $salt);
+            $sql="CALL spchangeuserpassword ({$this->clientid},{$userid},'{$newpassword}','{$salt}',0)";
             $rst=$this->connect()->query($sql);
-            // echo $newpassword;
             return "success";
         }
 
@@ -383,8 +399,9 @@
                 if($row['pin'] === hash('SHA256',$pin.$row['pinsalt'])){
                     if($row['accountactive']==true){
                         if($row['changepasswordonlogon']==true){
-                            $this->userid=$row['id'];
-                            $_SESSION['userid']=$row['id'];
+                            $this->userid=$row['userid'];
+                            $_SESSION['userid']=$row['userid'];
+                            $_SESSION['clientid']=$row['clientid'];
                             return ["status"=>"change password"];
                             $_SESSION['username']=$row['firstname'].' '.$row['middlename'];
                             $_SESSION['userfirstname']=$row['firstname'];
@@ -392,8 +409,12 @@
                             $_SESSION['systemadmin']=$row['systemadmin'];
                             $_SESSION['userimage']='../../images/blankavatar.jpg';   
                         }else{
-                            $this->userid=$row['id'];
-                            $_SESSION['userid']=$row['id'];
+                            $this->userid=$row['userid'];
+                            $_SESSION['userid']=$row['userid'];
+                            $_SESSION['clientid']=$row['clientid'];
+                            $branchid = isset($row['defaultbranchid']) ? $row['defaultbranchid'] : 1;
+                            $_SESSION['branchid']=$branchid;
+                            $_SESSION['branchname'] = isset($row['branchname']) ? $row['branchname'] : "Default Branch";
                             $_SESSION['username']=$row['firstname'].' '.$row['middlename'];
                             $_SESSION['userfirstname']=$row['firstname'];
                             $_SESSION['userothernames']=$row['middlename'].' '.$row['lastname'];

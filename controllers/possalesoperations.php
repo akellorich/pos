@@ -12,7 +12,13 @@
         $customerid=$_POST['customerid'];
         $transactiondate=$_POST['transactiondate'];
         $reference=isset($_POST['reference'])?$_POST['reference']:'';
-        $sendtovault=isset($_POST['sendtovault'])??0;
+        
+        // Get Institution details for settings
+        $sql="CALL `spgetinstitutiondetails`({$sale->clientid})";
+        $institution = $sale->getData($sql)->fetch();
+
+        $sendtovault = isset($_POST['sendtovault']) ? $_POST['sendtovault'] : $institution['sendtovault'];
+        $printreceipt = $institution['printreceipt'];
         $walletid=isset($_POST['walletid'])?$_POST['walletid']:"";
         $change=isset($_POST['change'])?$_POST['change']:0;
        // echo "Change amount:".$change;  
@@ -59,9 +65,7 @@
         $receiptno=$sale->saveSale($refno,$customerid,$pos,$transactiondate,$reference);
 
         if($sendtovault==1){
-            // Get Institution details
-            $sql="CALL `spgetinstitutiondetails`()";
-            $institution = $sale->getData($sql)->fetch();
+            // Institution details already fetched above
 
             $receiptHeader   = $sale->getreceiptheader($receiptno);
             $receiptDetails  = $sale->getreceiptdetails($receiptno);
@@ -168,7 +172,14 @@
             // echo $response;
             curl_close($ch);
         }
-        echo $receiptno;
+        header('Content-Type: application/json');
+        $response = [
+            "status" => "success",
+            "receiptno" => $receiptno,
+            "printreceipt" => $printreceipt
+        ];
+        echo json_encode($response);
+        exit;
     }
 
     if(isset($_POST['checkpaymentmodereference'])){
@@ -395,7 +406,7 @@
         $response = curl_exec($ch);
 
         // Send new receipt
-        $sql="CALL `spgetinstitutiondetails`()";
+        $sql="CALL `spgetinstitutiondetails`({$sale->clientid})";
         $institution = $sale->getData($sql)->fetch();
 
         $receiptHeader   = $sale->getreceiptheader($receiptno);

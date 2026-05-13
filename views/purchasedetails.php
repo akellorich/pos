@@ -8,9 +8,7 @@
   <?php require_once("sidebar.html") ?>
 
   <section class="home-section">
-    <div class="home-content">
-      <i class='bx bx-menu' ></i>
-      <span class="text">Purchases</span>
+    <?php $pagename = "Purchases"; require_once("topbar.php"); ?>
         <div class="container-fluid">
             <input type="hidden" id="id" name="id" value="0">
             <!-- <p class="lead text-center mt-2 mb-2">Product Purchases</p> -->

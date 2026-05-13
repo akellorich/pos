@@ -8,9 +8,7 @@
 <body>
     <?php require_once("sidebar.html") ?>
     <section class="home-section">
-        <div class="home-content">
-            <i class='bx bx-menu' ></i>
-            <span class="text">Orders</span>
+        <?php $pagename = "Orders"; require_once("topbar.php"); ?>
             <!-- Page Content -->
             <div class="container-fluid">
                 <!-- Add tabbed dialogue for Order details, list and settlement -->

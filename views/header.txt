@@ -19,5 +19,4 @@
 <link href="../plugins/boxicons-2.1.4/css/animations.css" rel="stylesheet">
 <link href="../plugins/boxicons-2.1.4/css/transformations.css" rel="stylesheet">
 
-
-    
+<script type="text/javascript" src="../js/jquery-2.2.4.js"></script>

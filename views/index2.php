@@ -8,10 +8,7 @@
   <?php require_once("sidebar.html") ?>
 
   <section class="home-section">
-    <div class="home-content">
-      <i class='bx bx-menu' ></i>
-      <span class="text">Dashboard</span>
-    </div>
+    <?php $pagename = "Dashboard"; require_once("topbar.php"); ?>
     
   </section>
 

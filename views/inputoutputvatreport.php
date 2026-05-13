@@ -7,9 +7,7 @@
 <body>
     <?php require_once("sidebar.html") ?>
     <section class="home-section">
-        <div class="home-content">
-            <i class='bx bx-menu' ></i>
-            <span class="text">Input / Output VAT Report</span>
+        <?php $pagename = "Input / Output VAT Report"; require_once("topbar.php"); ?>
             <!-- Page Content -->
             <div class="container-fluid mt-3">
             <div class="row">

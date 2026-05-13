@@ -124,4 +124,63 @@
     if(isset($_GET['getloginuisettings'])){
         echo $setting->getloginuisettings();
     }   
+    if(isset($_GET['getbranches'])){
+        echo $setting->getBranches();
+    }
+
+    if(isset($_POST['savebranch'])){
+        $branchid = $_POST['branchid'];
+        $branchname = $_POST['branchname'];
+        $location = $_POST['location'];
+        echo $setting->saveBranch($branchid, $branchname, $location);
+    }
+
+    if(isset($_POST['deletebranch'])){
+        $branchid = $_POST['branchid'];
+        echo $setting->deleteBranch($branchid);
+    }
+
+    if(isset($_GET['checkbranch'])){
+        $branchid = $_GET['branchid'];
+        $branchname = $_GET['branchname'];
+        echo $setting->checkBranch($branchid, $branchname);
+    }
+
+    if(isset($_GET['getcountries'])){
+        echo $setting->getCountries();
+    }
+
+    if(isset($_POST['savecountry'])){
+        $countryid = $_POST['countryid'];
+        $countryname = $_POST['countryname'];
+        $countrycode = $_POST['countrycode'];
+        $currency = $_POST['currency'];
+        $currencysymbol = $_POST['currencysymbol'];
+        $dialingcode = $_POST['dialingcode'];
+        $isdefault = $_POST['isdefault'];
+        echo $setting->saveCountry($countryid, $countryname, $countrycode, $currency, $currencysymbol, $dialingcode, $isdefault);
+    }
+
+    if(isset($_POST['deletecountry'])){
+        $countryid = $_POST['countryid'];
+        echo $setting->deleteCountry($countryid);
+    }
+
+    if(isset($_POST['update_session_branch'])){
+        session_start();
+        $branchid = $_POST['branchid'];
+        $_SESSION['branchid'] = $branchid;
+        
+        // Also update branch name in session
+        require_once("../models/db.php");
+        $db = new db();
+        $branch_sql = "CALL sp_getbranchdetails($branchid)";
+        $branch_rst = $db->connect()->query($branch_sql);
+        if($branch_rst->rowCount()){
+            $branch_row = $branch_rst->fetch();
+            $_SESSION['branchname'] = $branch_row['branchname'];
+        }
+        
+        echo "success";
+    }
 ?>

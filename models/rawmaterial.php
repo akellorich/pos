@@ -5,12 +5,12 @@
 
     class rawmaterial extends db{
         function getcategories(){
-            $sql="CALL `sp_getrawmaterialcategories`({$this->clientid})";
+            $sql="CALL `sp_getrawmaterialcategories`({$this->branchid})";
             return $this->getJSON($sql);
         }
 
         function checkrawmaterial($materialid,$materialname){
-            $sql="CALL `sp_checkrawmaterial`({$this->clientid},{$materialid},'{$materialname}')";
+            $sql="CALL `sp_checkrawmaterial`({$this->branchid},{$materialid},'{$materialname}')";
             return $this->getData($sql)->rowCount();
         }
 
@@ -18,7 +18,7 @@
             if($this->checkrawmaterial($materialid,$materialname)){
                 return "exists";
             }else{
-                $sql="CALL `sp_saverawmaterial`({$this->clientid},{$materialid},{$categoryid},'{$materialname}','{$uom}',{$physicalproduct},{$unitprice},'{$itemcode}',
+                $sql="CALL `sp_saverawmaterial`({$this->branchid},{$materialid},{$categoryid},'{$materialname}','{$uom}',{$physicalproduct},{$unitprice},'{$itemcode}',
                 {$generateitemcode},{$this->userid})";
                 $this->getData($sql);
                 return "success";
@@ -26,23 +26,23 @@
         }
 
         function getrawmaterials(){
-            $sql="CALL `sp_getrawmaterials`({$this->clientid})";
+            $sql="CALL `sp_getrawmaterials`({$this->branchid})";
             return $this->getJSON($sql);
         }
 
         function getrawmaterialdetails($materialid){
-            $sql="CALL `sp_getrawmaterialdetails`({$this->clientid},{$materialid})";
+            $sql="CALL `sp_getrawmaterialdetails`({$this->branchid},{$materialid})";
             return $this->getJSON($sql);
         }
 
         function deleterawmaterial($materialid){
-            $sql="CALL `sp_deleterawmaterial`({$this->clientid},{$materialid},{$this->userid})";
+            $sql="CALL `sp_deleterawmaterial`({$this->branchid},{$materialid},{$this->userid})";
             $this->getData($sql);
             return "success";
         }
 
         function savetempmaterialsreceiptdetails($refno,$itemid,$quantity,$unitprice,$serialno,$poid,$tagno){
-            $sql="CALL `sp_savetempmaterialreceiptdetails`({$this->clientid},'{$refno}',{$itemid},{$quantity},{$unitprice},'{$serialno}',{$poid},'{$tagno}')";
+            $sql="CALL `sp_savetempmaterialreceiptdetails`({$this->branchid},'{$refno}',{$itemid},{$quantity},{$unitprice},'{$serialno}',{$poid},'{$tagno}')";
             //echo $sql."<br/>";
             $this->getData($sql);
             return "success";
@@ -53,30 +53,30 @@
             if($this->checkdeliverynoteno($source,$sourceid,$deliverynoteno)){
                 return "exists";
             }else{
-                $sql="CALL `sp_savematerialsreceived`({$this->clientid},'{$refno}','{$source}','{$deliverynoteno}',{$this->userid},{$inspectedby},{$materialusecaseid},{$projectid},'{$receivedby}',{$sourceid},{$warehouseid})";
+                $sql="CALL `sp_savematerialsreceived`({$this->branchid},'{$refno}','{$source}','{$deliverynoteno}',{$this->userid},{$inspectedby},{$materialusecaseid},{$projectid},'{$receivedby}',{$sourceid},{$warehouseid})";
                 return $this->getData($sql)->fetch()['grnno'];
             }
            
         }
 
         function savetempmaterialsissueddetail($refno,$itemid,$serialno,$quantity){
-            $sql="CALL `sp_savetempmaterialissueddetail`({$this->clientid},'{$refno}',{$itemid},'{$serialno}',{$quantity})";
+            $sql="CALL `sp_savetempmaterialissueddetail`({$this->branchid},'{$refno}',{$itemid},'{$serialno}',{$quantity})";
             $this->getData($sql);
             return "success";
         }
         
         function savematerialsissued($refno,$receivedby,$materialrequestid,$narration,$warehouseid,$issuetotype,$issuetoname){
-            $sql="CALL `sp_savematerialissue`({$this->clientid},'{$refno}',{$this->userid},{$receivedby},{$materialrequestid},'{$narration}',{$warehouseid},'{$issuetotype}','{$issuetoname}')";
+            $sql="CALL `sp_savematerialissue`({$this->branchid},'{$refno}',{$this->userid},{$receivedby},{$materialrequestid},'{$narration}',{$warehouseid},'{$issuetotype}','{$issuetoname}')";
             return $this->getData($sql)->fetch()['sinno'];
         }
         
         function checkmaterialrequisitionreference($id,$reference){
-            $sql="CALL `sp_checkmaterialrequestreference`({$this->clientid},{$id},'{$reference}')";
+            $sql="CALL `sp_checkmaterialrequestreference`({$this->branchid},{$id},'{$reference}')";
             return $this->getData($sql)->rowCount()?true:false;
         }
 
         function savetempmaterialrequisitiondetails($refno,$itemid,$quantity,$unitprice,$narration){
-            $sql="CALL `sp_savetempmaterialrequestdetails`({$this->clientid},'{$refno}',{$itemid},{$quantity},{$unitprice},'{$narration}')" ;
+            $sql="CALL `sp_savetempmaterialrequestdetails`({$this->branchid},'{$refno}',{$itemid},{$quantity},{$unitprice},'{$narration}')" ;
             $this->getData($sql);
             return "success";
         }
@@ -85,7 +85,7 @@
             if($this->checkmaterialrequisitionreference($id,$reference)){
                 return "exists";
             }else{
-                $sql="CALL `sp_savematerialrequisition`({$this->clientid},{$id},'{$refno}',{$materialusecase},'{$reference}','{$narration}','{$scope}',{$supplierid},{$activityid},{$departmentid},{$this->userid},{$purchaserequisition},{$siteid})";
+                $sql="CALL `sp_savematerialrequisition`({$this->branchid},{$id},'{$refno}',{$materialusecase},'{$reference}','{$narration}','{$scope}',{$supplierid},{$activityid},{$departmentid},{$this->userid},{$purchaserequisition},{$siteid})";
                 //echo $sql."<br/>";
                 $requisitionno= $this->getData($sql)->fetch()['requisitionno'];
                 return $requisitionno;
@@ -93,121 +93,121 @@
         }
 
         function getrequisitionapprovallevels(){
-            $sql="CALL sp_getmaterialrequestapprovallevels({$this->clientid})";
+            $sql="CALL sp_getmaterialrequestapprovallevels({$this->branchid})";
             return $this->getJSON($sql);
         }
 
         function getrequisitionapprovalusers($requisitionno,$level){
-            $sql="CALL `sp_getrequisitionapprovalusers`({$this->clientid},'{$requisitionno}',{$level})";
+            $sql="CALL `sp_getrequisitionapprovalusers`({$this->branchid},'{$requisitionno}',{$level})";
             return $this->getData($sql);
         }
 
         function getrequisitionapprovallevelname($hierarchy){
-            $sql="CALL `sp_getrequisitionapprovallevelname`({$this->clientid},{$hierarchy})";
+            $sql="CALL `sp_getrequisitionapprovallevelname`({$this->branchid},{$hierarchy})";
             return $this->getData($sql)->fetch()['description'];
         }
 
         function filterrequisitions($startdate,$enddate,$departmentid,$supplierid,$usecaseid,$requisitionstatus,$requisitionno){
             $startdate=$this->mySQLDate($startdate);
             $enddate=$this->mySQLDate($enddate);
-            $sql="CALL `sp_filterrequisitions`({$this->clientid},'{$startdate}','{$enddate}',{$departmentid},{$supplierid},{$usecaseid},'{$requisitionstatus}','{$requisitionno}')";
+            $sql="CALL `sp_filterrequisitions`({$this->branchid},'{$startdate}','{$enddate}',{$departmentid},{$supplierid},{$usecaseid},'{$requisitionstatus}','{$requisitionno}')";
             //echo $sql."<br>";
             return $this->getJSON($sql);
         }
 
         function requisitionapprovalstatus($requisitionno){
-            $sql="CALL sp_getrequisitionapprovallevelstatus({$this->clientid},'{$requisitionno}')";
+            $sql="CALL sp_getrequisitionapprovallevelstatus({$this->branchid},'{$requisitionno}')";
             return $this->getJSON($sql);
         }
 
         function approverequisition($requisitionno,$approvallevelid,$narration){
-            $sql="CALL `sp_approverequisition`({$this->clientid},'{$requisitionno}',{$approvallevelid},{$this->userid},'{$narration}')";
+            $sql="CALL `sp_approverequisition`({$this->branchid},'{$requisitionno}',{$approvallevelid},{$this->userid},'{$narration}')";
             //echo $sql;
             $this->getData($sql);
             return "success";
         }
 
         function getrequisitionnextapprovallevel($requisitionno){
-            $sql="CALL sp_getrequisitionnextapprovallevel({$this->clientid},'{$requisitionno}')";
+            $sql="CALL sp_getrequisitionnextapprovallevel({$this->branchid},'{$requisitionno}')";
             return $this->getData($sql)->fetch()['hierarchy'];
         }
 
         function getrequisitioncurrentstatus($requisitionno){
-            $sql="CALL `sp_getrequisitioncurrentstatus`({$this->clientid},'{$requisitionno}')";
+            $sql="CALL `sp_getrequisitioncurrentstatus`({$this->branchid},'{$requisitionno}')";
             return $this->getData($sql)->fetch()['status'];
         }
 
         function getdepartmentpendingporequisitions($departmentid){
-            $sql="CALL sp_getdepartmentpopendingrequisitions({$this->clientid},{$departmentid})";
+            $sql="CALL sp_getdepartmentpopendingrequisitions({$this->branchid},{$departmentid})";
             return $this->getJSON($sql);
         }
 
         function getdepartmentpendingpopurchaserequisitions($departmentid){
-            $sql="CALL `sp_getdepartmentpopendingpurchaserequisitions`({$this->clientid},{$departmentid})";
+            $sql="CALL `sp_getdepartmentpopendingpurchaserequisitions`({$this->branchid},{$departmentid})";
             return $this->getJSON($sql);
         }
 
         function getrequisitionitems($requisitionno){
-            $sql="CALL `sp_getrequisitionitems`({$this->clientid},'{$requisitionno}')";
+            $sql="CALL `sp_getrequisitionitems`({$this->branchid},'{$requisitionno}')";
             return $this->getJSON($sql);
         }
 
         function getpurchaseorderapprovallevels(){
-            $sql="CALL sp_getpurchaseorderapprovallevels({$this->clientid})";
+            $sql="CALL sp_getpurchaseorderapprovallevels({$this->branchid})";
             return $this->getJSON($sql);
         }
 
         function getpurchaseorderapprovalusers($purchaseorderno,$level){
-            $sql="CALL `sp_getpurchaseorderapprovalusers`({$this->clientid},'{$purchaseorderno}',{$level})";
+            $sql="CALL `sp_getpurchaseorderapprovalusers`({$this->branchid},'{$purchaseorderno}',{$level})";
             return $this->getData($sql);
         }
 
         function getpurchaseorderapprovallevelname($hierarchy){
-            $sql="CALL `sp_getpurchaseorderapprovallevelname`({$this->clientid},{$hierarchy})";
+            $sql="CALL `sp_getpurchaseorderapprovallevelname`({$this->branchid},{$hierarchy})";
             return $this->getData($sql)->fetch()['description'];
         }
 
         function purchaseorderapprovalstatus($purchaseorderno){
-            $sql="CALL sp_getpurchaseorderapprovallevelstatus({$this->clientid},'{$purchaseorderno}')";
+            $sql="CALL sp_getpurchaseorderapprovallevelstatus({$this->branchid},'{$purchaseorderno}')";
             return $this->getJSON($sql);
         }
 
         function approvepurchaseorder($purchaseorderno,$approvallevelid,$narration){
-            $sql="CALL `sp_approvepurchaseorder`({$this->clientid},'{$purchaseorderno}',{$approvallevelid},{$this->userid},'{$narration}')";
+            $sql="CALL `sp_approvepurchaseorder`({$this->branchid},'{$purchaseorderno}',{$approvallevelid},{$this->userid},'{$narration}')";
             //echo $sql;
             $this->getData($sql);
             return "success";
         }
 
         function getpurchaseordernextapprovallevel($purchaseorderno){
-            $sql="CALL sp_getpurchaseordernextapprovallevel({$this->clientid},'{$purchaseorderno}')";
+            $sql="CALL sp_getpurchaseordernextapprovallevel({$this->branchid},'{$purchaseorderno}')";
             return $this->getData($sql)->fetch()['hierarchy'];
         }
 
         function getpurchaseordercurrentstatus($purchaseorderno){
-            $sql="CALL `sp_getpurchaseordercurrentstatus`({$this->clientid},'{$purchaseorderno}')";
+            $sql="CALL `sp_getpurchaseordercurrentstatus`({$this->branchid},'{$purchaseorderno}')";
             return $this->getData($sql)->fetch()['status'];
         }
 
         function filtergoodsreceivednotes($supplierid,$startdate,$enddate,$grnno,$deliverynoteno){
             $startdate=$this->mySQLDate($startdate);
             $enddate=$this->mySQLDate($enddate);
-            $sql="CALL `sp_filtergoodsreceivednotes`({$this->clientid},{$supplierid},'{$startdate}','{$enddate}','{$grnno}','{$deliverynoteno}')";
+            $sql="CALL `sp_filtergoodsreceivednotes`({$this->branchid},{$supplierid},'{$startdate}','{$enddate}','{$grnno}','{$deliverynoteno}')";
             return $this->getJSON($sql);
         }
 
         function getdepartmentunissuedrequisitions($departmentid){
-            $sql="CALL `sp_getunissuedepartmentrequisitions`({$this->clientid},{$departmentid})";
+            $sql="CALL `sp_getunissuedepartmentrequisitions`({$this->branchid},{$departmentid})";
             return $this->getJSON($sql);
         }
 
         function getunissuedrequisitionitems($requisitionid){
-            $sql="CALL `sp_getunissuedrequisitionitems`({$this->clientid},{$requisitionid})";
+            $sql="CALL `sp_getunissuedrequisitionitems`({$this->branchid},{$requisitionid})";
             return $this->getJSON($sql);
         }
 
         function checkmaterialserialnoforissuing($materialid,$serialno){
-            $sql="CALL `sp_checkmaterialserialnoforissuing`({$this->clientid},{$materialid},'{$serialno}')";
+            $sql="CALL `sp_checkmaterialserialnoforissuing`({$this->branchid},{$materialid},'{$serialno}')";
             //echo $sql."<br/>";
             $rst=$this->getData($sql);
             if($rst->rowCount()){
@@ -223,14 +223,14 @@
         }
 
         function filterstoreissuenote($departmentid,$materialusecaseid,$startdate,$enddate,$sinno,$requisitionno){
-            $sql="CALL `sp_filtersin`({$this->clientid},{$departmentid},{$materialusecaseid},'{$startdate}','{$enddate}','{$sinno}','{$requisitionno}')";
+            $sql="CALL `sp_filtersin`({$this->branchid},{$departmentid},{$materialusecaseid},'{$startdate}','{$enddate}','{$sinno}','{$requisitionno}')";
             return $this->getJSON($sql);
         }
 
         function checkRequisitionApprovalPrivilege($approvallevel,$requisitionno){
             $userid=$this->userid;
             $departmentid=$this->getrequisitiondepartment($requisitionno);
-            $sql="CALL sp_validaterequisitionapproval({$this->clientid},{$userid},{$approvallevel},{$departmentid})";
+            $sql="CALL sp_validaterequisitionapproval({$this->branchid},{$userid},{$approvallevel},{$departmentid})";
             //echo $sql."<br/>";
             $rst=$this->connect()->query($sql);
             if($rst->rowCount()){
@@ -243,7 +243,7 @@
         function checkPurchaseOrderApprovalPrivilege($approvallevel,$pono){
             $userid=$this->userid;
             $departmentid=$this->getpurchaseorderdepartment($pono);
-            $sql="CALL sp_validatepurchaseorderapproval({$this->clientid},{$userid},{$approvallevel},{$departmentid})";
+            $sql="CALL sp_validatepurchaseorderapproval({$this->branchid},{$userid},{$approvallevel},{$departmentid})";
             //echo $sql."<br/>";
             $rst=$this->connect()->query($sql);
             if($rst->rowCount()){
@@ -254,33 +254,33 @@
         }
 
         function getmaterialrequestdetails($requisitionno){
-            $sql="CALL sp_getmaterialrequisitiondetails({$this->clientid},'{$requisitionno}')";
+            $sql="CALL sp_getmaterialrequisitiondetails({$this->branchid},'{$requisitionno}')";
             return $this->getJSON($sql);
         }
 
         function getmaterialrequisitionitems($requisitionid){
-            $sql="CALL `sp_getmaterialrequisitionitems`({$this->clientid},{$requisitionid})";
+            $sql="CALL `sp_getmaterialrequisitionitems`({$this->branchid},{$requisitionid})";
             return $this->getJSON($sql);
         }
 
         function getpurchaseorderdetails($pono){
-            $sql="CALL `sp_getpurchaseorderdetails`({$this->clientid},'{$pono}')";
+            $sql="CALL `sp_getpurchaseorderdetails`({$this->branchid},'{$pono}')";
             return $this->getJSON($sql);
         }
 
         function getpurchaseorderitems($pono){
-            $sql="CALL `sp_getpoitems`({$this->clientid},'{$pono}')";
+            $sql="CALL `sp_getpoitems`({$this->branchid},'{$pono}')";
             return $this->getJSON($sql);
         }
 
         public function getpurchaseorderdepartment($pono){
             $poid=$this->getpoidfrompono($pono);
-            $sql="CALL `spgetpurchaseorderdetails`({$this->clientid},'{$poid}')";
+            $sql="CALL `spgetpurchaseorderdetails`({$this->branchid},'{$poid}')";
             return $this->getData($sql)->fetch()['departmentid'];
         }
 
         public function getpoidfrompono($pono){
-            $sql="CALL `sp_getpoidfrompono`({$this->clientid},'{$pono}') ";
+            $sql="CALL `sp_getpoidfrompono`({$this->branchid},'{$pono}') ";
             return $this->getData($sql)->fetch()['poid'];
         }
 

@@ -20,16 +20,18 @@
         private $dbname;
         private $charset;
         public $userid;
+        public $branchid;
         public $clientid;
         // production   
         // private $defaultdb="suncity1_companies";
 
-        private $defaultdb="companies";
+        private $defaultdb="pos";
         // private $defaultdb="wovijlbc_companies";
         // private $defaultdb="tnixjxsk_ecopointcompanies";
 
         function __construct(){
             $this->userid=isset($_SESSION['userid'])?$_SESSION['userid']:5;
+            $this->branchid=isset($_SESSION['branchid'])?$_SESSION['branchid']:1;
             $this->clientid=isset($_SESSION['clientid'])?$_SESSION['clientid']:1;
         }
 

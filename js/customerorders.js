@@ -231,7 +231,7 @@ $(document).ready(()=>{
                         errors=`<strong>${data[0].itemname}</strong> has <strong>${data[0].itembalance}</strong> quantities in stock hence can't be sold.`
                         ordernotifications.html(showAlert("danger",errors))
                     }else{
-                        let sellingprice=data[0].sellingprice-data[0].discount,randomno=randomId()
+                        let sellingprice=data[0].sellingprice,randomno=randomId()
                         const currentrow=orderitemstable.find("tbody tr").length+1
                         productdetails+=`<tr class='clickable-row' data-id='${randomno}' data-productid='${data[0].productid}' data-serializable='${data[0].serializable}' data-serial-nos='' data-allownegativesales=${data[0].allownegativesales}>`
                         productdetails+=`<td>${currentrow}</td>`

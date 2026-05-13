@@ -67,7 +67,7 @@
     }
 
     if(isset($_GET['getposproductcategories'])){
-        $posid=$_GET['posid'];
+        $posid=$_GET['posid'] ?? 0;
         echo $pos->getposproductcategories($posid);
     }
 

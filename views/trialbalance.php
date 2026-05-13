@@ -26,9 +26,7 @@
     <body>
         <?php require_once("sidebar.html") ?>
         <section class="home-section">
-            <div class="home-content">
-                <i class='bx bx-menu' ></i>
-                <span class="text">Trial Balance</span>
+            <?php $pagename = "Trial Balance"; require_once("topbar.php"); ?>
                 <div class="container-fluid mt-2">
                     <div class="row">
                         <div class="col col-md-3" id="filteroptions">

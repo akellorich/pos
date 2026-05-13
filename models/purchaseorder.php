@@ -5,14 +5,14 @@
     class purchaseorder extends db{
 
         public function saveTempPurchaseOrderItem($refno,$itemcode,$quantity,$unitprice,$taxable,$taxinclusive){
-            $sql="CALL spsavetemppurchaseorderitem({$this->clientid},'{$refno}','{$itemcode}',{$quantity},{$unitprice},{$taxable},{$taxinclusive})";
+            $sql="CALL spsavetemppurchaseorderitem({$this->branchid},'{$refno}','{$itemcode}',{$quantity},{$unitprice},{$taxable},{$taxinclusive})";
             // echo $sql."<br/>";
             $rst=$this->connect()->query($sql);
             //echo "The item has been added to the temporary data successfully";
         }
 
         public function savePurchaseOrder($id,$refno,$supplierid,$terms,$departmentid,$category,$currencyid,$exchangerate,$taxid,$taxrate){
-            $sql="CALL spsavepurchaseorder({$this->clientid},{$id},'{$refno}',{$supplierid},'{$terms}','{$category}',{$currencyid},{$exchangerate},{$departmentid},
+            $sql="CALL spsavepurchaseorder({$this->branchid},{$id},'{$refno}',{$supplierid},'{$terms}','{$category}',{$currencyid},{$exchangerate},{$departmentid},
             {$taxid},{$taxrate},{$this->userid})";
             //echo $sql."<br/>";
             $rst=$this->connect()->query($sql);
@@ -21,7 +21,7 @@
         }
 
         public function getPurchaseOrders(){
-           $sql="CALL spgetpurchaseorders({$this->clientid})";
+           $sql="CALL spgetpurchaseorders({$this->branchid})";
            $rst=$this->connect()->query($sql);
            echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
@@ -39,20 +39,20 @@
         }
 
         public function getSupplierPendingOrders($supplierid){
-            $sql="CALL spgetsupplierpendingorders({$this->clientid},'{$supplierid}')";
+            $sql="CALL spgetsupplierpendingorders({$this->branchid},'{$supplierid}')";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function getPOUndeliveredItems($purchaseordernumber){
-            $sql="CALL spgetpoitemsundelivered({$this->clientid},'{$purchaseordernumber}')";
+            $sql="CALL spgetpoitemsundelivered({$this->branchid},'{$purchaseordernumber}')";
             //echo $sql."<br/>";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         public function getPurchaseOrderDetails($id){
-            $sql="CALL spgetpurchaseorderdetails({$this->clientid},{$id})";
+            $sql="CALL spgetpurchaseorderdetails({$this->branchid},{$id})";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }

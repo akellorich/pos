@@ -25,7 +25,7 @@
                     <input type="password" id="inputPassword" class="form-control" placeholder="Password" required autocomplete="nope">
                 </div>
                 
-                <select name="company" id="company" class="form-control"></select>
+
                 <div id="remember" class="checkbox">
                     <label>
                         <input type="checkbox" value="remember-me"> Remember me

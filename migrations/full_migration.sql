@@ -677,7 +677,7 @@ BEGIN
     END $$
 
 DROP PROCEDURE IF EXISTS `spgetaccountspayableaginganalysis` $$
-CREATE PROCEDURE `spgetaccountspayableaginganalysis`(`$basedate` DATETIME)
+CREATE PROCEDURE `spgetaccountspayableaginganalysis`($branchid INT, $basedate DATETIME)
 BEGIN
 	SET @basedate=$basedate;
 	SET @cutoffdate=(SELECT DATE_FORMAT(`cutoffdate`,'%Y-%m-%d') FROM `startingparameters`);
@@ -688,28 +688,32 @@ BEGIN
 		SUM(IF(`range`='61',amountoverdue,0)) AS `ninenty` ,
 		SUM(IF(`range`='91',amountoverdue,0)) AS `onetwenty` ,
 		SUM(IF(`range`='120+',amountoverdue,0)) AS `aboveonetwenty` 
-	FROM (SELECT i.id AS invoiceid,s.`supplierid`,suppliername,`invoiceno`,
-	CASE 
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d')) BETWEEN 1 AND 30 THEN '1' 
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d')) BETWEEN 31 AND 60 THEN '31'
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d')) BETWEEN 61 AND 90 THEN '61'
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d')) BETWEEN 91 AND 120 THEN '91'
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d'))>=120 THEN '120+' 
-	END `range`,
-	SUM(`quantity`*`unitprice`) -
-	IFNULL((SELECT SUM(`quantity`*`unitprice`) FROM `paymentvouchers` v, `paymentvoucherdetails` vd 
-	WHERE v.`id`=vd.`voucherid` AND `supplier`=s.supplierid AND `invoicenumber`=`invoiceno` AND DATE_FORMAT(v.`date`,'%Y-%m-%d')<=@basedate),0) AS amountoverdue
-	FROM `supplierinvoice` i,`supplierinvoicedetails` id, `suppliers` s
-	WHERE i.`id`=id.`invoiceid` AND s.`supplierid`=i.`supplierid` 
-	AND DATE_FORMAT(`invoicedate`,'%Y-%m-%d')>=@cutoffdate
-	GROUP BY i.id ,s.`supplierid`,suppliername,`invoiceno`,`status`,DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d'))
-	ORDER BY `invoicedate` DESC, `invoiceno`) AS tab1
+	FROM (
+		SELECT i.supplierinvoiceid AS invoiceid,s.`supplierid`,suppliername,`invoiceno`,
+		CASE 
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d')) BETWEEN 1 AND 30 THEN '1' 
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d')) BETWEEN 31 AND 60 THEN '31'
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d')) BETWEEN 61 AND 90 THEN '61'
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d')) BETWEEN 91 AND 120 THEN '91'
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d'))>=120 THEN '120+' 
+		END AS `range`,
+		SUM(`quantity`*`unitprice`) -
+		IFNULL((SELECT SUM(`quantity`*`unitprice`) FROM `paymentvouchers` v, `paymentvoucherdetails` vd 
+		WHERE v.`paymentvoucherid`=vd.`voucherid` AND `supplier`=s.supplierid AND `invoicenumber`=`invoiceno` 
+		AND v.branchid = $branchid AND DATE_FORMAT(v.`date`,'%Y-%m-%d')<=@basedate),0) AS amountoverdue
+		FROM `supplierinvoice` i,`supplierinvoicedetails` id, `suppliers` s
+		WHERE i.`supplierinvoiceid`=id.`invoiceid` AND s.`supplierid`=i.`supplierid` 
+		AND i.branchid = $branchid
+		AND DATE_FORMAT(`invoicedate`,'%Y-%m-%d')>=@cutoffdate
+		GROUP BY i.supplierinvoiceid ,s.`supplierid`,suppliername,`invoiceno`,`status`,DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d'))
+		ORDER BY `invoicedate` DESC, `invoiceno`
+	) AS tab1
 	GROUP BY suppliername
 	WITH ROLLUP;
-    END $$
+END $$
 
 DROP PROCEDURE IF EXISTS `spgetaccountsreceivableaginganalysis` $$
-CREATE PROCEDURE `spgetaccountsreceivableaginganalysis`(`$basedate` DATETIME)
+CREATE PROCEDURE `spgetaccountsreceivableaginganalysis`($branchid INT, $basedate DATETIME)
 BEGIN
 	SET @cutoffdate=(SELECT DATE_FORMAT(`cutoffdate`,'%Y-%m-%d') FROM `startingparameters`);
 	SET @basedate=$basedate;
@@ -721,24 +725,26 @@ BEGIN
 		SUM(IF(`range`='onetwenty',`balance`,0)) AS `onetwenty` ,
 		SUM(IF(`range`='aboveonetwenty',`balance`,0)) AS `aboveonetwenty` 
 	FROM(
-	SELECT c.`customerid`, p.id,c.`customername`,
-	CASE 
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d'))<=30 THEN 'thirty' 
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d')) BETWEEN 31 AND 60 THEN 'sixty'
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d')) BETWEEN 61 AND 90 THEN 'ninety'
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d')) BETWEEN 91 AND 120 THEN 'onetwenty'
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d'))>120 THEN 'aboveonetwenty' 
-	END `range`,
-	pp.amount -
-	IFNULL((SELECT SUM(`amount`) FROM `customerreceiptdetails` WHERE `possaleid`=p.`id`),0) /**/ AS balance
-	FROM `possales` p, `possalesdetails` pd, `possalespayments` pp, `customers` c
-	WHERE p.`id`=pd.`possaleid` AND pp.`possaleid`=p.`id` AND pp.`paymentmode`=4  AND c.`customerid`=p.`customerid`-- AND p.`customerid`=$customerid  
-	AND  pp.amount - IFNULL((SELECT SUM(`amount`) FROM `customerreceiptdetails` WHERE `possaleid`=p.`id`),0)>0
-	AND DATE_FORMAT(`receiptdate`,'%Y-%m-%d')>=@cutoffdate
-	GROUP BY c.`customerid`,p.id,c.`customername`) AS tab1
+		SELECT c.`customerid`, p.possaleid AS id,c.`customername`,
+		CASE 
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d'))<=30 THEN 'thirty' 
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d')) BETWEEN 31 AND 60 THEN 'sixty'
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d')) BETWEEN 61 AND 90 THEN 'ninety'
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d')) BETWEEN 91 AND 120 THEN 'onetwenty'
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d'))>120 THEN 'aboveonetwenty' 
+		END AS `range`,
+		pp.amount -
+		IFNULL((SELECT SUM(`amount`) FROM `customerreceiptdetails` WHERE `possaleid`=p.`possaleid`),0) AS balance
+		FROM `possales` p, `possalesdetails` pd, `possalespayments` pp, `customers` c
+		WHERE p.`possaleid`=pd.`possaleid` AND pp.`possaleid`=p.`possaleid` AND pp.`paymentmode`=4 AND c.`customerid`=p.`customerid`
+		AND p.branchid = $branchid
+		AND pp.amount - IFNULL((SELECT SUM(`amount`) FROM `customerreceiptdetails` WHERE `possaleid`=p.`possaleid`),0)>0
+		AND DATE_FORMAT(`receiptdate`,'%Y-%m-%d')>=@cutoffdate
+		GROUP BY c.`customerid`,p.possaleid,c.`customername`
+	) AS tab1
 	GROUP BY customername
 	WITH ROLLUP;
-    END $$
+END $$
 
 DROP PROCEDURE IF EXISTS `spgetallusers` $$
 CREATE PROCEDURE `spgetallusers`(IN clientid INT)
@@ -759,28 +765,28 @@ BEGIN
     END $$
 
 DROP PROCEDURE IF EXISTS `spgetbalancesheet` $$
-CREATE PROCEDURE `spgetbalancesheet`(`$startdate` DATETIME, `$enddate` DATETIME)
+CREATE PROCEDURE `spgetbalancesheet`($branchid INT, $startdate DATETIME, $enddate DATETIME)
 BEGIN
-	
-	SET @startdate=$startdate,@enddate=$enddate;
-	SELECT 'PROFIT' `accountcode`,CASE WHEN SUM(`debit`-`credit`)>0 THEN 'Profit Before Tax' ELSE 'Loss Before Tax' END `accountname`,'Financed By' classname,
-	'Profit / Loss'`groupname`,SUM(`credit`-`debit`) AS `total`
+	SET @startdate = $startdate, @enddate = $enddate;
+	SELECT 'PROFIT' AS `accountcode`, CASE WHEN SUM(`debit`-`credit`)>0 THEN 'Profit Before Tax' ELSE 'Loss Before Tax' END AS `accountname`, 'Financed By' AS classname,
+	'Profit / Loss' AS `groupname`, SUM(`credit`-`debit`) AS `total`
 	FROM `glaccounts` g, `gltransactions` t, `glaccountgroups` p, `glaccountclasses` c
 	WHERE g.`id`=t.`glaccount` AND p.`id`=g.`groupid` AND p.`glaccountclass`=c.`id` 
-	AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate
-	AND classname IN('Income','Expense')
+	  AND t.branchid = $branchid
+	  AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate
+	  AND classname IN('Income','Expense')
 		
 	UNION 
-	SELECT `accountcode`,`accountname`,classname,
-	`groupname`,ABS(SUM(`debit`-`credit`)) AS `total`
+	SELECT `accountcode`, `accountname`, classname,
+	`groupname`, ABS(SUM(`debit`-`credit`)) AS `total`
 	FROM `glaccounts` g, `gltransactions` t, `glaccountgroups` p, `glaccountclasses` c
 	WHERE g.`id`=t.`glaccount` AND p.`id`=g.`groupid` AND p.`glaccountclass`=c.`id` 
-	AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate
-	AND classname NOT IN('Income','Expense')
-	GROUP BY `accountcode`,`accountname` , `groupname`
-	ORDER BY classname ,`accountcode`;
-	
-    END $$
+	  AND t.branchid = $branchid
+	  AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate
+	  AND classname NOT IN('Income','Expense')
+	GROUP BY `accountcode`, `accountname`, `groupname`
+	ORDER BY classname, `accountcode`;
+END $$
 
 DROP PROCEDURE IF EXISTS `spgetbestcustomer` $$
 CREATE PROCEDURE `spgetbestcustomer`(`$startdate` DATETIME, `$enddate` DATETIME)
@@ -1090,10 +1096,28 @@ BEGIN
     END $$
 
 DROP PROCEDURE IF EXISTS `spgetdiscountreport` $$
-CREATE PROCEDURE `spgetdiscountreport`(`$startdate` DATETIME, `$enddate` DATETIME)
+CREATE PROCEDURE `spgetdiscountreport`($branchid INT, $startdate DATETIME, $enddate DATETIME)
 BEGIN
-	/*SET @startdate=date_format($startdate,'%d-%m-%Y');
-	SET @enddate=date_format($enddate,'%d-%m-%Y');*/
+	SET @startdate = $startdate;
+	SET @enddate = $enddate;
+	
+	SELECT * FROM (
+		SELECT p.`itemcode` AS `Item Code`, `itemname` AS `Item Name`, FORMAT(`buyingprice`, 0) AS `Buying Price`, FORMAT(`sellingprice`, 0) AS `Selling Price`, FORMAT(SUM(quantity), 2) AS `Units Sold`, 
+		FORMAT(SUM(quantity*unitprice), 2) AS `Total Sales`, FORMAT(SUM(discount), 2) AS `Discount`
+		FROM `products` p, `possales` s, `possalesdetails` sd
+		WHERE p.`productid` = sd.`itemcode` AND sd.`possaleid` = s.`possaleid`
+		AND s.`branchid` = $branchid
+		AND `receiptdate` BETWEEN @startdate AND @enddate AND IFNULL(s.deleted, 0) = 0
+		GROUP BY p.`itemcode`, `itemname`, `buyingprice`, `sellingprice` 
+		ORDER BY itemname
+	) AS q1
+	UNION
+	SELECT '' AS `Item Code`, 'TOTAL' AS `Item Name`, 0 AS `Buying Price`, 0 AS `Selling Price`, FORMAT(SUM(quantity), 2) AS `Units Sold`, FORMAT(SUM(quantity*unitprice), 2) AS `Total Sales`, FORMAT(SUM(discount), 2) AS `Discount`
+	FROM `products` p, `possales` s, `possalesdetails` sd
+	WHERE p.`productid` = sd.`itemcode` AND sd.`possaleid` = s.`possaleid` AND IFNULL(s.deleted, 0) = 0
+	AND s.`branchid` = $branchid
+	AND `receiptdate` BETWEEN @startdate AND @enddate;
+ENDdate=date_format($enddate,'%d-%m-%Y');*/
 	SET @startdate=$startdate;
 	SET @enddate=$enddate;
 	
@@ -1150,24 +1174,24 @@ BEGIN
     END $$
 
 DROP PROCEDURE IF EXISTS `spgetglstatement` $$
-CREATE PROCEDURE `spgetglstatement`(`$startdate` DATETIME, `$enddate` DATETIME, `$accountid` INT)
+CREATE PROCEDURE `spgetglstatement`($branchid INT, $startdate DATETIME, $enddate DATETIME, $accountid INT)
 BEGIN
-    
-	SET @startdate=$startdate,@enddate=$enddate,@accountid=$accountid;
-	SET @openingbalancedate=DATE_SUB(@startdate, INTERVAL 1 DAY );
-	SET @cutoffdate=(SELECT DATE_FORMAT(`cutoffdate`,'%Y-%m-%d') FROM `startingparameters`);
+	SET @startdate = $startdate, @enddate = $enddate, @accountid = $accountid;
+	SET @openingbalancedate = DATE_SUB(@startdate, INTERVAL 1 DAY);
+	SET @cutoffdate = (SELECT DATE_FORMAT(`cutoffdate`,'%Y-%m-%d') FROM `startingparameters`);
 	
-	SELECT `accountcode`,`accountname`,`classname`, DATE_FORMAT(`transactiondate`,'%d-%b-%Y') AS `transactiondate`,`referenceno`, `narration`, `debit`,`credit`,
-	CONCAT(`firstname`,' ',`middlename`) AS `addedby` ,
-	IFNULL((SELECT SUM(IFNULL(`debit`,0)-IFNULL(`credit`,0)) FROM `gltransactions` WHERE `glaccount`=a.id AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @cutoffdate AND @openingbalancedate),0) `openingbalance`,
-	IFNULL((SELECT SUM(IFNULL(`debit`,0)) FROM `gltransactions` WHERE `glaccount`=a.id AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate),0) `debits`,
-	IFNULL((SELECT SUM(IFNULL(`credit`,0)) FROM `gltransactions` WHERE `glaccount`=a.id AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate),0) `credits` ,
-	IFNULL((SELECT SUM(IFNULL(`debit`,0)-IFNULL(`credit`,0)) FROM `gltransactions` WHERE `glaccount`=a.id  AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @cutoffdate AND @enddate),0) AS `closingbalance`
+	SELECT `accountcode`, `accountname`, `classname`, DATE_FORMAT(`transactiondate`,'%d-%b-%Y') AS `transactiondate`, `referenceno`, `narration`, `debit`, `credit`,
+	CONCAT(`firstname`,' ',`middlename`) AS `addedby`,
+	IFNULL((SELECT SUM(IFNULL(`debit`,0)-IFNULL(`credit`,0)) FROM `gltransactions` WHERE `glaccount`=a.id AND `branchid`=$branchid AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @cutoffdate and @openingbalancedate),0) AS `openingbalance`,
+	IFNULL((SELECT SUM(IFNULL(`debit`,0)) FROM `gltransactions` WHERE `glaccount`=a.id AND `branchid`=$branchid AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate),0) AS `debits`,
+	IFNULL((SELECT SUM(IFNULL(`credit`,0)) FROM `gltransactions` WHERE `glaccount`=a.id AND `branchid`=$branchid AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate),0) AS `credits`,
+	IFNULL((SELECT SUM(IFNULL(`debit`,0)-IFNULL(`credit`,0)) FROM `gltransactions` WHERE `glaccount`=a.id AND `branchid`=$branchid AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @cutoffdate AND @enddate),0) AS `closingbalance`
 	FROM `glaccounts` a, `glaccountgroups` g, `glaccountclasses` c, `user` u, `gltransactions` t
-	WHERE a.`groupid`=g.`id` AND g.`glaccountclass`=c.id  AND a.`id`=t.`glaccount` AND t.`addedby`=u.`id`
-	AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate AND a.`id`=@accountid
+	WHERE a.`groupid`=g.`id` AND g.`glaccountclass`=c.id AND a.`id`=t.`glaccount` AND t.`addedby`=u.`userid`
+	  AND t.branchid = $branchid
+	  AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate AND a.`id`=@accountid
 	ORDER BY `transactiondate`;
-    END $$
+END $$
 
 DROP PROCEDURE IF EXISTS `spgetglsubgroups` $$
 CREATE PROCEDURE `spgetglsubgroups`(`$groupid` INT)
@@ -1847,47 +1871,57 @@ BEGIN
     END $$
 
 DROP PROCEDURE IF EXISTS `spgetposstockbalanceasatdate` $$
-CREATE PROCEDURE `spgetposstockbalanceasatdate`(`$asatdate` DATETIME, `$posid` INT)
+CREATE PROCEDURE `spgetposstockbalanceasatdate`($branchid INT, $asatdate DATETIME, $posid INT)
 BEGIN	
+	SET @startdate = (SELECT DATE_SUB($asatdate, INTERVAL 1 DAY));
+	SET @basedate = DATE(IFNULL((SELECT `stockcutoffdate` FROM `startingparameters`), NOW())); 
 	
-	SET @startdate= (SELECT DATE_SUB($asatdate, INTERVAL 1 DAY));
-	SET @basedate=DATE(IFNULL((SELECT `stockcutoffdate` FROM `startingparameters`),NOW())); 
-	-- This is the cut off date 
-	SELECT `itemcode`,`itemname`,`buyingprice`,`sellingprice`, 
-	
-	-- Compute opening Balance
-	/*-- Transfers In
-	IFNULL((SELECT SUM(`quantity`) FROM `stocktransfer` s, `stocktransferdetails` sd WHERE s.`id`=sd.`transferid` AND `destinationtype`='pos' AND `destinationid`=$posid AND 
-	DATE(`dateadded`) between @basedate and @startdate AND sd.`itemcode`=p.`productid`),0) -
-	-- Less Transfers Out
-	IFNULL((SELECT SUM(`quantity`) FROM `stocktransfer` s, `stocktransferdetails` sd WHERE s.`id`=sd.`transferid` AND `sourcetype`='pos' AND `sourceid`=$posid AND 
-	DATE(`dateadded`) between @basedate AND @startdate AND sd.`itemcode`=p.`productid`),0) -
-	-- Less Sales 
-	IFNULL((SELECT SUM(quantity) FROM `possales` s,`possalesdetails` sd WHERE s.`id`=sd.`possaleid` AND
-	DATE(`receiptdate`) between @basedate AND @startdate
-	AND s.`pointofsaleid`=$posid AND s.deleted=0 AND sd.`itemcode`=p.`productid` and ifnull(`deleted`,0)=0),0) +
-	-- Add Reconciled balance 
-	ifnull((select sum(quantity) from `stockreconciledbalance` sb join `stockreconciledbalancedetails` sd on sd.`reconciliationid`=sb.`id`
-	and `itemid`=p.productid and date(`reconciliationdate`)<=$asatdate and `category`='outlet' and `posid`=$posid),0)
-	AS `openingbalance`,*/
-	`fn_getitemstorebalanceasat`(productid,$posid,@startdate) openingbalance,
+	SELECT `itemcode`, `itemname`, `buyingprice`, `sellingprice`, 
+	`fn_getitemstorebalanceasat`(productid, $posid, @startdate) AS openingbalance,
 	
 	-- Compute Day's Transfers and Sales
-	IFNULL((SELECT SUM(`quantity`) FROM `stocktransfer` s, `stocktransferdetails` sd WHERE s.`id`=sd.`transferid` AND `destinationtype`='pos' AND `destinationid`=$posid AND 
-	DATE(`dateadded`)>=@basedate AND DATE(`dateadded`)=$asatdate AND sd.`itemcode`=p.`productid`),0) AS transfersin,
-	IFNULL((SELECT SUM(`quantity`) FROM `stocktransfer` s, `stocktransferdetails` sd WHERE s.`id`=sd.`transferid` AND `sourcetype`='pos' AND `sourceid`=$posid AND 
-	DATE(`dateadded`)>=@basedate AND DATE(`dateadded`)=$asatdate AND sd.`itemcode`=p.`productid`),0) AS transfersout,
+	IFNULL((
+		SELECT SUM(`quantity`) 
+		FROM `stocktransfer` s, `stocktransferdetails` sd 
+		WHERE s.`stocktransferid` = sd.`transferid` 
+		  AND `destinationtype` = 'pos' 
+		  AND `destinationid` = $posid 
+		  AND s.`branchid` = $branchid
+		  AND DATE(`dateadded`) >= @basedate 
+		  AND DATE(`dateadded`) = $asatdate 
+		  AND sd.`itemcode` = p.`productid`
+	), 0) AS transfersin,
+	
+	IFNULL((
+		SELECT SUM(`quantity`) 
+		FROM `stocktransfer` s, `stocktransferdetails` sd 
+		WHERE s.`stocktransferid` = sd.`transferid` 
+		  AND `sourcetype` = 'pos' 
+		  AND `sourceid` = $posid 
+		  AND s.`branchid` = $branchid
+		  AND DATE(`dateadded`) >= @basedate 
+		  AND DATE(`dateadded`) = $asatdate 
+		  AND sd.`itemcode` = p.`productid`
+	), 0) AS transfersout,
 	
 	-- Compute Days Sales
-	IFNULL((SELECT SUM(quantity) FROM `possales` s,`possalesdetails` sd WHERE s.`id`=sd.`possaleid` AND 
-	DATE(`receiptdate`)>=@basedate AND DATE(`receiptdate`)=$asatdate
-	AND s.`pointofsaleid`=$posid AND s.deleted=0 AND sd.`itemcode`=p.`productid` AND IFNULL(`deleted`,0)=0),0) AS sales
+	IFNULL((
+		SELECT SUM(quantity) 
+		FROM `possales` s, `possalesdetails` sd 
+		WHERE s.`possaleid` = sd.`possaleid` 
+		  AND s.`branchid` = $branchid
+		  AND DATE(`receiptdate`) >= @basedate 
+		  AND DATE(`receiptdate`) = $asatdate
+		  AND s.`pointofsaleid` = $posid 
+		  AND s.deleted = 0 
+		  AND sd.`itemcode` = p.`productid` 
+		  AND IFNULL(`deleted`, 0) = 0
+	), 0) AS sales
 	
 	FROM `categories` c, `products` p
-	WHERE p.`categoryid`=c.`categoryid` 
-	
+	WHERE p.`categoryid` = c.`categoryid` 
 	ORDER BY itemname, p.itemcode;
-    END $$
+END $$
 
 DROP PROCEDURE IF EXISTS `spgetproductbycategory` $$
 CREATE PROCEDURE `spgetproductbycategory`(IN clientid INT, IN p_categoryid INT)
@@ -1910,14 +1944,48 @@ BEGIN
     END $$
 
 DROP PROCEDURE IF EXISTS `spgetprofitabilityreport` $$
-CREATE PROCEDURE `spgetprofitabilityreport`(`$startdate` VARCHAR(50), `$enddate` VARCHAR(50), `$posid` INT)
+CREATE PROCEDURE `spgetprofitabilityreport`($branchid INT, $startdate VARCHAR(50), $enddate VARCHAR(50), $posid INT)
 BEGIN
-	IF $posid=0 THEN 
-		SELECT m.`itemcode`,`itemname`, FORMAT(`buyingprice`,2) AS `Buying Price`, FORMAT(AVG(`unitprice`),2) AS sellingprice, FORMAT(SUM(`quantity`),2) AS unitssold, 
-		FORMAT(SUM(`buyingprice`*`quantity`),2) AS  `Total Purchases`, FORMAT(SUM((`unitprice`-IFNULL(discount,0))* `quantity`),2) AS  `Total Sales`,
-		FORMAT((SUM((`unitprice`-IFNULL(discount,0))*`quantity`))- (`buyingprice`*SUM(`quantity`)),2) AS Margin
+	IF $posid = 0 THEN 
+		SELECT m.`itemcode`, `itemname`, FORMAT(`buyingprice`, 2) AS `Buying Price`, FORMAT(AVG(`unitprice`), 2) AS sellingprice, FORMAT(SUM(`quantity`), 2) AS unitssold, 
+		FORMAT(SUM(`buyingprice` * `quantity`), 2) AS `Total Purchases`, FORMAT(SUM((`unitprice` - IFNULL(discount, 0)) * `quantity`), 2) AS `Total Sales`,
+		FORMAT((SUM((`unitprice` - IFNULL(discount, 0)) * `quantity`)) - (`buyingprice` * SUM(`quantity`)), 2) AS Margin
 		FROM `products` m, `possales` p, `possalesdetails` pd
-		WHERE m.`productid`=pd.`itemcode` AND pd.`possaleid`=p.`id` AND DATE_FORMAT(p.`receiptdate`,'%Y-%m-%d') BETWEEN $startdate AND $enddate
+		WHERE m.`productid` = pd.`itemcode` AND pd.`possaleid` = p.`possaleid` AND p.`branchid` = $branchid AND DATE_FORMAT(p.`receiptdate`, '%Y-%m-%d') BETWEEN $startdate AND $enddate
+		AND IFNULL(p.`deleted`, 0) = 0
+		GROUP BY `itemcode`, `itemname`, `buyingprice`
+		UNION 
+		SELECT 'TOTAL: ' AS itemcode, '' AS itemname,
+		FORMAT(AVG(`buyingprice`), 2) AS `Buying Price`, FORMAT(AVG(`unitprice`), 2) AS sellingprice, FORMAT(SUM(`quantity`), 2) AS unitssold, 
+		FORMAT(SUM(`buyingprice` * `quantity`), 2) AS `Total Purchases`, 
+		FORMAT(SUM(`quantity` * (`unitprice` - IFNULL(discount, 0))), 2) AS `Total Sales`,
+		FORMAT(SUM((`unitprice` - IFNULL(discount, 0)) * `quantity`) - SUM(`buyingprice` * `quantity`), 2) AS Margin
+		FROM `products` m, `possales` p, `possalesdetails` pd
+		WHERE m.`productid` = pd.`itemcode` AND pd.`possaleid` = p.`possaleid` AND p.`branchid` = $branchid AND DATE_FORMAT(p.`receiptdate`, '%Y-%m-%d') BETWEEN $startdate AND $enddate
+		AND IFNULL(p.`deleted`, 0) = 0
+		;
+	ELSE
+		SELECT m.`itemcode`, `itemname`, FORMAT(`buyingprice`, 2) AS `Buying Price`, FORMAT(AVG(`unitprice`), 2) AS sellingprice, FORMAT(SUM(`quantity`), 2) AS unitssold, 
+		FORMAT(SUM(`buyingprice` * `quantity`), 2) AS `Total Purchases`, FORMAT(SUM((`unitprice` - IFNULL(discount, 0)) * `quantity`), 2) AS `Total Sales`,
+		FORMAT((SUM((`unitprice` - IFNULL(discount, 0)) * `quantity`)) - (`buyingprice` * SUM(`quantity`)), 2) AS Margin
+		FROM `products` m, `possales` p, `possalesdetails` pd
+		WHERE m.`productid` = pd.`itemcode` AND pd.`possaleid` = p.`possaleid` AND p.`branchid` = $branchid
+		AND DATE_FORMAT(p.`receiptdate`, '%Y-%m-%d') BETWEEN $startdate AND $enddate AND `pointofsaleid` = $posid
+		AND IFNULL(p.`deleted`, 0) = 0
+		GROUP BY `itemcode`, `itemname`, `buyingprice`
+		UNION 
+		SELECT 'TOTAL: ' AS itemcode, '' AS itemname,
+		FORMAT(AVG(`buyingprice`), 2) AS `Buying Price`, FORMAT(AVG(`unitprice`), 2) AS sellingprice, FORMAT(SUM(`quantity`), 2) AS unitssold, 
+		FORMAT(SUM(`buyingprice` * `quantity`), 2) AS `Total Purchases`, 
+		FORMAT(SUM(`quantity` * (`unitprice` - IFNULL(discount, 0))), 2) AS `Total Sales`,
+		FORMAT(SUM((`unitprice` - IFNULL(discount, 0)) * `quantity`) - SUM(`buyingprice` * `quantity`), 2) AS Margin
+		FROM `products` m, `possales` p, `possalesdetails` pd
+		WHERE m.`productid` = pd.`itemcode` AND pd.`possaleid` = p.`possaleid` AND p.`branchid` = $branchid AND DATE_FORMAT(p.`receiptdate`, '%Y-%m-%d') BETWEEN $startdate AND $enddate 
+		AND IFNULL(p.`deleted`, 0) = 0
+		AND `pointofsaleid` = $posid 
+		;
+	END IF;
+    ENDdate
 		AND IFNULL(p.`deleted`,0)=0
 		GROUP BY `itemcode`,`itemname`,`buyingprice`
 		UNION 
@@ -1954,139 +2022,147 @@ BEGIN
     END $$
 
 DROP PROCEDURE IF EXISTS `spgetprofitandlossaccount` $$
-CREATE PROCEDURE `spgetprofitandlossaccount`(`$startdate` DATETIME, `$enddate` DATETIME)
+CREATE PROCEDURE `spgetprofitandlossaccount`($branchid INT, $startdate DATETIME, $enddate DATETIME)
 BEGIN
-	SET @startdate=$startdate,@enddate=$enddate;
-	SELECT `accountcode`,`accountname`,classname,
+	SET @startdate = $startdate, @enddate = $enddate;
+	SELECT `accountcode`, `accountname`, classname,
 	ABS(SUM(`debit`-`credit`)) AS `total`
 	FROM `glaccounts` g, `gltransactions` t, `glaccountgroups` p, `glaccountclasses` c
 	WHERE g.`id`=t.`glaccount` AND p.`id`=g.`groupid` AND p.`glaccountclass`=c.`id` 
-	AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate
-	AND classname IN('Income','Expense')
-	GROUP BY `accountcode`,`accountname` 
-	ORDER BY classname DESC,`accountcode`;
-    END $$
+	  AND t.branchid = $branchid
+	  AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate
+	  AND classname IN('Income','Expense')
+	GROUP BY `accountcode`, `accountname` 
+	ORDER BY classname DESC, `accountcode`;
+END $$
 
 DROP PROCEDURE IF EXISTS `spgetprofitandlossaccountdetails` $$
-CREATE PROCEDURE `spgetprofitandlossaccountdetails`(`$startdate` DATETIME, `$enddate` DATETIME)
+CREATE PROCEDURE `spgetprofitandlossaccountdetails`($branchid INT, $startdate DATETIME, $enddate DATETIME)
 BEGIN
-    
-	SET @startdate=DATE_FORMAT($startdate,'%Y-%m-%d');
-	SET @enddate=DATE_FORMAT($enddate,'%Y-%m-%d');
-	SELECT `classname`,`accountcode`,`accountname`,SUM(IFNULL(debit,0)-IFNULL(credit,0)) AS amount
-	FROM `glaccounts` g,`gltransactions` t, `glaccountgroups` r,`glaccountclasses` c
+	SET @startdate = DATE_FORMAT($startdate, '%Y-%m-%d');
+	SET @enddate = DATE_FORMAT($enddate, '%Y-%m-%d');
+	SELECT `classname`, `accountcode`, `accountname`, SUM(IFNULL(debit,0)-IFNULL(credit,0)) AS amount
+	FROM `glaccounts` g, `gltransactions` t, `glaccountgroups` r, `glaccountclasses` c
 	WHERE g.`groupid`=r.`id` AND r.`glaccountclass`=c.`id` AND c.classname IN('Expense','Income')
-	AND g.`accountcode` NOT IN(SELECT account FROM `glaccountsettings`) 
-	AND t.`glaccount`=g.`id`
-	AND DATE_FORMAT(transactiondate,'%Y-%m-%d') BETWEEN @startdate AND @enddate
-	GROUP BY  `classname`,`accountcode`,`accountname`;
-	
-    END $$
+	  AND g.`accountcode` NOT IN(SELECT account FROM `glaccountsettings`) 
+	  AND t.`glaccount`=g.`id`
+	  AND t.branchid = $branchid
+	  AND DATE_FORMAT(transactiondate, '%Y-%m-%d') BETWEEN @startdate AND @enddate
+	GROUP BY `classname`, `accountcode`, `accountname`;
+END $$
 
 DROP PROCEDURE IF EXISTS `spgetprofitandlossaccountheader` $$
-CREATE PROCEDURE `spgetprofitandlossaccountheader`(IN `$startdate` DATETIME, IN `$enddate` DATETIME)
+CREATE PROCEDURE `spgetprofitandlossaccountheader`($branchid INT, $startdate DATETIME, $enddate DATETIME)
 BEGIN
-    -- Trim date inputs to ensure no time portion
-    SET @startdate = DATE($startdate);
-    SET @enddate = DATE($enddate);
-
-    -- Get Sales and COGS account IDs using JOINs
-    SELECT g.id INTO @salesaccount
-    FROM glaccounts g
-    JOIN glaccountsettings s ON g.accountcode = s.account
-    WHERE s.description = 'Sales'
-    LIMIT 1;
-
-    SELECT g.id INTO @stockaccount
-    FROM glaccounts g
-    JOIN glaccountsettings s ON g.accountcode = s.account
-    WHERE s.description = 'Cost of Goods Sold'
-    LIMIT 1;
-
-    -- Cutoff date for stock
-    SELECT DATE(cutoffdate) INTO @cutoffdate FROM startingparameters;
-
-    -- Sales amount
-    SELECT SUM(pd.quantity * pd.unitprice) INTO @salesamount
-    FROM possales p
-    JOIN possalesdetails pd ON p.id = pd.possaleid
-    WHERE p.receiptdate BETWEEN @startdate AND @enddate
-      AND IFNULL(p.deleted, 0) = 0;
-
-    -- Purchases
-    SELECT SUM(gd.quantity * pd.unitprice) INTO @purchases
-    FROM goodsreceived g
-    JOIN goodsreceiveddetails gd ON g.grnno = gd.grnno
-    JOIN purchaseorders po ON gd.purchaseorderno = po.purchaseorderno
-    JOIN purchaseorderdetails pd ON po.id = pd.purchaseorderid AND gd.itemcode = pd.itemcode
-    WHERE g.datereceived BETWEEN @startdate AND @enddate;
-
-    -- Get last reconciliation before start date
-    SELECT id, DATE(reconciliationdate) INTO @reconciliationid, @reconciliationdate
-    FROM stockreconciledbalance
-    WHERE reconciliationdate < @startdate
-    ORDER BY reconciliationdate DESC
-    LIMIT 1;
-
-    -- Tentative start = one day before range
-    SET @tentativestartdate = DATE_SUB(@startdate, INTERVAL 1 DAY);
-
-    -- Opening stock from last reconciliation
-    SELECT SUM(sb.quantity * sb.unitprice) INTO @openingstock
-    FROM stockreconciledbalancedetails sb
-    JOIN stockreconciledbalance s ON sb.reconciliationid = s.id
-    WHERE s.id = @reconciliationid;
-
-    -- Purchases since reconciliation
-    SELECT SUM(gd.quantity * p.buyingprice) INTO @purchasessincelastreconciliation
-    FROM goodsreceiveddetails gd
-    JOIN products p ON gd.itemcode = p.productid
-    WHERE gd.grnno IN (
-        SELECT grnno FROM goodsreceived
-        WHERE datereceived BETWEEN @reconciliationdate AND @tentativestartdate
-    );
-
-    -- Sales since reconciliation
-    SELECT SUM(pd.quantity * r.buyingprice) INTO @salessincelastreconciliation
-    FROM possales p
-    JOIN possalesdetails pd ON p.id = pd.possaleid
-    JOIN products r ON pd.itemcode = r.productid
-    WHERE p.receiptdate BETWEEN @reconciliationdate AND @tentativestartdate
-      AND IFNULL(p.deleted, 0) = 0;
-
-    -- Adjust opening stock
-    SET @openingstock = IFNULL(@openingstock, 0) 
-                        + IFNULL(@purchasessincelastreconciliation, 0) 
-                        - IFNULL(@salessincelastreconciliation, 0);
-
-    -- Purchases since start
-    SELECT SUM(gd.quantity * p.buyingprice) INTO @purchasessincestartdate
-    FROM goodsreceiveddetails gd
-    JOIN products p ON gd.itemcode = p.productid
-    WHERE gd.grnno IN (
-        SELECT grnno FROM goodsreceived
-        WHERE datereceived BETWEEN @startdate AND @enddate
-    );
-
-    -- Sales since start
-    SELECT SUM(pd.quantity * r.buyingprice) INTO @salessincestartdate
-    FROM possales p
-    JOIN possalesdetails pd ON p.id = pd.possaleid
-    JOIN products r ON pd.itemcode = r.productid
-    WHERE p.receiptdate BETWEEN @startdate AND @enddate
-      AND IFNULL(p.deleted, 0) = 0;
-
-    -- Compute closing stock
-    SET @closingstock = IFNULL(@openingstock, 0) 
-                        + IFNULL(@purchasessincestartdate, 0) 
-                        - IFNULL(@salessincestartdate, 0);
-
-    -- Final result
-    SELECT  
-        ROUND(IFNULL(@salesamount, 0), 2) AS sales, 
-	ROUND(IFNULL(@openingstock, 0), 2) AS openingstock,
-	ROUND(IFNULL(@purchases, 0), 2) AS purchases, 
-	ROUND(IFNULL(@closingstock, 0), 2) AS closingstock;
+	SET @salesaccount = (SELECT id FROM glaccounts WHERE `accountcode`=(SELECT `account` FROM `glaccountsettings` WHERE `description`='Sales'));
+	SET @stockaccount = (SELECT id FROM glaccounts WHERE `accountcode`=(SELECT `account` FROM `glaccountsettings` WHERE `description`='Cost of Goods Sold'));
+	SET @startdate = DATE_FORMAT($startdate, '%Y-%m-%d');
+	SET @enddate = DATE_FORMAT($enddate, '%Y-%m-%d');
+	SET @cutoffdate = DATE_FORMAT((SELECT `cutoffdate` FROM `startingparameters`), '%Y-%m-%d');
+	
+	SET @salesamount = IFNULL((
+		SELECT SUM(quantity*unitprice) 
+		FROM possales p, possalesdetails pd 
+		WHERE p.possaleid = pd.possaleid 
+		  AND p.branchid = $branchid
+		  AND DATE_FORMAT(p.receiptdate, '%Y-%m-%d') BETWEEN @startdate AND @enddate 
+		  AND IFNULL(p.deleted, 0) = 0
+	), 0);
+	
+	SET @purchases = (
+		SELECT SUM(gd.quantity*pd.unitprice) 
+		FROM goodsreceived g, goodsreceiveddetails gd, purchaseorders p, purchaseorderdetails pd 
+		WHERE g.`grnno` = gd.`grnno` 
+		  AND p.purchaseorderid = pd.`purchaseorderid` 
+		  AND gd.`purchaseorderno` = p.purchaseorderno 
+		  AND pd.`itemcode` = gd.`itemcode` 
+		  AND g.branchid = $branchid
+		  AND p.branchid = $branchid
+		  AND DATE_FORMAT(g.`datereceived`, '%Y-%m-%d') BETWEEN @startdate AND @enddate
+	);
+	
+	SET @startdate = DATE_SUB(@startdate, INTERVAL 1 DAY);
+	SET @reconcilliationid = IFNULL((
+		SELECT `stockreconciledbalanceid` 
+		FROM `stockreconciledbalance` 
+		WHERE branchid = $branchid 
+		  AND DATE_FORMAT(`reconciliationdate`, '%Y-%m-%d') < @startdate 
+		ORDER BY `reconciliationdate` DESC LIMIT 1
+	), 0);
+	
+	SET @reconciliationdate = IFNULL((
+		SELECT DATE_FORMAT(`reconciliationdate`, '%Y-%m-%d') 
+		FROM `stockreconciledbalance` 
+		WHERE branchid = $branchid 
+		  AND DATE_FORMAT(`reconciliationdate`, '%Y-%m-%d') < @startdate 
+		ORDER BY `reconciliationdate` DESC LIMIT 1
+	), @startdate);
+	
+	SET @tentativestartdate = DATE_SUB(@startdate, INTERVAL 1 DAY);
+	
+	SET @openingstock = IFNULL((
+		SELECT SUM(quantity*unitprice) 
+		FROM `stockreconciledbalance` s, `stockreconciledbalancedetails` sb 
+		WHERE s.`stockreconciledbalanceid` = sb.`reconciliationid` 
+		  AND s.branchid = $branchid 
+		  AND s.`stockreconciledbalanceid` = @reconcilliationid
+	), 0);
+	
+	-- Get purchases since last reconciliation
+	SET @purchasessincelastreconciliation = IFNULL((
+		SELECT SUM(quantity*buyingprice) 
+		FROM goodsreceiveddetails g, products p 
+		WHERE p.`productid` = g.`itemcode` 
+		  AND grnno IN (
+			  SELECT grnno 
+			  FROM `goodsreceived` 
+			  WHERE branchid = $branchid 
+				AND DATE_FORMAT(datereceived, '%Y-%m-%d') BETWEEN @reconciliationdate AND @tentativestartdate
+		  )
+	), 0);
+	
+	-- Get sales since last reconciliation
+	SET @salessincelastreconciliation = IFNULL((
+		SELECT SUM(quantity*buyingprice) 
+		FROM `possales` p, `possalesdetails` pd, products r 
+		WHERE p.`possaleid` = pd.`possaleid` 
+		  AND r.`productid` = pd.`itemcode` 
+		  AND p.branchid = $branchid 
+		  AND DATE_FORMAT(`receiptdate`, '%Y-%m-%d') BETWEEN @reconciliationdate AND @tentativestartdate 
+		  AND IFNULL(p.deleted, 0) = 0
+	), 0);
+	
+	-- Compute the correct opening balance (using correct opening stock variable)
+	SET @openingstock = @openingstock + @purchasessincelastreconciliation - @salessincelastreconciliation;
+	
+	-- Get purchases since start date
+	SET @purchasessincestartdate = IFNULL((
+		SELECT SUM(quantity*buyingprice) 
+		FROM goodsreceiveddetails g, products p 
+		WHERE p.`productid` = g.`itemcode` 
+		  AND grnno IN (
+			  SELECT grnno 
+			  FROM `goodsreceived` 
+			  WHERE branchid = $branchid 
+				AND DATE_FORMAT(datereceived, '%Y-%m-%d') BETWEEN @startdate AND @enddate
+		  )
+	), 0);
+	
+	-- Get sales since start date
+	SET @salessincestartdate = IFNULL((
+		SELECT SUM(quantity*buyingprice) 
+		FROM `possales` p, `possalesdetails` pd, products r 
+		WHERE p.`possaleid` = pd.`possaleid` 
+		  AND r.`productid` = pd.`itemcode` 
+		  AND p.branchid = $branchid 
+		  AND DATE_FORMAT(`receiptdate`, '%Y-%m-%d') BETWEEN @startdate AND @enddate 
+		  AND IFNULL(p.deleted, 0) = 0
+	), 0);
+	
+	-- Compute the closing stock
+	SET @closingstock = @openingstock + @purchasessincestartdate - @salessincestartdate;
+	
+	SELECT @salesamount AS `sales`, @openingstock AS `openingstock`, @purchases AS `purchases`, @closingstock AS `closingstock`;
 END $$
 
 DROP PROCEDURE IF EXISTS `spgetpropertydocumenttemplates` $$
@@ -2999,20 +3075,23 @@ BEGIN
 END $$
 
 DROP PROCEDURE IF EXISTS `spgettrialbalance` $$
-CREATE PROCEDURE `spgettrialbalance`(`$startdate` DATETIME, `$enddate` DATETIME)
+CREATE PROCEDURE `spgettrialbalance`($branchid INT, $startdate DATETIME, $enddate DATETIME)
 BEGIN
-	SET @startdate=$startdate,@enddate=$enddate;
-	SELECT IFNULL(CONCAT(accountcode,' - ',accountname),'TOTAL') accountname, 
+	SET @startdate = $startdate, @enddate = $enddate;
+	SELECT IFNULL(CONCAT(accountcode,' - ',accountname),'TOTAL') AS accountname, 
 		SUM(IF(`total`>0,`total`,0)) AS debit,
-		SUM(IF(`total`<0,ABS(`total`),0)) AS credit FROM
-	(SELECT `accountcode`,`accountname`,
-	SUM(`debit`-`credit`) AS `total`
-	FROM `glaccounts` g, `gltransactions` t
-	WHERE g.`id`=t.`glaccount`  AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate
-	GROUP BY `accountcode`,`accountname` ORDER BY `accountcode` ) tab1
+		SUM(IF(`total`<0,ABS(`total`),0)) AS credit 
+	FROM (
+		SELECT `accountcode`, `accountname`,
+		SUM(`debit`-`credit`) AS `total`
+		FROM `glaccounts` g, `gltransactions` t
+		WHERE g.`id`=t.`glaccount` AND t.branchid = $branchid AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate
+		GROUP BY `accountcode`, `accountname` 
+		ORDER BY `accountcode`
+	) tab1
 	GROUP BY accountname
 	WITH ROLLUP;
-    END $$
+END $$
 
 DROP PROCEDURE IF EXISTS `spgetuninvoicedgrns` $$
 CREATE PROCEDURE `spgetuninvoicedgrns`(`$supplierid` INT, `$startdate` DATETIME, `$enddate` DATETIME)

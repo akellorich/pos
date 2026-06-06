@@ -6,17 +6,39 @@ $(document).ready(function(){
         alldates=$("#alldates"),
         errordiv=$("#errors"),
         report=$("#report"),
-        productsalesreport=$("#productsalesreport")
+        productsalesreport=$("#productsalesreport");
 
-    startdatefield.datepicker({dateFormat: 'dd-M-yy'})
-    enddatefield.datepicker({dateFormat: 'dd-M-yy'})
+    var productsLoaded = false;
 
-    alldates.prop("checked",true)
-    startdatefield.prop("disabled",true)
-    enddatefield.prop("disabled",true)
+    function checkAllLoaded() {
+        if (productsLoaded) {
+            searchbutton.trigger('click');
+        }
+    }
+
+    startdatefield.datepicker({maxDate: new Date(), dateFormat: 'dd-M-yy'})
+    enddatefield.datepicker({maxDate: new Date(), dateFormat: 'dd-M-yy'})
+
+    // Helper to format date as dd-M-yy (e.g. 02-Jun-2026)
+    function formatDate(date) {
+        var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var day = date.getDate();
+        var month = months[date.getMonth()];
+        var year = date.getFullYear();
+        if (day < 10) day = '0' + day;
+        return day + '-' + month + '-' + year;
+    }
+
+    // Set default filter to last 24 hours
+    var today = new Date();
+    var yesterday = new Date(Date.now() - 86400000);
+
+    alldates.prop("checked", false);
+    startdatefield.prop("disabled", false).val(formatDate(yesterday));
+    enddatefield.prop("disabled", false).val(formatDate(today));
 
     alldates.on("click",function(){
-        if(alldates.prop("disabled")){
+        if(alldates.prop("checked")){
             startdatefield.prop("disabled",true)
             enddatefield.prop("disabled",true)
         }else{
@@ -38,6 +60,8 @@ $(document).ready(function(){
                 results+="<option value='"+data[i].itemname+"'>"+data[i].itemname+"</option>"
             }
             $(results).appendTo(productslist)
+            productsLoaded = true;
+            checkAllLoaded();
         }
     )
 

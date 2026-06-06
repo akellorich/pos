@@ -30,17 +30,18 @@ CREATE PROCEDURE spgetreceiptvatanalysis(
 BEGIN
     SELECT 
         t.`abbreviation`,
-        pd.`taxrate`,
-        SUM(pd.quantity * pd.unitprice) AS total,
-        SUM(pd.quantity * pd.unitprice) * pd.`taxrate` / 100 AS vat
+        IFNULL(pd.`taxrate`, t.`taxrate`) AS taxrate,
+        SUM(pd.quantity * (pd.unitprice - pd.discount)) AS total,
+        SUM(pd.quantity * (pd.unitprice - pd.discount)) * IFNULL(pd.`taxrate`, t.`taxrate`) / (100 + IFNULL(pd.`taxrate`, t.`taxrate`)) AS vat
     FROM `possalesdetails` pd
     INNER JOIN `possales` p ON pd.`possaleid` = p.`possaleid`
-    INNER JOIN `taxtypes` t ON pd.`taxtypeid` = t.`id`
+    INNER JOIN `products` prod ON pd.`itemcode` = prod.`productid`
+    INNER JOIN `taxtypes` t ON IFNULL(pd.`taxtypeid`, prod.`taxtypeid`) = t.`id`
     WHERE p.`branchid` = $branchid 
     AND p.`receiptno` = $receiptno
     AND t.`clientid` = $clientid
-    GROUP BY t.`abbreviation`, pd.`taxrate`
-    ORDER BY pd.`taxrate`;
+    GROUP BY t.`abbreviation`, taxrate
+    ORDER BY taxrate;
 END //
 
 DELIMITER ;

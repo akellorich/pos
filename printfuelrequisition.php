@@ -13,7 +13,7 @@ $db=new db();
 $requisitionno=$_GET['requisitionno'];
 
 // get institutional details
-$sql="CALL spgetinstitutiondetails()";
+$sql="CALL spgetinstitutiondetails({$db->clientid})";
 $rst=$db->getData($sql)->fetch();
 $sql="CALL `sp_getfleetrequisitionheaderdetails`('{$requisitionno}')";
 $rst2=$db->getData($sql)->fetch();

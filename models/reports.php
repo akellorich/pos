@@ -28,7 +28,7 @@
 
         function getStockSheet($asatdate){
             $asatdate= $this->mySQLDate($asatdate);
-            $sql="CALL spgetstocksheet({$this->branchid},'{$asatdate}')";
+            $sql="CALL spgetstocksheet('{$asatdate}')";
             //echo $sql."<br/>";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
@@ -62,14 +62,14 @@
         function getCustomerStatement($customerid,$startdate,$enddate){
             $startdate=$this->mySQLDate($startdate);
             $enddate=$this->mySQLDate($enddate);
-            $sql="CALL  spgetcustomerstatement ({$customerid},'{$startdate}','{$enddate}')";
+            $sql="CALL  spgetcustomerstatement ({$this->clientid},{$customerid},'{$startdate}','{$enddate}')";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         function getCustomerAgingAnalysis($customerid,$basedate){
             $basedate=$this->mySQLDate($basedate);
-            $sql="CALL   spgetcustomeraginganalysis ({$customerid},'{$basedate}')";
+            $sql="CALL   spgetcustomeraginganalysis ({$this->clientid},'{$basedate}',{$customerid})";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
@@ -77,14 +77,14 @@
         function getSupplierStatement($supplierid,$startdate,$enddate){
             $startdate=$this->mySQlDate($startdate);
             $enddate=$this->mySQLDate($enddate);
-            $sql="CALL spgetsupplierstatement ($supplierid,'{$startdate}','{$enddate}')";
+            $sql="CALL spgetsupplierstatement ({$this->clientid},$supplierid,'{$startdate}','{$enddate}')";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
 
         function getSupplierAgingAnalysis($basedate,$supplierid){
             $basedate=$this->mySQLDate($basedate);
-            $sql="CALL spgetsupplieraginganalysis({$this->branchid},'{$basedate}',{$supplierid})";
+            $sql="CALL spgetsupplieraginganalysis({$this->clientid},'{$basedate}',{$supplierid})";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
@@ -142,7 +142,20 @@
             $startdate=$this->mySQLDate($startdate);
             $enddate=$this->mySQLDate($enddate);
             $sql="CALL spgetsalesbycustomercount({$this->branchid},'{$startdate}','{$enddate}','{$range}')";
-            //echo $sql."<br/>";
+            $rst=$this->connect()->query($sql);
+            echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
+        }
+
+        function getreorderitems(){
+            $sql="CALL spgetreorderitems({$this->branchid})";
+            $rst=$this->connect()->query($sql);
+            echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
+        }
+
+        function getcustomerperformance($startdate, $enddate){
+            $startdate=$this->mySQLDate($startdate);
+            $enddate=$this->mySQLDate($enddate);
+            $sql="CALL spgetcustomerperformance({$this->branchid}, '{$startdate}', '{$enddate}')";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
         }
@@ -232,19 +245,19 @@
 
         function getmasterstocksheet($enddate){           
             $enddate=$this->MySQLDate($enddate);
-            $sql="CALL spgetmasterstocksheet({$this->branchid},'{$enddate}')";
+            $sql="CALL spgetmasterstocksheet('{$enddate}')";
             echo $this->getJSON($sql);
         }
 
         function getreturnoutwardssummary($asatdate){
             $asatdate=$this->mySQLDate($asatdate);
-            $sql="CALL spgetreturnoutwardssummary({$this->branchid},'{$asatdate}')";
+            $sql="CALL spgetreturnoutwardssummary('{$asatdate}')";
             return $this->getJSON($sql);
         }
 
         function getreturninwardssummary($asatdate){
             $asatdate=$this->mySQLDate($asatdate);
-            $sql="CALL spgetreturninwardssummary({$this->branchid},'{$asatdate}')";
+            $sql="CALL spgetreturninwardssummary('{$asatdate}')";
             return $this->getJSON($sql);
         }
 

@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EPOS - Login Form</title>
+    <link rel="shortcut icon" href="images/logo.png">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/bootstrap.css">
     <link rel="stylesheet" href="css/all.css">
     <link rel="stylesheet" href="css/index.css">
@@ -14,7 +16,7 @@
 <div class="login-container">
     <!-- Logo and Company Name -->
     <div class="logo-container">
-        <img src="images/logo.jpg" alt="Company Logo" class="logo" id="companylogo">
+        <img src="images/logo.png" alt="Company Logo" class="logo" id="companylogo">
         <!-- <div class="company-name">EPOS</div> -->
     </div>
 
@@ -41,11 +43,14 @@
                     <input type="password" class="form-control" placeholder="Password" id="userpassword">
                 </div>
 
-                <div class="form-group form-check">
-                    <input type="checkbox" class="form-check-input" id="rememberMe">
-                    <label class="form-check-label" for="rememberMe">Remember me</label>
+                <div class="form-group d-flex justify-content-between align-items-center mb-3">
+                    <div class="form-check p-0" style="margin-left: 20px;">
+                        <input type="checkbox" class="form-check-input" id="rememberMe">
+                        <label class="form-check-label" for="rememberMe">Remember me</label>
+                    </div>
+                    <a href="#" id="forgot-password-link" style="font-size: 13px; text-decoration: none; color: #007bff; font-weight: 500;">Forgot Password?</a>
                 </div>
-                <button type="submit" class="btn btn-primary" id="userlogin">Login</button>
+                <button type="submit" class="btn btn-primary btn-block" id="userlogin">Login</button>
             </form>
         </div>
         <!-- Waiter Login Tab -->
@@ -81,6 +86,76 @@
                 <button type="submit" class="btn btn-primary" id="loginwithpin">Login</button>
             </form>
         </div>
+        
+        <!-- PWA Install Promotion Widget -->
+        <div id="pwa-promo-widget" style="display: none; align-items: center; justify-content: space-between; padding: 14px 18px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 14px; margin-top: 24px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02);" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#94a3b8';" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1';">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="background: #dcfce7; border-radius: 10px; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                        <path d="M12 7v6"></path>
+                        <path d="M9 10l3 3 3-3"></path>
+                    </svg>
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-size: 14px; font-weight: 700; color: #1e293b; line-height: 1.2;">Install Quicksale App</span>
+                    <span style="font-size: 11px; color: #64748b; margin-top: 2px;">Offline access & desktop shortcut</span>
+                </div>
+            </div>
+            <i class="fal fa-arrow-right" style="color: #15803d; font-size: 14px;"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1" role="dialog" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: none;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #007bff, #00c6ff); color: white; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 20px; border-bottom: none;">
+                <h5 class="modal-title font-weight-bold" id="forgotPasswordModalLabel" style="font-size: 1.25rem;">
+                    Reset Your Password
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.8; font-size: 1.5rem; outline: none; border: none; background: transparent; padding: 0; margin: 0;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 30px;">
+                <div id="modal-alerts"></div>
+                
+                <!-- Step 1: Request OTP -->
+                <div id="otp-request-step">
+                    <p class="text-muted mb-4" style="font-size: 14px;">Enter your username or email address below, and we will send you a One-Time Password (OTP) to reset your password.</p>
+                    <div class="form-group">
+                        <label for="reset-username-email" class="font-weight-bold text-dark" style="font-size: 13px;">Username or Email Address</label>
+                        <input type="text" id="reset-username-email" class="form-control" placeholder="Enter username or email..." style="border-radius: 8px; padding: 12px 15px; border: 1px solid #ced4da; font-size: 14px;" required>
+                    </div>
+                    <button type="button" id="send-otp-btn" class="btn btn-primary btn-block" style="border-radius: 8px; padding: 12px; font-weight: 600; font-size: 15px; background-color: #007bff; border-color: #007bff; margin-top: 20px; transition: all 0.2s;">
+                        <span class="spinner-border spinner-border-sm mr-2 d-none" role="status" aria-hidden="true" id="otp-spinner"></span>Send Reset OTP
+                    </button>
+                </div>
+
+                <!-- Step 2: Reset Password -->
+                <div id="otp-reset-step" class="d-none">
+                    <p class="text-muted mb-4" style="font-size: 14px;">Please enter the 6-digit OTP sent to your email and choose a new password.</p>
+                    <div class="form-group">
+                        <label for="reset-otp" class="font-weight-bold text-dark" style="font-size: 13px;">One-Time Password (OTP)</label>
+                        <input type="text" id="reset-otp" class="form-control" placeholder="Enter 6-digit OTP" maxlength="6" style="border-radius: 8px; padding: 12px 15px; font-size: 16px; text-align: center; font-weight: bold; letter-spacing: 5px; border: 1px solid #ced4da;" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reset-new-password" class="font-weight-bold text-dark" style="font-size: 13px;">New Password</label>
+                        <input type="password" id="reset-new-password" class="form-control" placeholder="Enter new password (min. 4 chars)..." style="border-radius: 8px; padding: 12px 15px; border: 1px solid #ced4da; font-size: 14px;" required>
+                    </div>
+                    <button type="button" id="reset-password-btn" class="btn btn-primary btn-block" style="border-radius: 8px; padding: 12px; font-weight: 600; font-size: 15px; background-color: #007bff; border-color: #007bff; margin-top: 25px; transition: all 0.2s;">
+                        <span class="spinner-border spinner-border-sm mr-2 d-none" role="status" aria-hidden="true" id="reset-spinner"></span>Update Password
+                    </button>
+                    <div class="text-center mt-3">
+                        <a href="#" id="back-to-step1" style="font-size: 13px; text-decoration: none; color: #6c757d; font-weight: 500;">Back to Request OTP</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <script src="js/jquery-2.2.4.js"></script>
@@ -89,5 +164,50 @@
 <script src="js/alert.js"></script>
 <script src="js/functions.js"></script>
 <script src="js/index.js"></script>
+<script>
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('service-worker.js')
+                .then((reg) => console.log('Service worker registered.', reg))
+                .catch((err) => console.log('Service worker registration failed.', err));
+        });
+    }
+
+    // Capture and handle PWA installation prompt
+    let deferredPrompt;
+    const promoWidget = document.getElementById('pwa-promo-widget');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+        // Stash the event so it can be triggered later.
+        deferredPrompt = e;
+        // Update UI to show the install promotion widget
+        promoWidget.style.display = 'flex';
+    });
+
+    promoWidget.addEventListener('click', () => {
+        if (!deferredPrompt) return;
+        // Show the prompt
+        deferredPrompt.prompt();
+        // Wait for the user to respond to the prompt
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+            } else {
+                console.log('User dismissed the install prompt');
+            }
+            deferredPrompt = null;
+            // Hide the install widget
+            promoWidget.style.display = 'none';
+        });
+    });
+
+    window.addEventListener('appinstalled', (evt) => {
+        console.log('Quicksale has been installed successfully!');
+        promoWidget.style.display = 'none';
+    });
+</script>
 </body>
 </html>

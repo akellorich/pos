@@ -101,6 +101,8 @@
         $defaultcustomer=$_POST['defaultcustomer'];
         $mainbusinesstype=$_POST['mainbusinesstype'];
         $town=$_POST['town'];
+        $allowpricechange=isset($_POST['allowpricechange'])?$_POST['allowpricechange']:0;
+        $allownegativesalesglobally=isset($_POST['allownegativesalesglobally'])?$_POST['allownegativesalesglobally']:0;
         
         // check if logo is uploaded
         if(isset($_FILES['logo']['tmp_name'])){
@@ -113,7 +115,8 @@
         }
 
         $response=$setting->saveinstitutiondetails($companyname,$physicaladdress,$postaladdress,$landline,$email,$mobile,$pinno,
-        $autoinvoicegrn,$postalcode,$tagline,$website,$receiptfooter,$defaultcustomer,$mainbusinesstype,$logo,$town);
+        $autoinvoicegrn,$postalcode,$tagline,$website,$receiptfooter,$defaultcustomer,$mainbusinesstype,$logo,$town,
+        $allowpricechange,$allownegativesalesglobally);
         echo json_encode($response);
     }
 

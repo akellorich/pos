@@ -136,10 +136,12 @@ $(document).ready(function(){
                     itemcode=$this.find("td").eq(0).text(),
                     unitprice=$this.find("td").eq(3).text(),
                     quantity=$this.find("td").eq(4).text()
-                if(quantitytransferred>stockquantity){
+                if(quantitytransferred > stockquantity || stockquantity <= 0 || quantitytransferred <= 0 || isNaN(quantitytransferred)){
                     invalidstocktransfer=true
+                    $this.addClass("text-danger font-weight-bold")
                     $this.find("td").addClass("text-danger")
                 }else{
+                    $this.removeClass("text-danger font-weight-bold")
                     $this.find("td").removeClass("text-danger")
                 }   
                 //console.log(serialnos)
@@ -162,7 +164,7 @@ $(document).ready(function(){
                 }
             })
             if(invalidstocktransfer){
-                errors="Quantity transferred exceed stock quantities for ALL highlighted entries"
+                errors="Quantity transferred is invalid or exceeds available stock for all highlighted entries."
             }else if(missingitems){
                 errors="Please add <strong>Serial Numbers</strong> for all entries highlighted."
             }
@@ -172,6 +174,14 @@ $(document).ready(function(){
              // save the transfer
              var TableData;
              TableData = JSON.stringify(TableData) 
+             
+             const isMobileOrTablet = window.innerWidth < 992;
+             if (isMobileOrTablet) {
+                 $("#transfer-modal-progress").show();
+                 $("#transfer-modal-result").hide();
+                 $("#transferprogressmodal").modal("show");
+             }
+             
              $.post(
                  "../controllers/productoperations.php",
                  {
@@ -188,7 +198,16 @@ $(document).ready(function(){
                     data=$.trim(data)
                     if(data.length==7){
                         errors=`The Transfer was completed successfully, Reference #:<span class='font-weight-bold'>${data}</span>`
-                        errordiv.html(showAlert("success",errors))
+                        if (isMobileOrTablet) {
+                            $("#transfer-result-icon").attr("class", "fal fa-check-circle fa-5x text-success");
+                            $("#transfer-result-title").text("Transfer Successful!");
+                            $("#transfer-result-message").html(errors);
+                            $("#transfer-result-btn").attr("class", "btn btn-success px-4 py-2 font-weight-bold btn-modal-action");
+                            $("#transfer-modal-progress").hide();
+                            $("#transfer-modal-result").show();
+                        } else {
+                            errordiv.html(showAlert("success",errors))
+                        }
                         // clear the form
                         clearForm()
                         // print the stock transfer form 
@@ -196,7 +215,16 @@ $(document).ready(function(){
                         window.open(url, '_blank');
                     }else{
                         errors=`An error Occured!"${data}`
-                        errordiv.html(showAlert("danger",errors))
+                        if (isMobileOrTablet) {
+                            $("#transfer-result-icon").attr("class", "fal fa-exclamation-circle fa-5x text-danger");
+                            $("#transfer-result-title").text("Save Failed!");
+                            $("#transfer-result-message").html(errors);
+                            $("#transfer-result-btn").attr("class", "btn btn-danger px-4 py-2 font-weight-bold btn-modal-action");
+                            $("#transfer-modal-progress").hide();
+                            $("#transfer-modal-result").show();
+                        } else {
+                            errordiv.html(showAlert("danger",errors))
+                        }
                     }
                  }
              )
@@ -210,10 +238,10 @@ $(document).ready(function(){
         clearForm()
     })
 
-    function getProduct(){
+    function getProduct(itemcodeParam){
         var sourcetype=sourcefield.val(),
             sourceid=sourcelist.val(),
-            itemcode=itemcodefield.val()
+            itemcode=itemcodeParam || itemcodefield.val()
             errordiv.html("")
         $.getJSON(
             "../controllers/productoperations.php",
@@ -231,13 +259,16 @@ $(document).ready(function(){
                     errordiv.html(showAlert("info",errors)) 
                 }else{
                     var results="",
-                    stockquantity=data[0].unitsreceived-data[0].issued,
-                    randomno=randomId()
-                    results=`<tr data-id='${randomno}' data-itemcode='${data[0].itemcode}' data-productid='${data[0].productid}' data-serializable='${data[0].serializable}' data-serial-nos=''><td>${data[0].itemcode}</td>`
+                    unitsreceived = parseFloat(data[0].unitsreceived) || 0,
+                    issued = parseFloat(data[0].issued) || 0,
+                    stockquantity=unitsreceived-issued,
+                    randomno=randomId(),
+                    rowClass = stockquantity <= 0 ? 'text-danger font-weight-bold' : ''
+                    results=`<tr class='${rowClass}' data-id='${randomno}' data-itemcode='${data[0].itemcode}' data-productid='${data[0].productid}' data-serializable='${data[0].serializable}' data-serial-nos=''><td>${data[0].itemcode}</td>`
                     results+=`<td>${data[0].itemname}</td>`
                     results+=`<td>${stockquantity}</td>`
                     results+=`<td>${data[0].buyingprice}</td>`
-                    results+=`<td class='quantity'>1</td>`
+                    results+=`<td class='quantity' contenteditable='true'>1</td>`
                     results+=data[0].serializable==1?`<td><button class='btn btn-xs btn-primary addserials' data-id='${randomno}' data-name='${data[0].itemname}'><span><i class='fas fa-plus-circle fa-sm'></i> Add serials numbers</span></button></td>`:`<td>&nbsp</td>`
                     results+=`<td class='linetotal'>${data[0].buyingprice}</td>`
                     results+=`<td><a href='javascript void(0)' class='delete' data-id='${randomId()}'><span><i class='fas fa-trash-alt fa-sm mt-2'></i></span></a></td></tr>`
@@ -299,29 +330,124 @@ $(document).ready(function(){
                     name:name
                 },
                 function(data){
-                    var results="<ul class='searchresults'>"
                     searchresults.html("")
                     if(data.length>0){
+                        var results="<div class='searchresults-container'>"
+                        results+="<ul class='searchresults list-unstyled mb-0'>"
+                        
+                        // Select All row
+                        results+=`<li class='d-flex align-items-center py-2 px-3 border-bottom' style='cursor: pointer;'>`
+                        results+=`<input type='checkbox' class='mr-2 select-all-chk' id='chk_all'>`
+                        results+=`<label for='chk_all' class='mb-0 text-dark font-weight-bold' style='cursor:pointer; flex: 1; font-size: 0.78rem;'>All</label>`
+                        results+=`</li>`
+                        
                         for(i=0;i<data.length;i++){
-                            results+="<li id='"+data[i].itemcode+"'>"+data[i].itemname+"</li>"
+                            results+=`<li class='d-flex align-items-center py-2 px-3 border-bottom' style='cursor: pointer;'>`
+                            results+=`<input type='checkbox' class='mr-2 select-product-chk' id='chk_${data[i].itemcode}' data-itemcode='${data[i].itemcode}'>`
+                            results+=`<label for='chk_${data[i].itemcode}' class='mb-0 text-dark font-weight-normal' style='cursor:pointer; flex: 1; font-size: 0.78rem;'>${data[i].itemname}</label>`
+                            results+=`</li>`
                         }
                         results+="</ul>"
+                        // Beautiful Apply Button Footer with primary background class
+                        results+="<div class='p-2 border-top bg-light text-left pl-3'><button type='button' class='btn btn-primary btn-xs px-4 apply-selected-products' style='font-weight: 500; font-size: 0.8rem;'><i class='fal fa-check-circle mr-1' style='font-size: 0.76rem;'></i> Apply</button></div>"
+                        results+="</div>"
+                        
                         $(results).appendTo(searchresults)
                         searchresults.show()
+                        
+                        // Initial state sync for "All" checkbox
+                        updateSelectAllState();
                     } 
                 }
             )
+        } else {
+            searchresults.hide()
         }
     })
 
-    // listen to the click event of search term when clicked
-    searchresults.on("click","li",function(){
-        var itemcode=''
-        itemcode=$(this).attr("id")
-        itemcodefield.val(itemcode)
-        getProduct()
-        searchresults.hide()
-    })
+    // Listen to changes on the product checkboxes (to sync "All" checkbox)
+    searchresults.on("change", ".select-product-chk", function(e) {
+        updateSelectAllState();
+    });
+
+    // Listen to changes on the "All" checkbox
+    searchresults.on("change", ".select-all-chk", function() {
+        var isChecked = $(this).is(":checked");
+        
+        if(sourcelist.val()==""){
+            errors="Please select the source of transfer"
+            errordiv.html(showAlert("info",errors))
+            $(this).prop("checked", false);
+            return;
+        }
+
+        searchresults.find(".select-product-chk").each(function() {
+            $(this).prop("checked", isChecked);
+        });
+    });
+
+    // Listen to applying selected multiple products via the Apply button at the bottom
+    searchresults.on("click", ".apply-selected-products", function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if(sourcelist.val()==""){
+            errors="Please select the source of transfer"
+            errordiv.html(showAlert("info",errors))
+            searchresults.hide();
+            return;
+        }
+
+        var checkedChks = searchresults.find(".select-product-chk:checked");
+
+        // Add checked items that are not in the table
+        checkedChks.each(function() {
+            var itemcode = $(this).attr("data-itemcode");
+            var exists = false;
+            transferitemsdetails.find("tr").each(function() {
+                if ($(this).attr("data-itemcode") == itemcode) {
+                    exists = true;
+                }
+            });
+            if (!exists) {
+                getProduct(itemcode);
+            }
+        });
+
+        // Recalculate grand totals
+        overalltotal.val($.number(performTotal()));
+
+        searchresults.hide();
+        itemcodefield.val("");
+    });
+
+    // Allow clicking the entire list item row to toggle checkbox
+    searchresults.on("click", "li", function(e) {
+        if ($(e.target).is("input") || $(e.target).is("label")) {
+            return;
+        }
+        var $chk = $(this).find("input[type='checkbox']");
+        $chk.prop("checked", !$chk.prop("checked")).trigger("change");
+    });
+
+    // Helper to dynamically update "All" checkbox state
+    function updateSelectAllState() {
+        var totalChks = searchresults.find(".select-product-chk").length;
+        var checkedChks = searchresults.find(".select-product-chk:checked").length;
+        
+        if (totalChks > 0 && totalChks === checkedChks) {
+            searchresults.find(".select-all-chk").prop("checked", true);
+        } else {
+            searchresults.find(".select-all-chk").prop("checked", false);
+        }
+    }
+
+    // Dismiss search dropdown when clicking outside
+    $(document).on("click", function(e) {
+        if (!$(e.target).closest("#searchproducts").length && !$(e.target).closest("#itemcode").length) {
+            searchresults.hide();
+        }
+    });
 
     transferitemsdetails.on("click",".delete",function(e){
         e.preventDefault();
@@ -353,26 +479,48 @@ $(document).ready(function(){
         })
     })
 
-     // listen to change quantity
-     transferitemsdetails.on("click",".quantity",function(e){
-        // console.log($(this).html())
-         var parent = $(this).parent("tr");
-         bootbox.prompt({
-             title:"Enter New Quantity",
-             size: 'small',
-             message: "Enter quantity required",
-             inputType: 'number',
-             callback: function (result) {
-                 if(parseFloat(result)>0){
-                     var unitprice= parent.find("td").eq(3).text(),
-                         linetotal=parseFloat(result*unitprice)
-                     parent.find("td").eq(4).text(result)
-                     parent.find("td").eq(6).text(linetotal)
-                     overalltotal.val($.number(performTotal()))
-                 } 
+     // listen to input/keyup/blur on quantity to recalculate line total and overall total on the fly
+     transferitemsdetails.on("blur keydown input", ".quantity", function(e){
+         var $td = $(this),
+             parent = $td.parent("tr"),
+             unitprice = parseFloat(parent.find("td").eq(3).text().replace(/,/g, "")) || 0,
+             stockquantity = parseFloat(parent.find("td").eq(2).text().replace(/,/g, "")) || 0;
+
+         // If Enter key is pressed, prevent default newline and blur the element
+         if (e.type === "keydown" && e.which === 13) {
+             e.preventDefault();
+             $td.blur();
+             return;
+         }
+
+         var rawVal = $td.text().trim();
+         var quantity = parseFloat(rawVal);
+
+         if (isNaN(quantity) || quantity < 0) {
+             quantity = 0;
+         }
+
+         // On blur, sanitize the text if it is invalid/empty
+         if (e.type === "blur") {
+             if (rawVal === "" || isNaN(quantity) || quantity <= 0) {
+                 quantity = 1;
+                 $td.text("1");
              }
-         });
-     })
+         }
+
+         var linetotal = quantity * unitprice;
+         parent.find("td").eq(6).text(linetotal.toFixed(2));
+         overalltotal.val($.number(performTotal()));
+
+         // Dynamically check stock balance validation on edit
+         if (quantity > stockquantity || stockquantity <= 0 || quantity <= 0) {
+             parent.addClass("text-danger font-weight-bold");
+             parent.find("td").addClass("text-danger");
+         } else {
+             parent.removeClass("text-danger font-weight-bold");
+             parent.find("td").removeClass("text-danger");
+         }
+     });
 
      transferitemsdetails.on("click",".addserials",function(){
         var $this=$(this), 

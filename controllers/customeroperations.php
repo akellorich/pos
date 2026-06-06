@@ -136,9 +136,11 @@
         $customerid=$_POST['customerid'];
         $categoryid=$_POST['categoryid'];
         $contactname=$_POST['contactname'];
+        $idno=$_POST['idno'];
         $mobile=$_POST['mobile'];
         $email=$_POST['email'];
-        echo $customer->savecustomercontact($id,$customerid,$categoryid,$contactname,$mobile,$email);
+        $consentsigned=$_POST['consentsigned'];
+        echo $customer->savecustomercontact($id,$customerid,$categoryid,$contactname,$idno,$mobile,$email,$consentsigned);
     }
 
     if(isset($_POST['deletecustomercontact'])){

@@ -21,12 +21,203 @@ $(document).ready(function(){
         $(".tab-pane").addClass("d-none");
         $(`#pane-${tabId}`).removeClass("d-none");
 
-        // Toggle Save Button Visibility
+        // Toggle Save Button & Sticky Footer Visibility
         if (tabId === 'biodata') {
             $("#btn-save-customer").css("visibility", "visible");
+            $(".mobile-sticky-footer").show();
         } else {
             $("#btn-save-customer").css("visibility", "hidden");
+            $(".mobile-sticky-footer").hide();
         }
+    });
+
+    // Save Customer Click Handler (Unified for Desktop and Mobile)
+    $(document).on("click", "#btn-save-customer, #btn-save-customer-mobile", function() {
+        const id = $("#customer-id-val").val() || 0,
+            customername = $.trim($("#customer-name").val()),
+            tradingname = $.trim($("#customer-trading-name").val()),
+            idno = $.trim($("#customer-id-no").val()),
+            pinno = $.trim($("#customer-pin-no").val()),
+            physicaladdress = $.trim($("#customer-physical-address").val()),
+            postaladdress = $.trim($("#customer-postal-address").val()),
+            mobile = $.trim($("#customer-mobile").val()),
+            email = $.trim($("#customer-email").val()),
+            category = $("#sel-category").val(),
+            posid = $("#sel-outlet").val(),
+            onetimecustomer = $("#customer-onetime").is(":checked") ? 1 : 0,
+            subzoneid = $("#sel-subzone").val() || "",
+            creditlimit = $.trim($("#customer-credit-limit").val()).replace(/,/g, ""),
+            creditterm = $("#customer-credit-terms").val();
+
+        let errors = "";
+        let errorField = null;
+
+        if (category === "") {
+            errors = "Please select Customer category";
+            errorField = $("#sel-category");
+        } else if (posid === "") {
+            errors = "Please select point of sale";
+            errorField = $("#sel-outlet");
+        } else if (customername === "") {
+            errors = "Please provide customer name";
+            errorField = $("#customer-name");
+        } else if (tradingname === "") {
+            errors = "Please provide trading name";
+            errorField = $("#customer-trading-name");
+        } else if (idno === "") {
+            errors = "Please provide ID number";
+            errorField = $("#customer-id-no");
+        } else if (pinno === "") {
+            errors = "Please provide PIN number";
+            errorField = $("#customer-pin-no");
+        } else if (mobile === "") {
+            errors = "Please provide mobile number";
+            errorField = $("#customer-mobile");
+        } else if (creditlimit === "") {
+            errors = "Please provide credit limit";
+            errorField = $("#customer-credit-limit");
+        } else if (creditterm === "" || creditterm === null) {
+            errors = "Please select credit terms";
+            errorField = $("#customer-credit-terms");
+        }
+
+        const isMobileOrTablet = window.innerWidth < 992;
+
+        if (errors !== "") {
+            if (isMobileOrTablet) {
+                // Show Mobile Modal (using showAlert() look-and-feel info with icon)
+                let alertHtml = '<div class="alert alert-info alert-white rounded text-left" style="margin-bottom: 0;">';
+                alertHtml += '<div class="icon"><i class="fa fa-info-circle"></i></div>';
+                alertHtml += '<div class="alert-title" style="margin-bottom: 5px;"><strong>Information!</strong></div>';
+                alertHtml += '<div class="alert-message">' + errors + '</div></div>';
+                
+                $("#customer-modal-progress").hide();
+                $("#customer-modal-alert-container").html(alertHtml);
+                $("#customer-result-btn").removeClass("btn-success btn-danger").addClass("btn-info");
+                $("#customer-modal-result").show();
+                $("#customer-notification-modal").modal("show");
+
+                // Place focus on the field with error after modal is dismissed
+                $("#customer-notification-modal").one("hidden.bs.modal", function() {
+                    if (errorField) {
+                        errorField.focus();
+                    }
+                });
+            } else {
+                // Show Desktop Card (using info styled border & icon)
+                $("#desktop-notification-card").css("border-left-color", "#3b82f6").slideDown(200);
+                $("#desktop-notification-icon").text("info").css("color", "#3b82f6");
+                $("#desktop-notification-title").text("Validation Information");
+                $("#desktop-notification-msg").text(errors);
+                
+                // Focus the error field immediately on desktop
+                if (errorField) {
+                    errorField.focus();
+                }
+            }
+            return;
+        }
+
+        // Show Processing state
+        if (isMobileOrTablet) {
+            $("#customer-modal-progress").show();
+            $("#customer-modal-result").hide();
+            $("#customer-notification-modal").modal("show");
+        } else {
+            $("#desktop-notification-card").css("border-left-color", "#3b82f6").slideDown(200);
+            $("#desktop-notification-icon").text("sync").css("color", "#3b82f6");
+            $("#desktop-notification-title").text("Processing...");
+            $("#desktop-notification-msg").html('<div class="d-flex align-items-center" style="gap: 8px;"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> <span>Please wait while we process the customer record...</span></div>');
+        }
+
+        // Send POST request to save customer
+        $.post("../controllers/customeroperations.php", {
+            savecustomer: "POST",
+            id: id,
+            customername: customername,
+            tradingname: tradingname,
+            physicaladdress: physicaladdress,
+            postaladdress: postaladdress,
+            mobile: mobile,
+            email: email,
+            creditlimit: creditlimit,
+            creditterm: creditterm,
+            category: category,
+            posid: posid,
+            onetimecustomer: onetimecustomer,
+            pinno: pinno,
+            idno: idno,
+            subzoneid: subzoneid
+        }, function(data) {
+            data = $.trim(data);
+            let displayTitle = "";
+            let displayMsg = "";
+            let isSuccessStatus = false;
+
+            if (data === "success") {
+                isSuccessStatus = true;
+                displayTitle = "Saved Successfully!";
+                displayMsg = "The customer records have been saved successfully to the system.";
+                // Reload customer list
+                loadCustomers();
+                // Select and highlight newly saved customer
+                if (id == 0) {
+                    clearCustomerScreenForNewEntry();
+                } else {
+                    selectCustomer(id);
+                }
+            } else if (data === "name exists") {
+                displayTitle = "Duplicate Customer Name";
+                displayMsg = "The customer name already exists in the system. Please try a different name.";
+            } else if (data === "id exists") {
+                displayTitle = "Duplicate ID Number";
+                displayMsg = "The customer's ID number already exists in the system.";
+            } else if (data === "pin exists") {
+                displayTitle = "Duplicate PIN Number";
+                displayMsg = "The customer's PIN number already exists in the system.";
+            } else {
+                displayTitle = "Save Error";
+                displayMsg = "Sorry, an unexpected error occurred: " + data;
+            }
+
+             if (isMobileOrTablet) {
+                // Update and show Result State in Modal (using showAlert() look-and-feel alert boxes with icon)
+                let alertHtml = '';
+                if (isSuccessStatus) {
+                    alertHtml = '<div class="alert alert-success alert-white rounded text-left" style="margin-bottom: 0;">';
+                    alertHtml += '<div class="icon"><i class="fas fa-check-circle"></i></div>';
+                    alertHtml += '<div class="alert-title" style="margin-bottom: 5px;"><strong>Success!</strong></div>';
+                    alertHtml += '<div class="alert-message">' + displayMsg + '</div></div>';
+                    $("#customer-result-btn").removeClass("btn-info btn-danger").addClass("btn-success");
+                } else {
+                    alertHtml = '<div class="alert alert-danger alert-white rounded text-left" style="margin-bottom: 0;">';
+                    alertHtml += '<div class="icon"><i class="fa fa-times-circle"></i></div>';
+                    alertHtml += '<div class="alert-title" style="margin-bottom: 5px;"><strong>Danger!</strong></div>';
+                    alertHtml += '<div class="alert-message">' + displayMsg + '</div></div>';
+                    $("#customer-result-btn").removeClass("btn-info btn-success").addClass("btn-danger");
+                }
+                
+                $("#customer-modal-progress").hide();
+                $("#customer-modal-alert-container").html(alertHtml);
+                $("#customer-modal-result").show();
+            } else {
+                // Update and show Desktop Card
+                if (isSuccessStatus) {
+                    $("#desktop-notification-card").css("border-left-color", "#10b981");
+                    $("#desktop-notification-icon").text("check_circle").css("color", "#10b981");
+                } else {
+                    $("#desktop-notification-card").css("border-left-color", "#ef4444");
+                    $("#desktop-notification-icon").text("cancel").css("color", "#ef4444");
+                }
+                $("#desktop-notification-title").text(displayTitle);
+                $("#desktop-notification-msg").text(displayMsg);
+            }
+        });
+    });
+
+    // Clear Customer Form Click Handler (Mobile Sticky Footer)
+    $(document).on("click", "#btn-clear-customer-mobile", function() {
+        clearCustomerScreenForNewEntry();
     });
 
     // Action Menu Logic (for Associated Contacts)
@@ -44,11 +235,19 @@ $(document).ready(function(){
     init();
 
     // Initialize Datepickers for Statement Tab
-    $(".statement-datepicker").datepicker({
-        dateFormat: "dd-M-yy",
-        maxDate: 0,
-        changeMonth: true,
-        changeYear: true
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+    $("#statement-start-date").flatpickr({
+        dateFormat: "d-M-Y",
+        maxDate: "today",
+        defaultDate: threeMonthsAgo
+    });
+
+    $("#statement-end-date").flatpickr({
+        dateFormat: "d-M-Y",
+        maxDate: "today",
+        defaultDate: "today"
     });
 
     // --- CORE CUSTOMER LOGIC ---
@@ -102,77 +301,17 @@ $(document).ready(function(){
                 $("#customer-pin-no").val(customer.pinno);
                 
                 // 3. Update Hidden ID
-                $("#customer-id-val").val(customer.id);
+                $("#customer-id-val").val(customer.customerid);
 
                 // 4. Load related data
-                loadCustomerDiscounts(customer.id);
-                loadCustomerReceivables(customer.id);
+                loadCustomerDiscounts(customer.customerid);
+                loadCustomerReceivables(customer.customerid);
+                loadCustomerContacts(customer.customerid);
             }
         });
     }
 
-    function loadCustomerDiscounts(id) {
-        $.getJSON("../controllers/customeroperations.php", { getcustomerdiscounts: true, customerid: id }, function(data) {
-            let rows = "";
-            if (data && data.length > 0) {
-                data.forEach((d, idx) => {
-                    const typeClass = d.percentage == 1 ? 'type-pill percentage' : 'type-pill';
-                    const typeLabel = d.percentage == 1 ? 'Percentage' : 'Flat';
-                    
-                    rows += `
-                        <tr>
-                            <td style="color: #64748b; font-size: 11px;">${d.itemcode}</td>
-                            <td>
-                                <div style="font-weight: 500; color: #1e293b;">${d.itemname}</div>
-                            </td>
-                            <td style="color: #64748b;">${d.sellingprice}</td>
-                            <td style="color: #dc2626; font-weight: 500;">${d.discount}</td>
-                            <td><span class="${typeClass}">${typeLabel}</span></td>
-                            <td style="font-weight: 500;">${parseFloat(d.sellingprice - d.discount).toFixed(2)}</td>
-                            <td style="color: #475569;">${d.expirydate}</td>
-                            <td><span class="badge-status status-active">Active</span></td>
-                            <td class="text-right">
-                                <button class="btn btn-light btn-sm delete-discount" data-id="${d.id}">
-                                    <span class="material-symbols-outlined" style="font-size: 18px; color: #dc2626;">delete</span>
-                                </button>
-                            </td>
-                        </tr>`;
-                });
-            } else {
-                rows = `<tr><td colspan="9" class="text-center py-4 text-muted">No active discounts found for this customer</td></tr>`;
-            }
-            $("#discount-table tbody").html(rows);
-        });
-    }
 
-    function loadCustomerReceivables(id) {
-        $.getJSON("../controllers/customeroperations.php", { getopenreceivables: true, customerid: id }, function(data) {
-            let rows = "";
-            let totalBal = 0;
-            if (data && data.length > 0) {
-                data.forEach((r) => {
-                    totalBal += parseFloat(r.balance);
-                    rows += `
-                        <tr>
-                            <td>${r.id}</td>
-                            <td class="ref-cell">${r.id}</td>
-                            <td>${r.transactiondate}</td>
-                            <td class="text-right">${r.total}</td>
-                            <td class="text-right">${r.paid}</td>
-                            <td class="bal-cell text-right">${r.balance}</td>
-                            <td class="text-right">
-                                <div class="amt-pay-editable" contenteditable="true">0</div>
-                            </td>
-                        </tr>`;
-                });
-            } else {
-                rows = `<tr><td colspan="7" class="text-center py-4 text-muted">No open receivables found</td></tr>`;
-            }
-            $("#receivables-list").html(rows);
-            $("#total-balance-summary-val").text(totalBal.toLocaleString(undefined, {minimumFractionDigits: 2}));
-            calculatePaymentTotal();
-        });
-    }
 
     // --- STATEMENT GENERATION ---
     $(".btn-generate").on("click", function() {
@@ -191,7 +330,32 @@ $(document).ready(function(){
             $.getJSON("../controllers/reportoperations.php", { getcustomerstatement: true, startdate, enddate, customerid }, function(data) {
                 let rows = "";
                 if (data && data.length > 0) {
-                    let runningBal = parseFloat(data[0].openingbalance);
+                    const first = data[0];
+                    // 1. Update Statement Header Info
+                    $("#st-account-no").text("Account #" + (first.customerno || first.customerid));
+                    $("#st-customer-name").text(first.customername);
+
+                    $("#st-contact-person").html(`<span class="material-symbols-outlined" style="font-size: 16px; color: #94a3b8;">person</span> ${first.primarycontact || '---'}`);
+
+                    $("#st-billing-address").html(`
+                        <div style="font-weight: 500; color: #1e293b;">${first.physicaladdress || 'No physical address'}</div>
+                        <div style="font-size: 12px; color: #64748b;">${first.postaladdress || 'No postal address'}</div>
+                    `);
+
+                    const displayMobile = first.contactmobile || first.mobile || '---';
+                    const displayEmail = first.contactemail || first.email || '---';
+
+                    $("#st-contact-mobile").html(`<span class="material-symbols-outlined" style="font-size: 16px; color: #94a3b8;">call</span> ${displayMobile}`);
+                    $("#st-contact-email").html(`<span class="material-symbols-outlined" style="font-size: 16px; color: #94a3b8;">alternate_email</span> ${displayEmail}`);
+
+                    // 2. Update Balance Summary Card
+                    $("#st-opening-bal").text($.number(first.openingbalance, 2));
+                    $("#st-total-invoices").text($.number(first.invoices, 2));
+                    $("#st-total-payments").text(`(${$.number(first.payments, 2)})`);
+                    $("#st-closing-bal").text($.number(first.closingbalance, 2));
+
+                    // 3. Render Transaction Table
+                    let runningBal = parseFloat(first.openingbalance);
                     data.forEach(item => {
                         runningBal += parseFloat(item.invoiceamount) - parseFloat(item.invoicepayment);
                         rows += `
@@ -199,19 +363,15 @@ $(document).ready(function(){
                                 <td>${item.date}</td>
                                 <td style="font-weight: 500; color: #1e293b;">${item.reference}</td>
                                 <td>${item.narration}</td>
-                                <td class="text-right">${parseFloat(item.invoiceamount).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                                <td class="text-right" style="color: #10b981;">${parseFloat(item.invoicepayment).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                                <td class="text-right" style="font-weight: 500; color: #1e293b;">${runningBal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                                <td class="text-right">${parseFloat(item.invoiceamount) > 0 ? $.number(item.invoiceamount, 2) : '-'}</td>
+                                <td class="text-right" style="color: #10b981;">${parseFloat(item.invoicepayment) > 0 ? '(' + $.number(item.invoicepayment, 2) + ')' : '-'}</td>
+                                <td class="text-right" style="font-weight: 500; color: #1e293b;">${$.number(runningBal, 2)}</td>
                             </tr>`;
                     });
-                    
-                    // Update Summary Box
-                    $(".summary-box .summary-line:eq(0) span:eq(1)").text(parseFloat(data[0].openingbalance).toLocaleString());
-                    $(".summary-box .summary-line:eq(1) span:eq(1)").text(parseFloat(data[0].invoices).toLocaleString());
-                    $(".summary-box .summary-line:eq(2) span:eq(1)").text(parseFloat(data[0].payments).toLocaleString());
-                    $(".closing-balance-box span:eq(1)").text(parseFloat(data[0].closingbalance).toLocaleString());
                 } else {
                     rows = '<tr><td colspan="6" class="text-center py-4">No transactions found for this period</td></tr>';
+                    // Reset summary on no data
+                    $("#st-opening-bal, #st-total-invoices, #st-total-payments, #st-closing-bal").text("0.00");
                 }
                 $("#statement-history-body").html(rows);
             });
@@ -220,12 +380,12 @@ $(document).ready(function(){
             $.getJSON("../controllers/reportoperations.php", { getcustomeraginganalysis: true, basedate: enddate, customerid }, function(data) {
                 if (data && data.length > 0) {
                     const aging = data[0];
-                    $(".aging-card:eq(0) .aging-val").text(parseFloat(aging.thirty).toLocaleString());
-                    $(".aging-card:eq(1) .aging-val").text(parseFloat(aging.sixty).toLocaleString());
-                    $(".aging-card:eq(2) .aging-val").text(parseFloat(aging.ninety).toLocaleString());
-                    $(".aging-card:eq(3) .aging-val").text(parseFloat(aging.onetwenty).toLocaleString());
-                    $(".aging-card:eq(4) .aging-val").text(parseFloat(aging.aboveonetwenty).toLocaleString());
-                    $(".aging-card.total .aging-val").text(parseFloat(aging.total).toLocaleString());
+                    $(".aging-card:eq(0) .aging-val").text($.number(aging.thirty, 2));
+                    $(".aging-card:eq(1) .aging-val").text($.number(aging.sixty, 2));
+                    $(".aging-card:eq(2) .aging-val").text($.number(aging.ninety, 2));
+                    $(".aging-card:eq(3) .aging-val").text($.number(aging.onetwenty, 2));
+                    $(".aging-card:eq(4) .aging-val").text($.number(aging.aboveonetwenty, 2));
+                    $(".aging-card.total .aging-val").text($.number(aging.total, 2));
                 }
             });
         } else {
@@ -241,16 +401,15 @@ $(document).ready(function(){
                                 <td>${item.date}</td>
                                 <td style="font-weight: 500; color: #1e293b;">${item.referenceno}</td>
                                 <td>${item.narration}</td>
-                                <td class="text-right">${parseFloat(item.debit).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                                <td class="text-right" style="color: #10b981;">${parseFloat(item.credit).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                                <td class="text-right" style="font-weight: 500; color: #1e293b;">${runningBal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                                <td class="text-right">${$.number(item.debit, 2)}</td>
+                                <td class="text-right" style="color: #10b981;">${$.number(item.credit, 2)}</td>
+                                <td class="text-right" style="font-weight: 500; color: #1e293b;">${$.number(runningBal, 2)}</td>
                             </tr>`;
                     });
                 } else {
                     rows = '<tr><td colspan="6" class="text-center py-4">No suspense records found</td></tr>';
                 }
                 $("#statement-history-body").html(rows);
-                // Suspense mode usually doesn't show aging or standard summary in same format
             });
         }
     });
@@ -334,6 +493,7 @@ $(document).ready(function(){
     function init() {
         loadCustomers();
         loadParameters();
+        loadContactCategories();
         updateHeaderStats(null); // Reset scorecard on load
         
         // Initialize Discount Table
@@ -379,12 +539,10 @@ $(document).ready(function(){
             $(".toggle-icon-box span").text(isPerc ? "percent" : "payments");
         });
 
-        // Expiry Picker (jQuery UI Datepicker)
-        $("#discount-expiry-picker").datepicker({
-            dateFormat: "dd-M-yy", // dd-MMM-yyyy
-            minDate: 0,
-            changeMonth: true,
-            changeYear: true
+        // Expiry Picker (Flatpickr)
+        $("#discount-expiry-picker").flatpickr({
+            dateFormat: "d-M-Y", // dd-MMM-yyyy
+            minDate: "today"
         });
 
         // Payment Tab Logic
@@ -464,19 +622,24 @@ $(document).ready(function(){
     // Receivables Dynamic Rendering
     window.renderReceivables = function(data) {
         let html = "";
+        if (!data || data.length === 0) {
+            $("#receivables-list").html('<tr><td colspan="7" class="text-center py-4 text-muted">No open receivables found</td></tr>');
+            calculatePaymentTotal();
+            return;
+        }
         
-        data.forEach(item => {
-            const balance = item.invoiceamount - item.paid;
+        data.forEach((item, index) => {
+            const balance = parseFloat(item.balance) || 0;
             html += `
-                <tr>
-                    <td>${item.invoiceno}</td>
-                    <td class="ref-cell">${item.reference}</td>
-                    <td>${item.date}</td>
-                    <td class="text-right">${$.number(item.invoiceamount, 2)}</td>
+                <tr data-id="${item.possaleid}">
+                    <td>${index + 1}</td>
+                    <td class="ref-cell">${item.receiptno || '-'}</td>
+                    <td>${item.transactiondate}</td>
+                    <td class="text-right">${$.number(item.total, 2)}</td>
                     <td class="text-right">${$.number(item.paid, 2)}</td>
-                    <td class="bal-cell text-right">${$.number(balance, 2)}</td>
+                    <td class="bal-cell text-right font-weight-bold" style="color: #ba1a1a;">${$.number(balance, 2)}</td>
                     <td class="text-right">
-                        <div class="amt-pay-editable" contenteditable="true">${balance}</div>
+                        <div class="amt-pay-editable" contenteditable="true">0</div>
                     </td>
                 </tr>
             `;
@@ -488,15 +651,10 @@ $(document).ready(function(){
 
     // Mock Fetch for Receivables
     window.loadCustomerReceivables = function(customerid) {
-        // Standard JSON Structure per request
-        const mockData = [
-            { invoiceno: 269, reference: "INV-2025-07-11", date: "2025-07-11", invoiceamount: 1845.00, paid: 0.00 },
-            { invoiceno: 5180, reference: "INV-2026-03-17", date: "2026-03-17", invoiceamount: 250.00, paid: 0.00 },
-            { invoiceno: 5192, reference: "INV-2026-04-02", date: "2026-04-02", invoiceamount: 1200.00, paid: 500.00 },
-            { invoiceno: 5205, reference: "INV-2026-04-15", date: "2026-04-15", invoiceamount: 5500.00, paid: 0.00 },
-            { invoiceno: 5218, reference: "INV-2026-04-25", date: "2026-04-25", invoiceamount: 3000.00, paid: 0.00 }
-        ];
-        renderReceivables(mockData);
+        if (!customerid || customerid == 0) return;
+        $.getJSON("../controllers/customeroperations.php", { getopenreceivables: true, customerid: customerid }, function(data) {
+            renderReceivables(data);
+        });
     };
 
     function loadParameters() {
@@ -504,7 +662,7 @@ $(document).ready(function(){
         $.getJSON("../controllers/customeroperations.php", { getcustomercategories: "GET" }, function(data) {
             let html = '<option value="">Choose One</option>';
             data.forEach(item => {
-                html += `<option value="${item.id}">${item.description}</option>`;
+                html += `<option value="${item.id}">${item.categoryname || item.description}</option>`;
             });
             $("#sel-category").html(html);
         });
@@ -608,6 +766,58 @@ $(document).ready(function(){
         selectCustomer(selectedCustomerId);
     });
 
+    // Add Customer Button Click
+    $(document).on("click", "#add-btn", function() {
+        clearCustomerScreenForNewEntry();
+        // Switch to Biodata tab automatically for seamless data entry
+        $(".mgmt-tab[data-tab='biodata']").trigger("click");
+        // Focus the customer name input
+        $("#customer-name").focus();
+    });
+
+    function clearCustomerScreenForNewEntry() {
+        selectedCustomerId = null;
+        $(".customer-row").removeClass("selected");
+
+        // 1. Reset the scorecard / header-card stats
+        updateHeaderStats(null);
+        
+        // 2. Clear all customer entry form fields (Biodata tab)
+        $("#customer-id-val").val("0");
+        $("#customer-name").val("");
+        $("#customer-trading-name").val("");
+        $("#customer-id-no").val("");
+        $("#customer-pin-no").val("");
+        $("#customer-physical-address").val("");
+        $("#customer-postal-address").val("");
+        $("#customer-mobile").val("");
+        $("#customer-email").val("");
+        
+        // Reset selections
+        $("#sel-category").val("");
+        $("#sel-outlet").val("");
+        $("#sel-mainzone").val("");
+        $("#sel-subzone").html('<option value="">Choose One</option>').val("");
+        
+        // Reset credit fields
+        $("#customer-credit-limit").val("50,000.00");
+        $("#customer-opening-balance").val("0.00");
+        $("#customer-credit-terms").val("0");
+        $("#customer-onetime").prop("checked", false);
+        
+        // 3. Clear associated contacts list
+        renderCustomerContacts([]);
+        
+        // 4. Clear associated discounts table
+        const table = $("#discount-table").DataTable();
+        table.clear().draw();
+        
+        // Clear discount stats
+        $("#ds-total-val").text("0.00");
+        $("#ds-active-count").text("00");
+        $("#ds-expiring-count").text("00");
+    }
+
     function selectCustomer(customerid) {
         // Show loading state in header stats
         $("#h-name").text("Loading...");
@@ -622,17 +832,21 @@ $(document).ready(function(){
                 updateHeaderStats(c);
                 renderCustomerMainDetails(c);
                 loadCustomerReceivables(customerid);
+                loadCustomerContacts(customerid);
+                loadCustomerDiscounts(customerid);
             } else {
                 // Handle mock data selection
                 const mock = allCustomers.find(c => c.customerid == customerid);
                 if (mock) {
                     updateHeaderStats({
+                        customerid: mock.customerid,
                         customername: mock.customername,
                         idno: mock.idno,
                         openingbalance: 50000,
                         creditlimit: 200000,
                         creditterm: 30
                     });
+                    loadCustomerDiscounts(customerid);
                 }
             }
         });
@@ -659,7 +873,7 @@ $(document).ready(function(){
         }
         // Basic Info
         $("#h-name").text(c.customername);
-        $("#h-id").text("ID: " + (c.customerno || 'CUST-'+c.id.toString().padStart(4, '0')));
+        $("#h-id").text("ID: " + (c.customerno || 'CUST-'+c.customerid.toString().padStart(4, '0')));
         
         // Outstanding & Credit (formatted as 50K etc)
         const formatStat = (val) => {
@@ -681,7 +895,7 @@ $(document).ready(function(){
         // Latest Payment & Oldest Charge (Reset to dynamic if possible)
         $.getJSON("../controllers/reportoperations.php", {
             getcustomerstatement: true,
-            customerid: c.id,
+            customerid: c.customerid,
             startdate: moment().subtract(6, 'months').format('D-MMM-YYYY'),
             enddate: moment().format('D-MMM-YYYY')
         }, function(statement) {
@@ -704,7 +918,7 @@ $(document).ready(function(){
 
     function renderCustomerMainDetails(c) {
         // Populate inputs in Biodata Pane using proper IDs
-        console.log(c)
+        $("#customer-id-val").val(c.customerid);
         $("#customer-name").val(c.customername);
         $("#customer-trading-name").val(c.tradingname || c.customername);
         $("#customer-id-no").val(c.idno || '');
@@ -730,8 +944,242 @@ $(document).ready(function(){
         $("#customer-onetime").prop("checked", c.onetimecustomer == 1);
     }
 
-    // Sidebar Toggle
+    // Sidebar Toggle (Mobile & Desktop)
     $("#menu-toggle").on("click", function() {
-        $(".sidebar").toggleClass("close1");
+        if (window.innerWidth <= 992) {
+            $(".sidebar").addClass("active");
+            $("#sidebar-overlay").addClass("active");
+        } else {
+            $(".sidebar").toggleClass("close1");
+        }
+    });
+
+    // Close mobile sidebar on overlay click
+    $("#sidebar-overlay").on("click", function() {
+        $(".sidebar").removeClass("active");
+        $(this).removeClass("active");
+    });
+
+    // --- CONTACT MANAGEMENT ---
+    let currentEditingContactId = 0;
+
+    function loadContactCategories() {
+        $.getJSON("../controllers/customeroperations.php", { getcontactcategories: true }, function(data) {
+            let options = '<option value="">Choose One</option>';
+            data.forEach(cat => {
+                options += `<option value="${cat.id}">${cat.description}</option>`;
+            });
+            $("#contact-category-sel").html(options);
+        });
+    }
+
+    function loadCustomerContacts(customerid) {
+        if (!customerid || customerid == 0) return;
+        $.getJSON("../controllers/customeroperations.php", { getcustomercontacts: true, customerid: customerid }, function(data) {
+            renderCustomerContacts(data);
+        });
+    }
+
+    function renderCustomerContacts(contacts) {
+        const body = $("#customer-contacts-body");
+        body.empty();
+        if (!contacts || contacts.length === 0) {
+            body.append('<tr><td colspan="8" class="text-center py-4 text-muted small">No associated contacts found</td></tr>');
+            return;
+        }
+
+        contacts.forEach(c => {
+            const row = `
+                <tr data-id="${c.customercontactid}">
+                    <td><span class="badge-cat" style="background: #E0EEFF; color: #0056D2;">${c.categoryname || 'General'}</span></td>
+                    <td class="font-weight-bold">${c.contactname}</td>
+                    <td>${c.idno || '-'}</td>
+                    <td>${c.mobile || '-'}</td>
+                    <td>${c.email || '-'}</td>
+                    <td><span class="material-symbols-outlined" style="color: ${c.idpath ? '#0056D2' : '#cbd5e1'};">description</span></td>
+                    <td><span class="material-symbols-outlined" style="color: ${c.consentsigned == 1 ? '#0056D2' : '#cbd5e1'}; font-variation-settings: 'FILL' ${c.consentsigned == 1 ? 1 : 0};">check_circle</span></td>
+                    <td class="text-right position-relative">
+                        <button class="btn btn-light btn-sm action-trigger">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">more_vert</span>
+                        </button>
+                        <div class="action-popup">
+                            <div class="action-item edit-contact"><span class="material-symbols-outlined">edit</span> Edit</div>
+                            <div class="action-item delete-contact text-danger"><span class="material-symbols-outlined">delete</span> Delete</div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            body.append(row);
+        });
+    }
+
+    $("#add-contact-btn").on("click", function() {
+        const customerid = $("#customer-id-val").val();
+        if (!customerid || customerid == 0) {
+            alert("Please select a customer first.");
+            return;
+        }
+
+        const categoryid = $("#contact-category-sel").val();
+        const contactname = $("#contact-name-in").val();
+        const idno = $("#contact-idno-in").val();
+        const mobile = $("#contact-mobile-in").val();
+        const email = $("#contact-email-in").val();
+
+        if (!contactname) {
+            alert("Please enter contact name.");
+            return;
+        }
+
+        $.post("../controllers/customeroperations.php", {
+            savecustomercontact: true,
+            id: currentEditingContactId,
+            customerid: customerid,
+            categoryid: categoryid,
+            contactname: contactname,
+            idno: idno,
+            mobile: mobile,
+            email: email,
+            consentsigned: 0 // Default for now
+        }, function(res) {
+            if (res.trim() === "success") {
+                clearContactForm();
+                loadCustomerContacts(customerid);
+            } else {
+                alert("Error: " + res);
+            }
+        });
+    });
+
+    function clearContactForm() {
+        currentEditingContactId = 0;
+        $("#contact-category-sel").val("");
+        $("#contact-name-in").val("");
+        $("#contact-idno-in").val("");
+        $("#contact-mobile-in").val("");
+        $("#contact-email-in").val("");
+        $("#add-contact-btn span").text("add");
+    }
+
+    $(document).on("click", ".delete-contact", function() {
+        if (!confirm("Are you sure you want to delete this contact?")) return;
+        const row = $(this).closest("tr");
+        const id = row.data("id");
+        const customerid = $("#customer-id-val").val();
+
+        $.post("../controllers/customeroperations.php", {
+            deletecustomercontact: true,
+            id: id
+        }, function(res) {
+            if (res.trim() === "success") {
+                loadCustomerContacts(customerid);
+            } else {
+                alert("Error: " + res);
+            }
+        });
+    });
+
+    $(document).on("click", ".edit-contact", function() {
+        const row = $(this).closest("tr");
+        const id = row.data("id");
+        currentEditingContactId = id;
+
+        // Fetch details from row or server (row is easier if all data is there)
+        // Since we render all fields, we can pull from row
+        const catName = row.find("td:eq(0)").text();
+        const name = row.find("td:eq(1)").text();
+        const idno = row.find("td:eq(2)").text();
+        const mobile = row.find("td:eq(3)").text();
+        const email = row.find("td:eq(4)").text();
+
+        // Match category name to ID
+        const catId = $("#contact-category-sel option").filter(function() {
+            return $(this).text() === catName;
+        }).val();
+
+        $("#contact-category-sel").val(catId);
+        $("#contact-name-in").val(name);
+        $("#contact-idno-in").val(idno === '-' ? '' : idno);
+        $("#contact-mobile-in").val(mobile === '-' ? '' : mobile);
+        $("#contact-email-in").val(email === '-' ? '' : email);
+        
+        $("#add-contact-btn span").text("save");
+        $("#contact-name-in").focus();
+    });
+
+    function loadCustomerDiscounts(customerid) {
+        if (!customerid || customerid == 0) return;
+        $.getJSON("../controllers/customeroperations.php", { getcustomerdiscounts: true, customerid: customerid }, function(data) {
+            renderDiscounts(data);
+        });
+    }
+
+    function renderDiscounts(discounts) {
+        const table = $("#discount-table").DataTable();
+        table.clear();
+
+        let totalVal = 0;
+        let activeCount = 0;
+        let expiringCount = 0;
+        const now = moment();
+        const soon = moment().add(48, 'hours');
+
+        if (discounts && discounts.length > 0) {
+            discounts.forEach(d => {
+                const expiry = moment(d.expirydate);
+                const isPerc = parseInt(d.percentage) === 1;
+                const discountDisplay = isPerc ? d.discount + '%' : $.number(d.discount, 2);
+                const finalPrice = isPerc ? (d.sellingprice * (1 - d.discount/100)) : (d.sellingprice - d.discount);
+                const isActive = expiry.isAfter(now);
+                const isExpiringSoon = isActive && expiry.isBefore(soon);
+
+                if (isActive) activeCount++;
+                if (isExpiringSoon) expiringCount++;
+                totalVal += parseFloat(d.discount) || 0;
+
+                table.row.add([
+                    d.itemcode,
+                    d.itemname,
+                    $.number(d.sellingprice, 2),
+                    discountDisplay,
+                    isPerc ? 'Percentage' : 'Flat',
+                    $.number(finalPrice, 2),
+                    expiry.format('MMM DD, YYYY'),
+                    `<span class="badge-status ${isActive ? 'status-active' : 'status-expiring'}">${isActive ? 'Active' : 'Expired'}</span>`,
+                    `<td class="text-right position-relative">
+                        <button class="btn btn-light btn-sm action-trigger">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">more_vert</span>
+                        </button>
+                        <div class="action-popup">
+                            <div class="action-item edit-discount" data-id="${d.id}"><span class="material-symbols-outlined">edit</span> Edit</div>
+                            <div class="action-item delete-discount text-danger" data-id="${d.id}"><span class="material-symbols-outlined">delete</span> Delete</div>
+                        </div>
+                    </td>`
+                ]);
+            });
+        }
+        table.draw();
+
+        // Update Stats
+        $("#ds-total-val").text($.number(totalVal, 2));
+        $("#ds-active-count").text(activeCount.toString().padStart(2, '0'));
+        $("#ds-expiring-count").text(expiringCount.toString().padStart(2, '0'));
+    }
+
+    // Copy Customer Name to Trading Name Click Handler
+    $(document).on("click", "#btn-copy-name-to-trading", function(e) {
+        e.stopPropagation();
+        const customerName = $.trim($("#customer-name").val());
+        if (customerName !== "") {
+            $("#customer-trading-name").val(customerName);
+            
+            // Micro-animation indicator
+            const $icon = $(this);
+            $icon.text("check").css("color", "#10b981");
+            setTimeout(function() {
+                $icon.text("content_copy").css("color", "#94a3b8");
+            }, 1000);
+        }
     });
 });
+

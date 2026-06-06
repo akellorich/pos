@@ -66,19 +66,37 @@ $(document).ready(function(){
                let results=""
                // console.log(data.length)
                for(i=0 ; i<data.length; i++){
-                    results+=`<tr data-id=${data[i].id}><td>${$.number(i+1)}</td>`
-                    results+=`<td>${data[i].id}</td>`
+                    results+=`<tr data-id=${data[i].purchaseorderid}><td>${$.number(i+1)}</td>`
                     results+=`<td>${data[i].purchaseorderno}</td>`
                     results+=`<td>${data[i].suppliername}</td>`
                     results+=`<td>${$.number(data[i].ordertotal)}</td>`
                     results+=`<td>${data[i].status}</td>`
-                    results+=`<td>${data[i].date}</td>`
-                    results+=`<td>${data[i].addedby}</td>`
-                    results+=`<td>${data[i].status=='Approved'?"<span><i class='fal fa-edit fa-lg text-secondary'></i></span>":"<a href='#' data-id="+data[i].id+" class='edit'><span><i class='fal fa-edit fa-lg' ></i></span>"}</a></td>`
-                    results+=`<td>${data[i].status=='Approved'?"<span><i class='fal fa-hourglass-half fa-lg text-secondary'></i></span>":"<a href='#' class='approve'><span><i class='fal fa-hourglass-half fa-lg' ></i></span></a>"}</td>`
-                    results+=`<td>${data[i].status=='Approved'?"<span><i class='fal fa-times fa-lg text-secondary'></i></span>":"<a href='#' class='cancel'><span><i class='fal fa-times fa-lg'></span></i></a>"}</td>`
-                    results+=`<td>${data[i].status!='Approved'?"<span><i class='fal fa-envelope fa-lg text-secondary'></i></span>":"<a href='#' class='email'><span><i class='fal fa-envelope fa-lg' ></i></span></a>"}</td>`
-                    results+=`<td>${data[i].status!='Approved'?"<span><i class='fal fa-print fa-lg text-secondary'></i></span>":"<a href='#' class='print'><span><i class='fal fa-print fa-lg'></span></i></a>"}</td></tr>` 
+                    results+=`<td class="d-none d-md-table-cell">${data[i].date}</td>`
+                    results+=`<td class="d-none d-md-table-cell">${data[i].addedbyname || data[i].addedby}</td>`
+                    results+=`<td class="text-center">
+                        <div class="dropdown">
+                            <a class="btn btn-sm btn-link text-secondary p-0" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 1.2rem; text-decoration: none;">
+                                <i class="fal fa-ellipsis-v"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow border-0" style="border-radius: 8px; font-size: 0.85rem; z-index: 1050 !important;">
+                                <a class="dropdown-item edit ${$.trim(data[i].status).toLowerCase()=='approved'?'disabled text-muted':''}" href="#" data-id="${data[i].purchaseorderid}">
+                                    <i class="fal fa-edit fa-fw mr-2" style="color: #6c757d; font-size: 0.72rem;"></i> Edit
+                                </a>
+                                <a class="dropdown-item approve ${$.trim(data[i].status).toLowerCase()=='approved'?'disabled text-muted':''}" href="#" data-purchaseorderno="${data[i].purchaseorderno}">
+                                    <i class="fal fa-hourglass-half fa-fw mr-2" style="color: green; font-size: 0.72rem;"></i> Approve
+                                </a>
+                                <a class="dropdown-item cancel ${$.trim(data[i].status).toLowerCase()=='approved'?'disabled text-muted':''}" href="#" data-purchaseorderno="${data[i].purchaseorderno}">
+                                    <i class="fal fa-ban fa-fw mr-2" style="color: red; font-size: 0.72rem;"></i> Reject
+                                </a>
+                                <a class="dropdown-item email ${$.trim(data[i].status).toLowerCase()!='approved'?'disabled text-muted':''}" href="#" data-purchaseorderno="${data[i].purchaseorderno}">
+                                    <i class="fal fa-envelope fa-fw mr-2" style="color: blue; font-size: 0.72rem;"></i> Email
+                                </a>
+                                <a class="dropdown-item print ${$.trim(data[i].status).toLowerCase()!='approved'?'disabled text-muted':''}" href="#" data-purchaseorderno="${data[i].purchaseorderno}">
+                                    <i class="fal fa-print fa-fw mr-2" style="color: black; font-size: 0.72rem;"></i> Print
+                                </a>
+                            </div>
+                        </div>
+                    </td></tr>`
                }
                 //    $(results).appendTo(orderlist)
                 //    ordertable.DataTable()
@@ -90,6 +108,7 @@ $(document).ready(function(){
     // listen to delete data click event
     orderlist.on("click",".edit",function(e){
         e.preventDefault();
+        if ($(this).hasClass("disabled")) return;
         var id = $(this).attr('data-id');
         $.getJSON(
             "../controllers/purchaseorderoperations.php",
@@ -98,6 +117,10 @@ $(document).ready(function(){
                 id:id
             },
             function(data){
+                 if (!data || data.length === 0) {
+                     window.location.href="purchasedetails.php?id="+id;
+                     return;
+                 }
                  // check if cancelled 
                  if(data[0].status=="Cancelled"){
                      bootbox.alert({
@@ -119,8 +142,8 @@ $(document).ready(function(){
     orderlist.on("click",".approve",function(e){
         // check permission
         e.preventDefault()
-        var parent=$(this).parent("td").parent("tr"),
-            purchaseorderno=parent.find("td").eq(2).text()
+        if ($(this).hasClass("disabled")) return;
+        var purchaseorderno=$.trim($(this).attr("data-purchaseorderno"))
         // check if the user is allowed to approve the purchase order at any level for the department from which the po was made
         $.post(
             "../controllers/rawmaterialsoperations.php",
@@ -181,8 +204,8 @@ $(document).ready(function(){
     orderlist.on("click",".cancel",function(e){
         // check permission
         e.preventDefault()
-        var parent=$(this).parent("td").parent("tr"),
-            purchaseorderno=parent.find("td").eq(2).text()
+        if ($(this).hasClass("disabled")) return;
+        var purchaseorderno=$.trim($(this).attr("data-purchaseorderno"))
         // check if the user is allowed to approve the purchase order at any level for the department from which the po was made
         $.post(
             "../controllers/rawmaterialsoperations.php",
@@ -243,7 +266,7 @@ $(document).ready(function(){
         var currentapprovallevel=approvepurchaseordermodal.find(".modal-body .data-current"),
             purchaseorderno=currentapprovallevel.attr("data-purchaseorderno"),
             approvallevel=currentapprovallevel.attr("data-id"),
-            narration=approvalnarrationfield.val()
+            narration=$("#approvalnarration").val(),
             notifications=""
 
         notifications="Processing. Please wait ..."
@@ -293,7 +316,8 @@ $(document).ready(function(){
 
     orderlist.on("click",".print",function(e){
         e.preventDefault()
-        const pono=$(this).closest("tr").find("td").eq(2).text() 
+        if ($(this).hasClass("disabled")) return;
+        const pono=$.trim($(this).attr("data-purchaseorderno")) 
         let notifications=""
         // purchaseordererors.html(showAlert("processing","Processing. Please wait ...",1))
         $.post(
@@ -325,10 +349,11 @@ $(document).ready(function(){
     //dispatch purchase order
     orderlist.on("click",".email",function(e){
         e.preventDefault()
+        if ($(this).hasClass("disabled")) return;
         // url="../controllers/dispatchpurchaseorder.php?pono="+pono
         // window.open(url, '_blank')
         // check if user is allowed to perform the operation
-        const pono=$(this).closest("tr").find("td").eq(1).text() 
+        const pono=$.trim($(this).attr("data-purchaseorderno")) 
         let notifications=""
         purchaseordererors.html(showAlert("processing","Processing. Please wait ...",1))
         $.post(
@@ -378,7 +403,7 @@ $(document).ready(function(){
         const currentapprovallevel=rejectpurchaseordermodal.find(".modal-body .data-current"),
             purchaseorderno=currentapprovallevel.attr("data-purchaseorderno"),
             approvallevel=currentapprovallevel.attr("data-id"),
-            narration=rejectionnarrationfield.val()
+            narration=$("#rejectionnarration").val()
         let notifications=""
         // check if rejection reason has been provided
         if(narration==""){
@@ -435,11 +460,20 @@ $(document).ready(function(){
     rejectionnarrationfield.on("input",function(){
         rejecterrors.html("")
     })
-
     const departmentlist=$("#filterdepartment")
     const filtercurrencylist=$("#filtercurrency")
 
     getdepartments(departmentlist)
     getscurrencies(filtercurrencylist)
+
+    // Toggle Filters collapsible panel text & icons
+    $('#filterCollapse').on('show.bs.collapse', function () {
+        $('#toggleFiltersBtn span').text('Close');
+        $('#toggleFiltersBtn i').removeClass('fa-filter').addClass('fa-times');
+    });
+    $('#filterCollapse').on('hide.bs.collapse', function () {
+        $('#toggleFiltersBtn span').text('Filters');
+        $('#toggleFiltersBtn i').removeClass('fa-times').addClass('fa-filter');
+    });
 
 })

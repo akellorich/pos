@@ -41,7 +41,6 @@ DELETE FROM journals;
 DELETE FROM heldsales;
 DELETE FROM heldsalesdetails;
 DELETE FROM cratesinventory;
-DELETE FROM products;
 DELETE FROM categories;
 DELETE FROM useroutlets;
 DELETE FROM userprivileges;
@@ -50,11 +49,13 @@ DELETE FROM customercontacts;
 DELETE FROM `customerreceiptdetails`;
 DELETE FROM `customerreceipts`;
 DELETE FROM `customersuspenseaccount`;
+DELETE FROM customerdiscountsettings;
+DELETE FROM products;
 DELETE FROM customers;
 DELETE FROM pointsofsale;
 DELETE FROM suppliers;
 DELETE FROM `user` WHERE username!='admin';
-DELETE FROM `zones`;
+-- DELETE FROM `zones`;
 
 -- Reseed the tables identity fields
 ALTER TABLE  possalesdetails AUTO_INCREMENT=1;
@@ -98,4 +99,5 @@ ALTER TABLE customersuspenseaccount AUTO_INCREMENT=1;
 ALTER TABLE  customers AUTO_INCREMENT=1;
 ALTER TABLE  suppliers AUTO_INCREMENT=1;
 ALTER TABLE  pointsofsale AUTO_INCREMENT=1;
-ALTER TABLE `zones` AUTO_INCREMENT=1
+-- ALTER TABLE `zones` AUTO_INCREMENT=1;
+ALTER TABLE customerdiscountsettings AUTO_INCREMENT=1;

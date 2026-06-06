@@ -57,21 +57,21 @@
                                     <!-- <p class="lead text-center mb-2 mt-2">Please Provide Supplier Details</p> -->
                                     <div id="errors" class="mt-2 mb-2" ></div>
                                     <div class="row">
-                                        <div class="col">
+                                        <div class="col-12 col-md-4">
                                             <div class="form-group">
                                                 <label for="suppliernames">Supplier Name:</label>
                                                 <input type="text" autocomplete="off" id="suppliername" name="suppliername"  class="form-control form-control-sm">
                                             </div>
                                         </div>
 
-                                        <div class="col">
+                                        <div class="col-12 col-md-4">
                                             <div class="form-group">
                                                 <label for="physicaladdress">Physical Address:</label>
                                                 <input type="text" autocomplete="off" id="physicaladdress" name="physicaladdress"  class="form-control form-control-sm">
                                             </div>
                                         </div>
 
-                                        <div class="col">
+                                        <div class="col-12 col-md-4">
                                             <div class="form-group">
                                                 <label for="postaladdress">Postal Address:</label>
                                                 <input type="text" autocomplete="off"  id="postaladdress" name="postaladdress"  class="form-control form-control-sm">
@@ -80,21 +80,21 @@
                                     </div>
 
                                     <div class="row">
-                                        <div class="col">
+                                        <div class="col-12 col-md-4">
                                             <div class="form-group">
                                                 <label for="email">Email:</label>
                                                 <input type="text" autocomplete="off"  id="email" name="email"  class="form-control form-control-sm">
                                             </div>
                                         </div>
 
-                                        <div class="col">
+                                        <div class="col-12 col-md-4">
                                             <div class="form-group">
                                                 <label for="mobile">Mobile:</label>
                                                 <input type="text"  autocomplete="off"  id="mobile" name="mobile"  class="form-control form-control-sm">
                                             </div>
                                         </div>
 
-                                        <div class="col">
+                                        <div class="col-12 col-md-4">
                                             <div class="form-group">
                                                 <label for="creditlimit">Credit Limit:</label>
                                                 <input type="text"  autocomplete="off"  id="creditlimit" name="creditlimit"  class="form-control form-control-sm">
@@ -103,12 +103,10 @@
                                     </div>
 
                                     <div class="row">
-                                        <div class="col form-group">
+                                        <div class="col-12 col-md-4 form-group">
                                             <label for="supplierpin">KRA PIN Number</label>
                                             <input type="text" name="supplierpin" id="supplierpin" class="form-control form-control-sm">
                                         </div>
-                                        <div class="col"></div>
-                                        <div class="col"></div>
                                     </div>
                                     <button class="btn btn-sm btn-success" id="savesupplier" name="savesupplier"><i class="fal fa-save fa-lg fa-fw"></i> Save supplier</button>
                                     <!-- <input type="button"  Value="Save supplier" class="btn btn-sm btn-success"> -->
@@ -117,18 +115,20 @@
                                 
                                 <div class="tab-pane" id="products" role="tabpanel">
                                     <div id="errorproductlist" class="mt-2 mb-2"></div>
-                                    <table class="table table-striped table-sm mt-3" id="supplierproducts">
-                                        <thead class="thead-light">
-                                            <th>#</th>
-                                            <th>Product Code</th>
-                                            <th>Product Name</th>
-                                            <th>Date Added</th>
-                                            <th>Added By</th>
-                                            <th>&nbsp;</th>
-                                        </thead>
-                                        <tbody id="productslist"></tbody>
-                                        <tfoot></tfoot>
-                                    </table>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-sm mt-3" id="supplierproducts">
+                                            <thead class="thead-light">
+                                                <th>#</th>
+                                                <th>Product Code</th>
+                                                <th>Product Name</th>
+                                                <th>Date Added</th>
+                                                <th>Added By</th>
+                                                <th>&nbsp;</th>
+                                            </thead>
+                                            <tbody id="productslist"></tbody>
+                                            <tfoot></tfoot>
+                                        </table>
+                                    </div>
                                     <button id="addproduct" name="addproduct"  class="btn btn-sm btn-success mt-3" data-toggle='modal' data-target='#productdetails'> Add Product(s)</button>
                                 </div>
 
@@ -207,31 +207,30 @@
 
                                 <div class="tab-pane" id="transactions" role="tabpanel">
                                     <div class="row mt-2">
-                                        <div class="col">
+                                        <div class="col-12 col-md-4">
                                             <div class="form-group">
                                                 <label for="statementstartdate">Start Date</label>
                                                 <input type="text"  autocomplete="off"  id="statementstartdate" name="statementstartdate" class="form-control form-control-sm">
                                             </div>
                                         </div>
-                                        <div class="col">
+                                        <div class="col-12 col-md-4">
                                             <div class="form-group">
                                                 <label for="statementenddate">End Date</label>
                                                 <input type="text"  autocomplete="off"  id="statementenddate" name="statementenddate" class="form-control form-control-sm">
                                             </div>
                                         </div>
-                                        <div class="col">
+                                        <div class="col-12 col-md-4">
                                             <div class="form-group">
                                                 <label for="">&nbsp;</label>
-                                                <button type="button" class="btn btn-sm btn-secondary d-block" id="generatestatement" name="generatestatement">Generate Statement</button>
+                                                <button type="button" class="btn btn-sm btn-secondary d-block w-100" id="generatestatement" name="generatestatement">Generate Statement</button>
                                             </div>
                                         </div>
                                     </div>
+                                    <div id='supplierstatement'></div>
+                                    <div id='supplieraging' class="mt-2"></div> 
                                 </div>
-                                <div id='supplierstatement'></div>
-                                <div id='supplieraging' class="mt-2"></div> 
                             </div>
                         </div>
-                    </div>
                 </div>
             </div>   
             
@@ -255,8 +254,11 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="productname">Product(s)</label>
-                                    <select name="productname[]" id="productname" multiple class="form-control form-control-sm "></select>
+                                    <label for="productname" class="font-weight-bold">Select Product(s)</label>
+                                    <div id="productname-checkboxes" class="border rounded p-2" style="max-height: 250px; overflow-y: auto; background: #f8f9fa;">
+                                        <!-- Checkboxes will be populated by JS -->
+                                        <p class="text-muted small mb-0">Select a category to load products...</p>
+                                    </div>
                                 </div>
 
                             </div>

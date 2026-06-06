@@ -33,7 +33,7 @@
         public function getuninvoicedgrn($supplierid,$startdate,$enddate){
             $startdate=$this->mySQLDate($startdate);
             $enddate=$this->mySQLDate($enddate);
-            $sql="CALL spgetuninvoicedgrns({$this->branchid},{$supplierid},'{$startdate}','{$enddate}')";
+            $sql="CALL spgetuninvoicedgrns({$supplierid},'{$startdate}','{$enddate}')";
             //echo $sql."<br/>";
             $rst=$this->connect()->query($sql);
             echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));

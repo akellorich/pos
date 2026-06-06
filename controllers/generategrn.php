@@ -11,10 +11,10 @@ $db=new db();
 $grnno=$_GET['grnno'];
 
 // get institutional details
-$sql="CALL spgetinstitutiondetails()";
+$sql="CALL spgetinstitutiondetails({$db->clientid})";
 $rst=$db->getData($sql)->fetch();
 
-$sql="CALL sp_getgrnheaderdetails('{$grnno}')";
+$sql="CALL sp_getgrnheaderdetails({$db->branchid},'{$grnno}')";
 $rst2=$db->getData($sql)->fetch();
 
 $sourcename=$rst2['suppliername'];
@@ -132,7 +132,7 @@ $narration=$rst2['narration'];
 $email=$rst2['email'];
 
 // get po items
-$sql="CALL sp_getgrnitems('{$grnno}')";
+$sql="CALL sp_getgrnitems({$db->branchid},'{$grnno}')";
 $rst=$db->getData($sql);
     $data.="<table  width='100%' cellpadding='3' cellspacing='0' class='items' style='overflow:wrap'>
                 <thead>
@@ -152,15 +152,18 @@ $rst=$db->getData($sql);
 $rw=1;
 while($row=$rst->fetch()){
 
+    $formatted_quantity = (float)$row['quantity'] == (int)$row['quantity'] ? number_format($row['quantity'], 0) : number_format($row['quantity'], 2);
+    $formatted_price = number_format($row['unitprice'], 2);
+    $formatted_total = number_format($row['quantity'] * $row['unitprice'], 2);
+
     $data.="<tr ><td width='5%' class='border-bottom'>".$rw."</td>";
     $data.="<td width='11.5%' class='border-bottom'>".$row['itemcode']."</td>";
     $itemname=$row['serialnos']==""?$row['itemname']:$row['itemname']." [".$row['serialnos']."]";
     $data.="<td width='40%' class='border-bottom'>".$itemname."</td>";
     $data.="<td  width='7.5%' class='border-bottom'>".$row['uom']."</td>";
-    $data.="<td  width='10%' style='text-align:right' class='border-bottom'>".$row['quantity']."</td>";
-    $data.="<td  width='10%' style='text-align:right' class='border-bottom'>".$row['unitprice']."</td>";
-    $total=$row['quantity']*$row['unitprice'];
-    $data.="<td  width='10%' style='text-align:right' class='border-bottom'>".$total."</td>";
+    $data.="<td  width='10%' style='text-align:right' class='border-bottom'>".$formatted_quantity."</td>";
+    $data.="<td  width='10%' style='text-align:right' class='border-bottom'>".$formatted_price."</td>";
+    $data.="<td  width='10%' style='text-align:right' class='border-bottom'>".$formatted_total."</td>";
     //$data.="<td  width='15%' class='border-bottom'>".$row['serialnos']."</td>";
     $data.="<td  width='11%' class='border-bottom'>".$row['pono']."</td></tr>";
 

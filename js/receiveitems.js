@@ -92,19 +92,29 @@ $(document).ready(function(){
                 function(data){
                 errordiv.html("")
                 var results="",
-                    total=0
+                    total=0,
+                    skippedCount=0
                     for(i=0;i<data.length;i++){
+                        if (data[i].disallowreceipt == 1) {
+                            skippedCount++;
+                            continue;
+                        }
                         var randomno=randomId()
                         total=data[i].undelivered*data[i].unitprice
-                        results+=`<tr data-id='${randomno}' data-serial-nos='' data-serializable='${data[i].serializable}'><td>${data[i].purchaseorderno}</td>`
+                        results+=`<tr data-id='${randomno}' data-serial-nos='' data-serializable='${data[i].serializable}' data-itemid='${data[i].itemid}'><td class='d-none d-lg-table-cell'>${data[i].purchaseorderno}</td>`
                         results+=`<td>${data[i].itemcode}</td>`
                         results+=`<td>${data[i].itemname}</td>`
-                        results+=`<td>${data[i].ordered}</td>`
-                        results+=`<td>${data[i].unitprice}</td>`
+                        results+=`<td class='d-none d-md-table-cell'>${data[i].ordered}</td>`
+                        results+=`<td class='d-none d-md-table-cell'>${data[i].unitprice}</td>`
                         results+=`<td class='quantity'>${data[i].undelivered}</td>`
-                        data[i].serializable==1?results+=`<td><button class='btn btn-xs btn-primary addserials' data-id='${randomno}' data-name='${data[i].itemname}'><span><i class='fas fa-plus-circle fa-sm'></i> Add serials numbers</span></button></td>`:results+=`<td>&nbsp</td>`
+                        data[i].serializable==1?results+=`<td><button class='btn btn-xs btn-primary addserials' data-id='${randomno}' data-name='${data[i].itemname}'><span><i class='fas fa-plus-circle fa-sm'></i> Add serials</span></button></td>`:results+=`<td>&nbsp;</td>`
                         results+=`<td class='linetotal'>${total}</td>`
-                        results+=`<td><a href='javascript void(0)' class='delete' data-id='${randomId()}'><span><i class='fas fa-trash-alt fa-sm mt-2'></i></span></a></td></tr>`
+                        results+=`<td><a href='javascript void(0)' class='delete' data-id='${randomId()}'><span class='text-danger'><i class='fas fa-trash-alt fa-sm mt-2'></i></span></a></td></tr>`
+                    }
+                    if(skippedCount > 0) {
+                        errordiv.html(showAlert("warning", `Skipped ${skippedCount} item(s) from receipt because receiving them is disallowed.`))
+                    } else {
+                        errordiv.html("")
                     }
                     $(results).appendTo(pendingorders)
                     //console.log($results)
@@ -155,7 +165,7 @@ $(document).ready(function(){
         $("#receiveditemsdetails tr").each(function(){
             $this=$(this) 
             pono=$this.find('td:eq(0)').text()
-            itemcode=$this.find('td:eq(1)').text()
+            itemcode=$this.attr('data-itemid')
             unitsreceived= $this.find('td:eq(5)').text()
             if($this.attr("data-serializable")==1){
                 if($this.attr("data-serial-nos")!=""){
@@ -567,7 +577,7 @@ $(document).ready(function(){
                     $this.attr("data-serial-nos",serials)
                     // change the add serials button to green
                     $this.find("td").eq(6).find("button").addClass("btn-success")
-                    $this.find("td").eq(6).find("button").html(`<i class="fas fa-edit fa-sm fa-fw"></i> Edit serial numbers`)
+                    $this.find("td").eq(6).find("button").html(`<i class="fas fa-edit fa-sm fa-fw"></i> Edit serials`)
                    // $this.find(".addserial").addClass("btn-success")
                 }
                 // hide the modal
@@ -588,5 +598,9 @@ $(document).ready(function(){
     transferreceiveditems.on("click",function(){
         const status=$(this).val()==1?true:false
         transfertopos.prop("disabled",!status)
+    })
+
+    $("#copy-delivery-note").on("click", function(){
+        invoicenumberfield.val(deliverynotefield.val());
     })
 })

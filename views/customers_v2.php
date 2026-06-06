@@ -1553,14 +1553,138 @@
             border: none;
         }
 
-        /* Responsive */
+        /* Responsive Adjustments */
+        @media (max-width: 1200px) {
+            .aging-grid { grid-template-columns: repeat(3, 1fr); }
+            .statement-filter-bar { grid-template-columns: repeat(2, 1fr); }
+            .btn-generate { grid-column: span 2; width: 100%; justify-content: center; }
+        }
+
         @media (max-width: 992px) {
-            .management-grid { grid-template-columns: 1fr; }
-            .customer-header-card { grid-template-columns: 1fr 1fr; gap: 1rem; }
+            .home-section {
+                left: 0 !important;
+                width: 100% !important;
+            }
+            .sidebar { 
+                left: -260px !important; 
+                z-index: 10000 !important;
+                transition: all 0.3s ease !important;
+                box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+            }
+            .sidebar.active {
+                left: 0 !important;
+            }
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.4);
+                backdrop-filter: blur(2px);
+                z-index: 9999;
+            }
+            .sidebar-overlay.active {
+                display: block;
+            }
+            
+            .management-grid { 
+                grid-template-columns: 1fr; 
+                height: auto;
+                overflow: visible;
+            }
+            .sidebar-mgmt {
+                height: 450px;
+                margin-bottom: 1rem;
+            }
+            .customer-header-card { 
+                grid-template-columns: 1fr 1fr; 
+                height: auto;
+            }
+            .header-section {
+                border-right: 1px solid #f1f5f9;
+                border-bottom: 1px solid #f1f5f9;
+                min-height: 100px;
+            }
+            .header-section:nth-child(2n) { border-right: none; }
+            
+            .main-content-mgmt { height: auto; min-height: 600px; }
+        }
+
+        @media (max-width: 768px) {
+            .customer-header-card { grid-template-columns: 1fr; }
+            .header-section { border-right: none !important; }
+            
+            .financial-grid { grid-template-columns: 1fr; gap: 1rem; }
+            .f-stat .val { font-size: 1.4rem; }
+
+            .mgmt-tabs {
+                overflow-x: auto;
+                padding-bottom: 2px;
+                justify-content: flex-start;
+                gap: 1.5rem;
+                -webkit-overflow-scrolling: touch;
+            }
+            .mgmt-tab { white-space: nowrap; }
+
+            .statement-header-grid { grid-template-columns: 1fr; }
+            .statement-filter-bar { grid-template-columns: 1fr; }
+            .btn-generate { grid-column: span 1; }
+
+            .aging-grid { grid-template-columns: repeat(2, 1fr); }
+            .discount-stats { grid-template-columns: 1fr; }
+            
+            .payment-details-card .row { --bs-gutter-x: 1rem; }
+            .payment-details-card .col-md-2, 
+            .payment-details-card .col-md-4 { width: 100% !important; }
+            
+            .summary-footer-row { padding: 1.5rem; }
+            .summary-item-box { 
+                flex-direction: column; 
+                gap: 1rem; 
+                width: 100%;
+                align-items: flex-end;
+            }
+            
+            .payment-action-bar {
+                flex-direction: column-reverse;
+                gap: 0.75rem;
+            }
+            .btn-payment-action { width: 100%; justify-content: center; }
+
+            .photo-upload-box { margin-bottom: 1.5rem; margin-right: 0; width: 100%; }
+            .d-flex.align-items-start { flex-direction: column; }
+        }
+
+        @media (max-width: 480px) {
+            .aging-grid { grid-template-columns: 1fr; }
+            .mgmt-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+        }
+
+        /* Sticky Footer for Mobile & Tablet */
+        .mobile-sticky-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-top: 1px solid var(--border-light);
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+            z-index: 1050;
+            padding: 8px 0;
+            display: none;
+        }
+
+        @media (max-width: 991px) {
+            body {
+                padding-bottom: 70px !important;
+            }
+            .mobile-sticky-footer {
+                display: block !important;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
     <?php require_once("sidebar.html") ?>
     
     <section class="home-section min-vh-100">
@@ -1724,7 +1848,7 @@
                         </div>
                         
                         <div class="mgmt-actions">
-                            <button class="btn-nexus-primary" id="btn-save-customer" style="padding: 6px 16px; font-size: 13px;">
+                            <button class="btn-nexus-primary d-none d-lg-inline-flex" id="btn-save-customer" style="padding: 6px 16px; font-size: 13px;">
                                 <span class="material-symbols-outlined" style="font-size: 18px;">save</span> Save Customer
                             </button>
                         </div>
@@ -1732,6 +1856,7 @@
 
                     <!-- Tab Content: Biodata -->
                     <div class="tab-content-container p-3 tab-pane active" id="pane-biodata" style="background: #f8fafc; border-radius: 0 0 12px 12px;">
+                        <input type="hidden" id="customer-id-val" value="0">
                         <div class="row gx-2">
                             <!-- Left Column -->
                             <div class="col-lg-7">
@@ -1772,7 +1897,10 @@
                                                 <div class="col-6">
                                                     <div class="field-group">
                                                         <label>Trading Name</label>
-                                                        <input type="text" class="nexus-input" id="customer-trading-name" placeholder="Business or alias name" autocomplete="off">
+                                                        <div class="position-relative d-flex align-items-center w-100">
+                                                            <input type="text" class="nexus-input w-100" id="customer-trading-name" placeholder="Business or alias name" autocomplete="off" style="padding-right: 36px;">
+                                                            <span class="material-symbols-outlined position-absolute" id="btn-copy-name-to-trading" style="right: 10px; cursor: pointer; color: #94a3b8; font-size: 20px; transition: color 0.2s;" title="Copy Customer Name" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">content_copy</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div class="col-6">
@@ -1789,6 +1917,20 @@
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <!-- Desktop Notifications Card -->
+                                <div class="form-section-card d-none d-lg-block" id="desktop-notification-card" style="display: none; border-left: 4px solid var(--primary); background: #f8fafc; margin-bottom: 1.5rem; padding: 1.25rem;">
+                                    <div class="form-section-title d-flex justify-content-between align-items-center" style="margin-bottom: 8px;">
+                                        <span class="d-flex align-items-center" style="gap: 8px;">
+                                            <span class="material-symbols-outlined" id="desktop-notification-icon" style="color: var(--primary);">notifications</span>
+                                            <span id="desktop-notification-title" style="font-weight: 600;">System Notification</span>
+                                        </span>
+                                        <span class="material-symbols-outlined" style="font-size: 18px; cursor: pointer; color: #94a3b8;" onclick="$('#desktop-notification-card').slideUp(200);">close</span>
+                                    </div>
+                                    <div id="desktop-notification-msg" style="font-size: 13px; color: #475569; line-height: 1.5;">
+                                        No active notifications.
                                     </div>
                                 </div>
 
@@ -1914,35 +2056,35 @@
                                 <div class="col-md-2">
                                     <div class="field-group mb-0">
                                         <label>Category</label>
-                                        <select class="nexus-input nexus-select"><option>Billing</option></select>
+                                        <select class="nexus-input nexus-select" id="contact-category-sel"><option value="">Choose One</option></select>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
                                     <div class="field-group mb-0">
                                         <label>Contact Name</label>
-                                        <input type="text" class="nexus-input" autocomplete="off">
+                                        <input type="text" class="nexus-input" id="contact-name-in" placeholder="Full name" autocomplete="off">
                                     </div>
                                 </div>
                                 <div class="col-md-2">
                                     <div class="field-group mb-0">
                                         <label>ID Number</label>
-                                        <input type="text" class="nexus-input" autocomplete="off">
+                                        <input type="text" class="nexus-input" id="contact-idno-in" autocomplete="off">
                                     </div>
                                 </div>
                                 <div class="col-md-2">
                                     <div class="field-group mb-0">
                                         <label>Mobile</label>
-                                        <input type="text" class="nexus-input" autocomplete="off">
+                                        <input type="text" class="nexus-input" id="contact-mobile-in" autocomplete="off">
                                     </div>
                                 </div>
                                 <div class="col-md-2">
                                     <div class="field-group mb-0">
                                         <label>Email</label>
-                                        <input type="email" class="nexus-input" autocomplete="off">
+                                        <input type="email" class="nexus-input" id="contact-email-in" autocomplete="off">
                                     </div>
                                 </div>
                                 <div class="col-md-1">
-                                    <button class="btn-nexus-primary w-100 justify-content-center p-0">
+                                    <button class="btn-nexus-primary w-100 justify-content-center p-0" id="add-contact-btn">
                                         <span class="material-symbols-outlined">add</span>
                                     </button>
                                 </div>
@@ -1962,48 +2104,9 @@
                                             <th class="text-right">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="customer-contacts-body">
                                         <tr>
-                                            <td><span class="badge-cat" style="background: #E0EEFF; color: #0056D2;">Billing</span></td>
-                                            <td class="font-weight-bold">Jane Doe</td>
-                                            <td>12345678</td>
-                                            <td>+254 712 345 678</td>
-                                            <td>jane.doe@example.com</td>
-                                            <td><span class="material-symbols-outlined" style="color: #cbd5e1;">description</span></td>
-                                            <td><span class="material-symbols-outlined" style="color: #0056D2; font-variation-settings: 'FILL' 1;">check_circle</span></td>
-                                            <td class="text-right position-relative">
-                                                <button class="btn btn-light btn-sm action-trigger">
-                                                    <span class="material-symbols-outlined" style="font-size: 18px;">more_vert</span>
-                                                </button>
-                                                <div class="action-popup">
-                                                    <div class="action-item"><span class="material-symbols-outlined">visibility</span> View</div>
-                                                    <div class="action-item"><span class="material-symbols-outlined">edit</span> Edit</div>
-                                                    <div class="action-item"><span class="material-symbols-outlined">upload_file</span> Upload ID</div>
-                                                    <div class="action-item"><span class="material-symbols-outlined">fingerprint</span> Enroll Biometrics</div>
-                                                    <div class="action-item"><span class="material-symbols-outlined">check_circle</span> Consent Signed</div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><span class="badge-cat" style="background: #fff7ed; color: #ea580c;">Receiving</span></td>
-                                            <td class="font-weight-bold">John Smith</td>
-                                            <td>87654321</td>
-                                            <td>+254 723 456 789</td>
-                                            <td>j.smith@procurement.co.ke</td>
-                                            <td><span class="material-symbols-outlined" style="color: #0056D2;">description</span></td>
-                                            <td><span class="material-symbols-outlined" style="color: #cbd5e1;">check_circle</span></td>
-                                            <td class="text-right position-relative">
-                                                <button class="btn btn-light btn-sm action-trigger">
-                                                    <span class="material-symbols-outlined" style="font-size: 18px;">more_vert</span>
-                                                </button>
-                                                <div class="action-popup">
-                                                    <div class="action-item"><span class="material-symbols-outlined">visibility</span> View</div>
-                                                    <div class="action-item"><span class="material-symbols-outlined">edit</span> Edit</div>
-                                                    <div class="action-item"><span class="material-symbols-outlined">upload_file</span> Upload ID</div>
-                                                    <div class="action-item"><span class="material-symbols-outlined">fingerprint</span> Enroll Biometrics</div>
-                                                    <div class="action-item"><span class="material-symbols-outlined">check_circle</span> Consent Signed</div>
-                                                </div>
-                                            </td>
+                                            <td colspan="8" class="text-center py-4 text-muted small">No associated contacts found</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -2021,7 +2124,7 @@
                                 </div>
                                 <div class="ds-info">
                                     <h6>Total Discounts</h6>
-                                    <div class="val" style="font-weight: 500;">1,482.00</div>
+                                    <div class="val" style="font-weight: 500;" id="ds-total-val">0.00</div>
                                     <div class="sub text-success">
                                         <span class="material-symbols-outlined" style="font-size: 12px; vertical-align: middle;">trending_up</span> +12% from last month
                                     </div>
@@ -2033,7 +2136,7 @@
                                 </div>
                                 <div class="ds-info">
                                     <h6>Currently Active</h6>
-                                    <div class="val" style="font-weight: 500;">08</div>
+                                    <div class="val" style="font-weight: 500;" id="ds-active-count">00</div>
                                     <div class="sub text-muted">Across 4 item categories</div>
                                 </div>
                             </div>
@@ -2043,7 +2146,7 @@
                                 </div>
                                 <div class="ds-info">
                                     <h6>Expiring Soon</h6>
-                                    <div class="val" style="font-weight: 500;">03</div>
+                                    <div class="val" style="font-weight: 500;" id="ds-expiring-count">00</div>
                                     <div class="sub text-danger">Within the next 48 hours</div>
                                 </div>
                             </div>
@@ -2062,7 +2165,7 @@
                                         <input type="text" id="discount-search" class="nexus-input" style="padding-left: 40px;" placeholder="Search item or code..." autocomplete="off">
                                     </div>
                                     <button class="btn-nexus-primary" id="create-discount-btn" style="font-weight: 500;">
-                                        <span class="material-symbols-outlined">add</span> Create Discount
+                                        <span class="material-symbols-outlined">add</span> Add New
                                     </button>
                                 </div>
                             </div>
@@ -2374,8 +2477,8 @@
                             <div class="account-info-card">
                                 <div class="d-flex justify-content-between">
                                     <div>
-                                        <div style="font-size: 10px; font-weight: 500; color: #0056D2; text-transform: uppercase; margin-bottom: 2px;">Account #100293</div>
-                                        <h3 style="font-size: 20px; font-weight: 500; color: #1e293b; margin: 0;">John Doe Enterprise</h3>
+                                        <div id="st-account-no" style="font-size: 10px; font-weight: 500; color: #0056D2; text-transform: uppercase; margin-bottom: 2px;">Account #---</div>
+                                        <h3 id="st-customer-name" style="font-size: 20px; font-weight: 500; color: #1e293b; margin: 0;">---</h3>
                                     </div>
                                     <div class="d-flex gap-2">
                                         <button class="btn-nexus-outline" style="width: 36px; height: 36px; padding: 0;"><span class="material-symbols-outlined" style="font-size: 18px;">print</span></button>
@@ -2386,19 +2489,20 @@
                                 <div class="row mt-4">
                                     <div class="col-md-6">
                                         <div style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;">Billing Address</div>
-                                        <div style="font-size: 13px; color: #475569; line-height: 1.6;">
-                                            742 Evergreen Terrace<br>
-                                            Vipingo, Kilifi County<br>
-                                            Kenya
+                                        <div id="st-billing-address" style="font-size: 13px; color: #475569; line-height: 1.6;">
+                                            ---
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;">Contact Details</div>
-                                        <div class="d-flex align-items-center gap-2 mb-2" style="font-size: 13px; color: #475569;">
-                                            <span class="material-symbols-outlined" style="font-size: 16px; color: #94a3b8;">call</span> +254 700 000 000
+                                        <div id="st-contact-person" class="d-flex align-items-center gap-2 mb-2" style="font-size: 13px; color: #1e293b; font-weight: 500;">
+                                            <span class="material-symbols-outlined" style="font-size: 16px; color: #94a3b8;">person</span> ---
                                         </div>
-                                        <div class="d-flex align-items-center gap-2" style="font-size: 13px; color: #475569;">
-                                            <span class="material-symbols-outlined" style="font-size: 16px; color: #94a3b8;">alternate_email</span> billing@johndoe.ent
+                                        <div id="st-contact-mobile" class="d-flex align-items-center gap-2 mb-2" style="font-size: 13px; color: #475569;">
+                                            <span class="material-symbols-outlined" style="font-size: 16px; color: #94a3b8;">call</span> ---
+                                        </div>
+                                        <div id="st-contact-email" class="d-flex align-items-center gap-2" style="font-size: 13px; color: #475569;">
+                                            <span class="material-symbols-outlined" style="font-size: 16px; color: #94a3b8;">alternate_email</span> ---
                                         </div>
                                     </div>
                                 </div>
@@ -2409,20 +2513,20 @@
                                     <h6 style="font-size: 14px; font-weight: 500; margin-bottom: 1rem; opacity: 0.9;">Current Balance Summary</h6>
                                     <div class="summary-line">
                                         <span>Opening Balance</span>
-                                        <span>1,240.00</span>
+                                        <span id="st-opening-bal">0.00</span>
                                     </div>
                                     <div class="summary-line">
                                         <span>Total Invoices (+)</span>
-                                        <span>4,500.00</span>
+                                        <span id="st-total-invoices">0.00</span>
                                     </div>
                                     <div class="summary-line">
                                         <span>Total Payments (-)</span>
-                                        <span>(3,200.00)</span>
+                                        <span id="st-total-payments">(0.00)</span>
                                     </div>
                                 </div>
                                 <div class="closing-balance-box">
                                     <span style="font-size: 14px; font-weight: 500;">Closing Balance</span>
-                                    <span style="font-size: 24px; font-weight: 500;">2,540.00</span>
+                                    <span id="st-closing-bal" style="font-size: 24px; font-weight: 500;">0.00</span>
                                 </div>
                             </div>
                         </div>
@@ -2447,38 +2551,9 @@
                                         <th class="text-right">Balance</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="statement-history-body">
                                     <tr>
-                                        <td>Oct 01, 2023</td>
-                                        <td style="font-weight: 500; color: #1e293b;">OB-2023</td>
-                                        <td>Opening Balance Carried Forward</td>
-                                        <td class="text-right">-</td>
-                                        <td class="text-right">-</td>
-                                        <td class="text-right" style="font-weight: 500; color: #1e293b;">1,240.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Oct 05, 2023</td>
-                                        <td style="font-weight: 500; color: #1e293b;">INV-8821</td>
-                                        <td>Service Fee - Monthly Maintenance</td>
-                                        <td class="text-right">2,500.00</td>
-                                        <td class="text-right">-</td>
-                                        <td class="text-right" style="font-weight: 500; color: #1e293b;">3,740.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Oct 12, 2023</td>
-                                        <td style="font-weight: 500; color: #1e293b;">RCT-5510</td>
-                                        <td>Bank Transfer - Settlement</td>
-                                        <td class="text-right">-</td>
-                                        <td class="text-right" style="color: #10b981; font-weight: 500;">(3,200.00)</td>
-                                        <td class="text-right" style="font-weight: 500; color: #1e293b;">540.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Oct 28, 2023</td>
-                                        <td style="font-weight: 500; color: #1e293b;">INV-8954</td>
-                                        <td>Inventory Purchase - Hardware</td>
-                                        <td class="text-right">2,000.00</td>
-                                        <td class="text-right">-</td>
-                                        <td class="text-right" style="font-weight: 500; color: #1e293b;">2,540.00</td>
+                                        <td colspan="6" class="text-center py-4 text-muted">Select a customer and generate report</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -2547,59 +2622,7 @@
                                 </thead>
                                 <tbody id="receivables-list">
                                     <tr>
-                                        <td>269</td>
-                                        <td class="ref-cell">INV-2025-07-11</td>
-                                        <td>2025-07-11</td>
-                                        <td class="text-right">1,845.00</td>
-                                        <td class="text-right">0.00</td>
-                                        <td class="bal-cell text-right">1,845.00</td>
-                                        <td class="text-right">
-                                            <div class="amt-pay-editable" contenteditable="true">1845</div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>5180</td>
-                                        <td class="ref-cell">INV-2026-03-17</td>
-                                        <td>2026-03-17</td>
-                                        <td class="text-right">250.00</td>
-                                        <td class="text-right">0.00</td>
-                                        <td class="bal-cell text-right">250.00</td>
-                                        <td class="text-right">
-                                            <div class="amt-pay-editable" contenteditable="true">250</div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>5192</td>
-                                        <td class="ref-cell">INV-2026-04-02</td>
-                                        <td>2026-04-02</td>
-                                        <td class="text-right">1,200.00</td>
-                                        <td class="text-right">500.00</td>
-                                        <td class="bal-cell text-right">700.00</td>
-                                        <td class="text-right">
-                                            <div class="amt-pay-editable" contenteditable="true">700</div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>5205</td>
-                                        <td class="ref-cell">INV-2026-04-15</td>
-                                        <td>2026-04-15</td>
-                                        <td class="text-right">5,500.00</td>
-                                        <td class="text-right">0.00</td>
-                                        <td class="bal-cell text-right">5,500.00</td>
-                                        <td class="text-right">
-                                            <div class="amt-pay-editable" contenteditable="true">5500</div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>5218</td>
-                                        <td class="ref-cell">INV-2026-04-25</td>
-                                        <td>2026-04-25</td>
-                                        <td class="text-right">3,000.00</td>
-                                        <td class="text-right">0.00</td>
-                                        <td class="bal-cell text-right">3,000.00</td>
-                                        <td class="text-right">
-                                            <div class="amt-pay-editable" contenteditable="true">3000</div>
-                                        </td>
+                                        <td colspan="7" class="text-center py-4 text-muted">No open receivables found</td>
                                     </tr>
                                 </tbody>
                                 <tfoot style="border-top: 2px solid #f1f5f9;">
@@ -2643,15 +2666,16 @@
                             <div class="row g-3">
                                 <div class="col-md-2">
                                     <label class="form-label-new">Mode of Payment</label>
-                                    <select class="form-input-new">
-                                        <option>MPESA</option>
-                                        <option>CASH</option>
-                                        <option>BANK</option>
+                                    <select class="form-input-new" id="payment-mode">
+                                        <option value="1">CASH</option>
+                                        <option value="2">MPESA</option>
+                                        <option value="3">BANK</option>
+                                        <option value="4">CREDIT</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label-new">Reference Number</label>
-                                    <input type="text" id="payment-ref" class="form-input-new" placeholder="Enter ref..." value="OA2EXWAKO">
+                                    <input type="text" id="payment-ref" class="form-input-new" placeholder="Enter ref..." value="">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label-new">Narration / Remarks</label>
@@ -2660,7 +2684,7 @@
                                 <div class="col-md-2"> <!-- Reduced from col-md-3 (~50% effective reduction) -->
                                     <label class="form-label-new">Amount Paid</label>
                                     <div class="input-group-custom">
-                                        <input type="text" id="payment-amount-paid" class="form-input-new" style="padding-right: 50px;" value="2500">
+                                        <input type="text" id="payment-amount-paid" class="form-input-new" style="padding-right: 50px;" value="0">
                                         <button type="button" id="btn-auto-distribute" class="btn-auto-inline" title="Auto Distribute Payment">
                                             <span class="material-symbols-outlined">auto_awesome</span>
                                         </button>
@@ -2668,7 +2692,7 @@
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label-new">Overpay (Balance)</label>
-                                    <input type="text" id="payment-overpay" class="form-input-new read-only overpay-field" value="405" readonly>
+                                    <input type="text" id="payment-overpay" class="form-input-new read-only overpay-field" value="0" readonly>
                                 </div>
                             </div>
                         </div>
@@ -2763,6 +2787,44 @@
                     Apply Discount
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Customer Progress & Notification Modal (Mobile/Tablet Only) -->
+    <div class="modal fade" tabindex="-1" role="dialog" id="customer-notification-modal" data-backdrop="static" data-keyboard="false" style="z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content shadow-lg border-0" style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+                <div class="modal-body text-center p-5">
+                    <!-- Progress State -->
+                    <div id="customer-modal-progress">
+                        <div class="spinner-border text-primary mb-4" role="status" style="width: 4rem; height: 4rem; border-width: 0.35em;">
+                            <span class="sr-only">Saving...</span>
+                        </div>
+                        <h4 class="font-weight-bold text-dark">Saving Customer Details</h4>
+                        <p class="text-muted mb-0">Please wait while we process and secure the customer records.</p>
+                    </div>
+                    
+                    <!-- Result State (Initially Hidden) -->
+                    <div id="customer-modal-result" style="display: none;">
+                        <div id="customer-modal-alert-container" class="mb-4"></div>
+                        <div class="d-flex justify-content-center">
+                            <button type="button" id="customer-result-btn" class="btn px-4 py-2 btn-modal-action" data-dismiss="modal" style="border-radius: 8px; font-size: 1rem;">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sticky Footer for Mobile and Tablet Views -->
+    <div class="mobile-sticky-footer">
+        <div class="d-flex px-3 justify-content-end align-items-center" style="gap: 12px;">
+            <button type="button" class="btn btn-outline-secondary font-weight-bold" id="btn-clear-customer-mobile" style="border-radius: 8px; height: 42px; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 18px; border: 1.5px solid #64748b; color: #64748b; background: transparent;">
+                <span class="material-symbols-outlined" style="font-size: 18px;">backspace</span> Clear Form
+            </button>
+            <button type="button" class="btn btn-success font-weight-bold" id="btn-save-customer-mobile" style="border-radius: 8px; height: 42px; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 18px; background-color: var(--success-green); border-color: var(--success-green);">
+                <span class="material-symbols-outlined" style="font-size: 18px;">save</span> Save Customer
+            </button>
         </div>
     </div>
 

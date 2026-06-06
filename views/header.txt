@@ -13,6 +13,7 @@
 <link href="../css/alert.css" rel="stylesheet" type="text/css" />
 <link href="../css/style.css" rel="stylesheet">
 <link href="../css/toggler.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <!-- Boxiocns CDN Link -->
 <!--<link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'> -->
 <link href="../plugins/boxicons-2.1.4/css/boxicons.min.css" rel="stylesheet"> <!-- -->

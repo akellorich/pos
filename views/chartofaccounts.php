@@ -11,7 +11,7 @@
         <?php $pagename = "Chart of Accounts"; require_once("topbar.php"); ?>
             <div class="container-fluid ">
                 <div class="row">
-                    <div class="col-md-3" id="chartofaccountslist">
+                    <div class="col-12 col-lg-3" id="chartofaccountslist">
                         <button class="btn btn-success btn-sm  w-100 mb-1 mt-3" data-toggle='modal' data-target='#glgroups'><i class="fas fa-plus-circle fa-lg fa-fw"></i> Add GL group</button>
                         <button class="btn btn-danger btn-sm  w-100 mb-1"><i class="fas fa-minus-circle fa-lg fa-fw"></i> Delete GL Account</button>
                         <div id="accordion" class="myaccordion" id="myaccordion">
@@ -19,7 +19,7 @@
                     </div>
 
                 
-                    <div class="col containergroup" id="chartofaccountsdetail">
+                    <div class="col-12 col-lg-6 containergroup" id="chartofaccountsdetail">
                         <div class="card mt-3">
                             <div class="card-header">
                                 <h5>Account Details</h5>
@@ -35,12 +35,16 @@
 
                                 <div class="form-group">
                                     <label for="accountgroup">Parent Group</label>
-                                    <select name="accountgroup" id="accountgroup" class="form-control form-control-sm"></select>
+                                    <select name="accountgroup" id="accountgroup" class="form-control form-control-sm">
+                                        <option value="0">&lt;Choose One&gt;</option>
+                                    </select>
                                 </div>
 
                                 <div class="from-group">
                                     <label for="subgroupname">Subgroup</label>
-                                    <select name="accountsubgroup" id="accountsubgroup" class="form-control form-control-sm"></select>
+                                    <select name="accountsubgroup" id="accountsubgroup" class="form-control form-control-sm">
+                                        <option value="0">&lt;Choose One&gt;</option>
+                                    </select>
                                 </div>
 
                                 <div class="form-group">
@@ -59,7 +63,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-12 col-lg-3">
                         <div class="card mt-3">
                             <div class="card-body">
                                 GL Account Summary

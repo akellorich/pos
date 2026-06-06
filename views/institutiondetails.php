@@ -114,6 +114,25 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div class="row">
+                                    <div class="col form-group">
+                                        <label for="allowpricechange">Allow Price Change During Sale</label>
+                                        <select name="allowpricechange" id="allowpricechange" class="form-control form-control-sm">
+                                            <option value="">&lt;Choose&gt;</option>
+                                            <option value="1">Yes</option>
+                                            <option value="0">No</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col form-group">
+                                        <label for="allownegativesalesglobally">Allow Negative Sale Globally</label>
+                                        <select name="allownegativesalesglobally" id="allownegativesalesglobally" class="form-control form-control-sm">
+                                            <option value="">&lt;Choose&gt;</option>
+                                            <option value="1">Yes</option>
+                                            <option value="0">No</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <div class="form-group">
                                     <label for="receiptfooter">Receipt Footer</label>
                                     <textarea name="receiptfooter" id="receiptfooter" rows="6" class="form-control form-control-sm"></textarea>

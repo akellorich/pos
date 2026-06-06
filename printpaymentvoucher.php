@@ -33,12 +33,12 @@ function index()
     // save to file because we can exit();
 }
     // get institution details
-    $sql="CALL spgetinstitutiondetails()";
+    $sql="CALL spgetinstitutiondetails({$db->clientid})";
     $rst=$db->connect()->query($sql);
     $data=$rst->fetch(PDO::FETCH_ASSOC);
    
     // get receipt details
-    $sql="CALL spgetpaymentvoucher('{$id}')";
+    $sql="CALL spgetpaymentvoucher({$db->branchid},'{$id}')";
     $rst=$db->connect()->query($sql);
     $data1=$rst->fetch(PDO::FETCH_ASSOC);
 
@@ -156,7 +156,7 @@ function index()
         <div id="items">
         <?php 
             $servedby=$data1['preparedby'];
-            $sql="CALL spgetpaymentvoucher('{$id}')";
+            $sql="CALL spgetpaymentvoucher({$db->branchid},'{$id}')";
             $rst=$db->connect()->query($sql);
             $data1=$rst->fetchAll(PDO::FETCH_ASSOC);
             $overalltotal=0;

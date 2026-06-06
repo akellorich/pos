@@ -32,15 +32,27 @@
 
     if(isset($_POST['saveuseroutlet'])){
         $userid=$_POST['userid'];
+        if (empty($userid) || $userid === 'undefined' || !is_numeric($userid)) {
+            echo "error: invalid user id";
+            exit;
+        }
         // this will be an array    
         $tableData = stripslashes($_POST['outletid']);
         // Decode the JSON array
         $tableData = json_decode($tableData,TRUE);       
-        foreach($tableData as $outlet){
-            $outletid=$outlet['id'];
-            $response=$pos->saveuseroutlet($userid,$outletid);
+        if (is_array($tableData)) {
+            $response = "success";
+            foreach($tableData as $outlet){
+                $outletid=$outlet['id'];
+                if (empty($outletid) || $outletid === 'undefined' || !is_numeric($outletid)) {
+                    continue; // Skip invalid outlets
+                }
+                $response=$pos->saveuseroutlet($userid,$outletid);
+            }
+            echo $response;
+        } else {
+            echo "error: invalid outlet data";
         }
-        echo $response; 
     }
 
     if(isset($_GET['getuseroutlets'])){

@@ -360,7 +360,7 @@ $(document).ready(function(){
             function (data){
                 var results="<option value=''>&lt;Choose One&gt;</option>"
                 for(i=0;i<data.length;i++){
-                    results+="<option value='"+data[i].id+"'>"+data[i].description+"</option>"
+                    results+="<option value='"+data[i].id+"'>"+(data[i].categoryname || data[i].description)+"</option>"
                 }
                 categorylist.html(results)
             }

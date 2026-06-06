@@ -103,4 +103,86 @@ $(document).ready(function() {
     $('#settings_v2').on('click', function() {
         $('#printersettings').click(); // Trigger original settings logic
     });
+
+    // 5. Resizable Split-Pane Layout Logic (Mouse & Touch compatible)
+    (function() {
+        console.log("Initializing Resizable Split-Pane...");
+        const $handle = $('#resize-handle');
+        const $sidebar = $('.cart-sidebar');
+        const $main = $('.main-pos-container');
+        
+        console.log("Handle found:", $handle.length);
+        console.log("Sidebar found:", $sidebar.length);
+        console.log("Main container found:", $main.length);
+        
+        if ($handle.length && $sidebar.length && $main.length) {
+            let isResizing = false;
+            
+            // Load saved width from localStorage if present
+            const savedWidth = localStorage.getItem('pos_sidebar_width');
+            if (savedWidth) {
+                const widthVal = parseInt(savedWidth);
+                if (widthVal >= 320 && widthVal <= 800) {
+                    $sidebar.css('width', widthVal + 'px');
+                    $handle.css('right', widthVal + 'px');
+                    $main.css({
+                        'width': `calc(100% - ${widthVal}px)`,
+                        'margin-right': widthVal + 'px'
+                    });
+                }
+            }
+            
+            function startResize(e) {
+                console.log("Resize started");
+                isResizing = true;
+                $handle.addClass('resizing');
+                $('body').css('cursor', 'col-resize').css('user-select', 'none');
+                e.preventDefault();
+            }
+            
+            function performResize(clientX) {
+                const newWidth = $(window).width() - clientX;
+                console.log("Resizing. ClientX:", clientX, "Calculated Width:", newWidth);
+                
+                if (newWidth >= 320 && newWidth <= 800) {
+                    $sidebar.css('width', newWidth + 'px');
+                    $handle.css('right', newWidth + 'px');
+                    $main.css({
+                        'width': `calc(100% - ${newWidth}px)`,
+                        'margin-right': newWidth + 'px'
+                    });
+                    localStorage.setItem('pos_sidebar_width', newWidth);
+                }
+            }
+            
+            function stopResize() {
+                if (isResizing) {
+                    console.log("Resize stopped");
+                    isResizing = false;
+                    $handle.removeClass('resizing');
+                    $('body').css('cursor', '').css('user-select', '');
+                }
+            }
+            
+            // Mouse Events
+            $handle.on('mousedown', startResize);
+            $(document).on('mousemove', function(e) {
+                if (isResizing) performResize(e.clientX);
+            });
+            $(document).on('mouseup', stopResize);
+            
+            // Touch Events
+            $handle.on('touchstart', function(e) {
+                if (e.originalEvent.touches && e.originalEvent.touches.length) {
+                    startResize(e);
+                }
+            });
+            $(document).on('touchmove', function(e) {
+                if (isResizing && e.originalEvent.touches && e.originalEvent.touches.length) {
+                    performResize(e.originalEvent.touches[0].clientX);
+                }
+            });
+            $(document).on('touchend touchcancel', stopResize);
+        }
+    })();
 });

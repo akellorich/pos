@@ -33,7 +33,7 @@ function index()
     // save to file because we can exit();
 }
     // get institution details
-    $sql="CALL spgetinstitutiondetails()";
+    $sql="CALL spgetinstitutiondetails({$db->clientid})";
     $rst=$db->connect()->query($sql);
     $data=$rst->fetch(PDO::FETCH_ASSOC);
    

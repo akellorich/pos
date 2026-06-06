@@ -8,7 +8,7 @@ $(document).ready(function(){
         departmentsfield=$("#department"),
         requisitionstatusfield=$("#status"),
         requisitionusecasefield=$("#usecase"),
-        addrequisitionbutton=$("#addnewrequisition"),
+        addrequisitionbutton=$("#addnewrequisition, #mobileAddPurchaseFAB"),
         filterrequisitionsbutton=$("#filterrequisitions"),
         requisitionslist=$("#requisitionslist"),
         approverequisitionmodal=$("#approverequisitionmodal"),
@@ -82,42 +82,56 @@ $(document).ready(function(){
                 var results=""
                 if(data.length>0){
                     for(var i=0;i<data.length;i++){
-                        results+=`<tr ${data[i].status=="Rejected"? "class='rejected'":data[i].status=="Approved"?"class='approved'":''}><td>${Number(i+1)}</td>`
-                        results+=`<td>${data[i].requestdate}</td>`
-                        results+=`<td>${data[i].requisitionno}</td>`
-                        results+=`<td>${data[i].departmentname}</td>`
-                        results+=`<td>${data[i].suppliername}</td>`
-                        results+=`<td>${data[i].projectname}</td>`
-                        results+=`<td>${data[i].usecasename}</td>`
-                        results+=`<td>${$.number(data[i].requisitionamount,2)}</td>`
-                        results+=`<td>${data[i].status}</td>`
-                        disabled=data[i].status=='Approved'?"disabled":""
-                        // add edit, cancel and approve buttons
-                        results+=`<td><a href='requisitiondetails.php?requisitionno=${data[i].requisitionno}' class='editdata' data-id='${data[i].id}'><span><i class='fas fa-edit fa-sm'></i></span></a></td>`
-                        if(data[i].status=="Approved"){
-                            results+=`<td><i class='fas fa-check-circle fa-sm text-success' title='Fully approved'></i></td>`
-                        }else{
-                            results+=`<td><a href='javascript void(0)' class='approvedata'  data-id='${data[i].id}'><span><i class='fas fa-check-circle fa-sm'></i></span></a></td>`   
-                        }
+                        var isRejected = data[i].status == "Rejected";
+                        var isApproved = data[i].status == "Approved";
+                        var rowClass = isRejected ? "class='rejected'" : (isApproved ? "class='approved'" : "");
                         
-                        results+=`<td><a href='javascript void(0)' class='canceldata' data-id='${data[i].id}'><span><i class='fas fa-times fa-sm'></i></span></a></td></tr>`
+                        results+=`<tr ${rowClass}>`
+                        results+=`<td class="d-none d-md-table-cell ${isRejected ? 'text-danger' : ''}">${Number(i+1)}</td>`
+                        results+=`<td class="d-none d-md-table-cell ${isRejected ? 'text-danger' : ''}">${data[i].requestdate}</td>`
+                        results+=`<td class="${isRejected ? 'text-danger' : ''}">${data[i].requisitionno}</td>`
+                        results+=`<td class="${isRejected ? 'text-danger' : ''}">${data[i].departmentname}</td>`
+                        results+=`<td class="d-none d-md-table-cell ${isRejected ? 'text-danger' : ''}">${data[i].suppliername}</td>`
+                        results+=`<td class="d-none d-md-table-cell ${isRejected ? 'text-danger' : ''}">${data[i].projectname}</td>`
+                        results+=`<td class="d-none d-md-table-cell ${isRejected ? 'text-danger' : ''}">${data[i].usecasename}</td>`
+                        results+=`<td class="${isRejected ? 'text-danger' : ''}">${$.number(data[i].requisitionamount,2)}</td>`
+                        results+=`<td class="${isRejected ? 'text-danger' : ''}">${data[i].status}</td>`
+                        
+                        // Action dropdown
+                        results+=`<td class="text-center">`
+                        if (isRejected) {
+                            results+=`-`
+                        } else {
+                            results+=`
+                            <div class="dropdown">
+                                <a class="btn btn-sm btn-link text-secondary p-0" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 1.2rem; text-decoration: none;">
+                                    <i class="fal fa-ellipsis-v"></i>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right shadow border-0" style="border-radius: 8px; font-size: 0.85rem; z-index: 1050 !important;">
+                                    <a class="dropdown-item editdata ${isApproved?'disabled text-muted':''}" href="${isApproved?'#':'requisitiondetails.php?requisitionno='+data[i].requisitionno}" data-id="${data[i].id}">
+                                        <i class="fal fa-edit fa-fw mr-2" style="color: #6c757d; font-size: 0.72rem;"></i> Edit
+                                    </a>
+                                    ${isApproved ? `
+                                    <a class="dropdown-item disabled text-success" href="#">
+                                        <i class="fal fa-check-circle fa-fw mr-2"></i> Approved
+                                    </a>
+                                    ` : `
+                                    <a class="dropdown-item approvedata" href="#" data-id="${data[i].id}">
+                                        <i class="fal fa-check-circle fa-fw mr-2" style="color: green; font-size: 0.72rem;"></i> Approve
+                                    </a>
+                                    `}
+                                    <a class="dropdown-item canceldata ${isApproved?'disabled text-muted':''}" href="#" data-id="${data[i].id}">
+                                        <i class="fal fa-times fa-fw mr-2" style="color: red; font-size: 0.72rem;"></i> Cancel
+                                    </a>
+                                </div>
+                            </div>`
+                        }
+                        results+=`</td></tr>`
                     }
                 }else{
                     results='<tr><td colspan="12" class="text-primary"><i class="fas fa-info-circle fa-lg"></i> Sorry, no records matching filter criteria found.</td></tr>'
                 }
-                requisitionslist.find("tbody").html(results)
-                
-                // get all rejected requisitions and hide action buttons and highlight in RED
-                requisitionslist.find(".rejected>td").each(function(){
-                    $this=$(this)
-                    $this.addClass("text-danger")
-                    $this.find("a").hide()
-                })
-
-                // get all approved requisitions and hide the actions buttons
-                requisitionslist.find(".approved>td").each(function(){
-                    $(this).find("a").hide()
-                })
+                makedatatable(requisitionslist, results, 15)
             }
         )
     })
@@ -367,5 +381,15 @@ $(document).ready(function(){
         startdatelabel.removeClass("text-muted")
         enddatelabel.removeClass("text-muted")
     }
+
+    // Toggle Filters collapsible panel text & icons
+    $('#filterCollapse').on('show.bs.collapse', function () {
+        $('#toggleFiltersBtn span').text('Close');
+        $('#toggleFiltersBtn i').removeClass('fa-filter').addClass('fa-times');
+    });
+    $('#filterCollapse').on('hide.bs.collapse', function () {
+        $('#toggleFiltersBtn span').text('Filters');
+        $('#toggleFiltersBtn i').removeClass('fa-times').addClass('fa-filter');
+    });
 
 })

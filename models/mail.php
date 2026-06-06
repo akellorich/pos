@@ -13,14 +13,17 @@
         private $password;
 
         public function __construct(){
+            parent::__construct();
             // fetch email settings
-            $sql="CALL sp_getemailconfiguration({$this->branchid})";
-            $row=$this->getData($sql)->fetch(PDO::FETCH_ASSOC);
-            $this->smtpserver=$row['smtpserver'];
-            $this->smtpport=$row['smtpport'];
-            $this->username=$row['emailaddress'];
-            $this->password=$row['password'];
-            $this->smtpsecurity=$row['usessl']==1?'ssl':'tls';
+            $sql="CALL sp_getemailconfiguration({$this->clientid})";
+            $rst=$this->getData($sql);
+            if ($rst && $row=$rst->fetch(PDO::FETCH_ASSOC)) {
+                $this->smtpserver=$row['smtpserver'];
+                $this->smtpport=$row['smtpport'];
+                $this->username=$row['emailaddress'];
+                $this->password=$row['password'];
+                $this->smtpsecurity=$row['usessl']==1?'ssl':'tls';
+            }
         }
 
         public function sendEmail($recipient,$subject,$message,$sender,$attachment='',$stringattachment='',$filename=''){
@@ -56,12 +59,12 @@
         }
 
         public function getemailparameters(){
-            $sql="CALL sp_getemailconfiguration({$this->branchid})";
+            $sql="CALL sp_getemailconfiguration({$this->clientid})";
             return $this->getJSON($sql);
         }
 
         public function saveemailparameters($emailaddress,$emailpassword,$smtpserver,$smtpport,$usessl){
-            $sql="CALL `sp_saveemailconfiguration`({$this->branchid},'{$emailaddress}','{$emailpassword}','{$smtpserver}',{$smtpport},{$usessl})";
+            $sql="CALL `sp_saveemailconfiguration`({$this->clientid},'{$emailaddress}','{$emailpassword}','{$smtpserver}',{$smtpport},{$usessl})";
             $this->getData($sql);
             return "success";
         }

@@ -93,7 +93,7 @@
         }
 
         function getrequisitionapprovallevels(){
-            $sql="CALL sp_getmaterialrequestapprovallevels({$this->branchid})";
+            $sql="CALL sp_getmaterialrequestapprovallevels()";
             return $this->getJSON($sql);
         }
 
@@ -116,24 +116,24 @@
         }
 
         function requisitionapprovalstatus($requisitionno){
-            $sql="CALL sp_getrequisitionapprovallevelstatus({$this->branchid},'{$requisitionno}')";
+            $sql="CALL sp_getrequisitionapprovallevelstatus('{$requisitionno}')";
             return $this->getJSON($sql);
         }
 
         function approverequisition($requisitionno,$approvallevelid,$narration){
-            $sql="CALL `sp_approverequisition`({$this->branchid},'{$requisitionno}',{$approvallevelid},{$this->userid},'{$narration}')";
+            $sql="CALL `sp_approverequisition`('{$requisitionno}',{$approvallevelid},{$this->userid},'{$narration}')";
             //echo $sql;
             $this->getData($sql);
             return "success";
         }
 
         function getrequisitionnextapprovallevel($requisitionno){
-            $sql="CALL sp_getrequisitionnextapprovallevel({$this->branchid},'{$requisitionno}')";
+            $sql="CALL sp_getrequisitionnextapprovallevel('{$requisitionno}')";
             return $this->getData($sql)->fetch()['hierarchy'];
         }
 
         function getrequisitioncurrentstatus($requisitionno){
-            $sql="CALL `sp_getrequisitioncurrentstatus`({$this->branchid},'{$requisitionno}')";
+            $sql="CALL `sp_getrequisitioncurrentstatus`('{$requisitionno}')";
             return $this->getData($sql)->fetch()['status'];
         }
 
@@ -153,39 +153,39 @@
         }
 
         function getpurchaseorderapprovallevels(){
-            $sql="CALL sp_getpurchaseorderapprovallevels({$this->branchid})";
+            $sql="CALL sp_getpurchaseorderapprovallevels()";
             return $this->getJSON($sql);
         }
 
         function getpurchaseorderapprovalusers($purchaseorderno,$level){
-            $sql="CALL `sp_getpurchaseorderapprovalusers`({$this->branchid},'{$purchaseorderno}',{$level})";
+            $sql="CALL `sp_getpurchaseorderapprovalusers`('{$purchaseorderno}',{$level})";
             return $this->getData($sql);
         }
 
         function getpurchaseorderapprovallevelname($hierarchy){
-            $sql="CALL `sp_getpurchaseorderapprovallevelname`({$this->branchid},{$hierarchy})";
+            $sql="CALL `sp_getpurchaseorderapprovallevelname`({$hierarchy})";
             return $this->getData($sql)->fetch()['description'];
         }
 
         function purchaseorderapprovalstatus($purchaseorderno){
-            $sql="CALL sp_getpurchaseorderapprovallevelstatus({$this->branchid},'{$purchaseorderno}')";
+            $sql="CALL sp_getpurchaseorderapprovallevelstatus('{$purchaseorderno}')";
             return $this->getJSON($sql);
         }
 
         function approvepurchaseorder($purchaseorderno,$approvallevelid,$narration){
-            $sql="CALL `sp_approvepurchaseorder`({$this->branchid},'{$purchaseorderno}',{$approvallevelid},{$this->userid},'{$narration}')";
+            $sql="CALL `sp_approvepurchaseorder`('{$purchaseorderno}',{$approvallevelid},{$this->userid},'{$narration}')";
             //echo $sql;
             $this->getData($sql);
             return "success";
         }
 
         function getpurchaseordernextapprovallevel($purchaseorderno){
-            $sql="CALL sp_getpurchaseordernextapprovallevel({$this->branchid},'{$purchaseorderno}')";
+            $sql="CALL sp_getpurchaseordernextapprovallevel('{$purchaseorderno}')";
             return $this->getData($sql)->fetch()['hierarchy'];
         }
 
         function getpurchaseordercurrentstatus($purchaseorderno){
-            $sql="CALL `sp_getpurchaseordercurrentstatus`({$this->branchid},'{$purchaseorderno}')";
+            $sql="CALL `sp_getpurchaseordercurrentstatus`('{$purchaseorderno}')";
             return $this->getData($sql)->fetch()['status'];
         }
 
@@ -230,7 +230,7 @@
         function checkRequisitionApprovalPrivilege($approvallevel,$requisitionno){
             $userid=$this->userid;
             $departmentid=$this->getrequisitiondepartment($requisitionno);
-            $sql="CALL sp_validaterequisitionapproval({$this->branchid},{$userid},{$approvallevel},{$departmentid})";
+            $sql="CALL sp_validaterequisitionapproval({$userid},{$approvallevel},{$departmentid})";
             //echo $sql."<br/>";
             $rst=$this->connect()->query($sql);
             if($rst->rowCount()){
@@ -243,7 +243,7 @@
         function checkPurchaseOrderApprovalPrivilege($approvallevel,$pono){
             $userid=$this->userid;
             $departmentid=$this->getpurchaseorderdepartment($pono);
-            $sql="CALL sp_validatepurchaseorderapproval({$this->branchid},{$userid},{$approvallevel},{$departmentid})";
+            $sql="CALL sp_validatepurchaseorderapproval({$userid},{$approvallevel},{$departmentid})";
             //echo $sql."<br/>";
             $rst=$this->connect()->query($sql);
             if($rst->rowCount()){
@@ -273,14 +273,20 @@
             return $this->getJSON($sql);
         }
 
+        public function getrequisitiondepartment($requisitionno){
+            $sql="SELECT `departmentid` FROM `materialrequest` WHERE `requisitionno`='{$requisitionno}'";
+            $row = $this->getData($sql)->fetch();
+            return $row ? $row['departmentid'] : 0;
+        }
+
         public function getpurchaseorderdepartment($pono){
-            $poid=$this->getpoidfrompono($pono);
-            $sql="CALL `spgetpurchaseorderdetails`({$this->branchid},'{$poid}')";
-            return $this->getData($sql)->fetch()['departmentid'];
+            $sql="SELECT `departmentid` FROM `purchaseorders` WHERE `purchaseorderno`='{$pono}'";
+            $row = $this->getData($sql)->fetch();
+            return $row ? $row['departmentid'] : 0;
         }
 
         public function getpoidfrompono($pono){
-            $sql="CALL `sp_getpoidfrompono`({$this->branchid},'{$pono}') ";
+            $sql="CALL `sp_getpoidfrompono`('{$pono}') ";
             return $this->getData($sql)->fetch()['poid'];
         }
 

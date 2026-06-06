@@ -40,12 +40,12 @@ function index()
     // save to file because we can exit();
 }
     // get institution details
-    $sql="CALL spgetinstitutiondetails()";
+    $sql="CALL spgetinstitutiondetails({$db->clientid})";
     $rst=$db->connect()->query($sql);
     $data=$rst->fetch(PDO::FETCH_ASSOC);
    
     // get receipt details
-    $sql="CALL spgetreceiptdetails('{$receiptno}')";
+    $sql="CALL spgetreceiptdetails({$db->clientid},{$db->branchid},'{$receiptno}')";
     $rst=$db->connect()->query($sql);
     $data1=$rst->fetch(PDO::FETCH_ASSOC);
 
@@ -209,7 +209,7 @@ function index()
         <div id="items">
         <?php 
             $servedby=$data1['servedby'];
-            $sql="CALL spgetreceiptdetails('{$receiptno}')";
+            $sql="CALL spgetreceiptdetails({$db->clientid},{$db->branchid},'{$receiptno}')";
             $rst=$db->connect()->query($sql);
             $data1=$rst->fetchAll(PDO::FETCH_ASSOC);
             $overalltotal=0;

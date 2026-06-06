@@ -1,5 +1,5 @@
 $(document).ready(function(){
-    var addorder=$("#addorder"),
+    var addorder=$("#addorder, #mobileAddPurchaseFAB"),
         mainmenu=$("#goback"),
         orderlist=$("#orderlist"),
         ordertable=$("#ordertable"),

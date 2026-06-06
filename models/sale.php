@@ -3,14 +3,15 @@
     require_once("../fpdf181/fpdf.php");
     class sale extends db{
 
-        public function saveTemporarySale($refno,$itemcode,$quantity,$unitprice,$discount,$serialno,$description){
-            $sql="CALL spsavetempsale({$this->branchid},'{$refno}' ,'{$itemcode}' ,{$quantity},{$unitprice},{$discount},'{$serialno}','{$description}')";
+        public function saveTemporarySale($refno,$itemcode,$quantity,$unitprice,$discount,$serialno,$description,$uom=null){
+            $uomParam = $uom !== null ? "'{$uom}'" : "NULL";
+            $sql="CALL spsavetempsale({$this->branchid},'{$refno}' ,'{$itemcode}' ,{$quantity},{$unitprice},{$discount},'{$serialno}','{$description}',{$uomParam})";
             $rst=$this->getData($sql);
             return true;
         }
 
         public function saveSale($refno,$customerid,$posid,$transactiondate,$reference){
-            $transactiondate=$this->mySQLDate($transactiondate);
+            $transactiondate=$this->mySQLDate($transactiondate) . ' ' . date('H:i:s');
             $sql="CALL spsavepossale({$this->branchid},'{$refno}',{$customerid},{$posid},'{$transactiondate}','{$reference}',{$_SESSION['userid']})";
             // echo $sql."<br/>";
             $rst=$this->getData($sql);
@@ -84,7 +85,8 @@
                 $total=$unitprice*$dataitem['quantity'];
                 $overalltotal+=$total;
                 $pdf->Cell(70,5,$dataitem['itemcode'],0);
-                $pdf->Cell(90,5,$dataitem['quantity']." X ".$unitprice,0,1,"R");
+                $uomStr = !empty($dataitem['uom']) ? " " . $dataitem['uom'] : "";
+                $pdf->Cell(90,5,$dataitem['quantity'] . $uomStr . " X " . $unitprice,0,1,"R");
                 $pdf->Cell(139,5,$dataitem['itemname'],0);
                 $pdf->Cell(20,5,$total,0,1,"R");
             }

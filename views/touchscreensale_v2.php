@@ -69,7 +69,7 @@
                 <!-- Row 2: Search Bar -->
                 <div class="search-wrapper mb-4">
                     <span class="material-symbols-outlined">search</span>
-                    <input id="itemcode" class="pos-search-input" placeholder="Search products by name or barcode..." type="text"/>
+                    <input id="itemcode" class="pos-search-input" placeholder="Search Item ..." type="text" autocomplete="off"/>
                 </div>
 
                 <!-- Row 3: Categories with "More" -->
@@ -100,6 +100,9 @@
                     <!-- Products populated by JS -->
                 </div>
             </main>
+
+            <!-- Resize Handle -->
+            <div class="resize-handle" id="resize-handle"></div>
 
             <!-- Right Sidebar: Current Sale -->
             <aside class="cart-sidebar">
@@ -136,7 +139,7 @@
                 <div class="cart-items-container no-scrollbar">
                     <table id="salesitemsdetails">
                         <thead>
-                            <tr><th>Code</th><th>Name</th><th>Desc</th><th>Price</th><th>Disc</th><th>Ext</th><th>Stock</th><th>Qty</th><th>Serial</th><th>Total</th><th></th></tr>
+                            <tr><th>Code</th><th>Name</th><th>Desc</th><th>Price</th><th>Disc</th><th>Ext</th><th>Stock</th><th>Qty</th><th>Serial</th><th>Total</th><th></th><th>UOM</th></tr>
                         </thead>
                         <tbody></tbody>
                     </table>
@@ -275,6 +278,65 @@
                     <button type="button" class="btn btn-nexus-charge" id="save">
                         <span class="material-symbols-outlined" style="font-size: 24px;">check_circle</span>
                         CONFIRM PAYMENT <span class="kbd-shortcut">(F4)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Printer Settings -->
+    <div class="modal fade" id="printersettingsmodal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+                <div class="modal-header" style="border-bottom: 1px solid #f1f5f9; padding: 20px 24px;">
+                    <h5 class="modal-title font-manrope font-weight-bold" style="font-size: 18px; color: #1a1c1e; display: flex; align-items: center; gap: 10px;">
+                        <span class="material-symbols-outlined text-success" style="font-size: 24px;">print</span>
+                        Printer Settings
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="font-size: 24px; color: #94a3b8; opacity: 1; outline: none; border: none; background: none;">&times;</button>
+                </div>
+                <div class="modal-body" style="padding: 24px;">
+                    <div id="printernotifications" style="margin-bottom: 16px;"></div>
+                    
+                    <div class="input-container mb-3" style="display: flex; flex-direction: column; gap: 6px;">
+                        <label for="deviceid" class="input-label" style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Device ID</label>
+                        <div class="payment-input-wrapper" style="position: relative; display: flex; align-items: center;">
+                            <span class="material-symbols-outlined icon" style="position: absolute; left: 16px; font-size: 18px; color: #94a3b8;">devices</span>
+                            <input type="text" name="deviceid" id="deviceid" class="payment-input" disabled style="padding-left: 48px; height: 48px; background-color: #f1f5f9; border: 2px solid #e2e8f0;">
+                        </div>
+                    </div>
+                    
+                    <div class="input-container mb-3" style="display: flex; flex-direction: column; gap: 6px;">
+                        <label for="printerconnection" class="input-label" style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Printer Connection</label>
+                        <div class="payment-input-wrapper" style="position: relative; display: flex; align-items: center;">
+                            <span class="material-symbols-outlined icon" style="position: absolute; left: 16px; font-size: 18px; color: #94a3b8;">settings_ethernet</span>
+                            <select name="printerconnection" id="printerconnection" class="payment-input" style="padding-left: 48px; height: 48px; border: 2px solid #f1f5f9;">
+                                <option value="usb">USB</option>
+                                <option value="bluetooth">Bluetooth</option>
+                                <option value="wifi">Wi-Fi</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-container mb-3" style="display: flex; flex-direction: column; gap: 6px;">
+                        <label for="printername" class="input-label" style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Printer Name</label>
+                        <div class="payment-input-wrapper" style="position: relative; display: flex; align-items: center;">
+                            <span class="material-symbols-outlined icon" style="position: absolute; left: 16px; font-size: 18px; color: #94a3b8;">print</span>
+                            <select name="printername" id="printername" class="payment-input" style="padding-left: 48px; height: 48px; border: 2px solid #f1f5f9;">
+                                <option value="0x4843">POS-80</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding: 20px 24px; border-top: 1px solid #f1f5f9; display: flex; gap: 12px; background-color: #f8fafc;">
+                    <button type="button" class="btn btn-nexus-charge flex-fill" id="saveprinterconfig" style="padding: 10px 16px; height: 42px; font-size: 13px; font-weight: 700; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">save</span> Save Changes
+                    </button>
+                    <button type="button" class="btn btn-nexus-secondary btn-retrieve flex-fill" id="testprinter" style="padding: 10px 16px; height: 42px; font-size: 13px; font-weight: 700; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">print</span> Test Printer
+                    </button>
+                    <button type="button" class="btn btn-nexus-secondary btn-clear flex-fill" data-dismiss="modal" style="padding: 10px 16px; height: 42px; font-size: 13px; font-weight: 700; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">close</span> Close
                     </button>
                 </div>
             </div>

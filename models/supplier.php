@@ -1,75 +1,87 @@
 <?php
-    require_once('db.php');
-    
-    class supplier extends db{
+require_once('db.php');
 
-        public function checkSupplierName($id,$name){
-            $sql="CALL spchecksuppliername({$this->clientid},{$id},'{$name}')";
-            $rst=$this->connect()->query($sql);
-            if($rst->rowCount()>0){
-                return true;
-            }else{
-                return false;
-            }
-        }
+class supplier extends db
+{
 
-        public function saveSupplier($supplierid,$suppliername,$physicaladdress,$postaladdress,$mobile ,$email,$creditlimit,$supplierpinno){
-            if(!$this->checkSupplierName($supplierid,$suppliername)){
-                $sql="CALL spsavesupplier({$this->clientid},{$supplierid},'{$suppliername}','{$physicaladdress}','{$postaladdress}',{$creditlimit},'{$mobile}' ,
-                '{$supplierpinno}','{$email}',{$this->userid})";
-                // echo $sql."<br/>";
-                $rst=$this->connect()->query($sql);
-                echo "success";
-            }else{
-                echo "exists";
-            }
-        }
-
-        public function getSupplierDetails($supplierid){
-            $sql="CALL spgetsupplierdetails({$this->clientid},{$supplierid})";
-            $rst=$this->connect()->query($sql);
-            echo json_encode($rst->fetch(PDO::FETCH_ASSOC));
-        }
-
-        public function deleteSupplier($supplierid){
-            $sql="CALL spdeletesupplier({$this->clientid},{$supplierid},{$_SESSION['userid']})";
-            $rst=$this->connect()->query($sql);
-            echo "The supplier has been deleted successfully.";
-        }
-
-        public function getSuppliers(){
-            $sql="CALL spgetsuppliers({$this->clientid})";
-            $rst=$this->connect()->query($sql);
-            echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
-        }
-
-        public function savetempinvoicedetails($refno,$grnno){
-            $sql="CALL spsavetempsupplierinvoice({$this->clientid},'{$refno}','{$grnno}')";
-            //echo $sql."<br/>";
-            $rst=$this->connect()->query($sql);
-        }
-
-        public function saveinvoice($refno,$invoiceno,$supplierid, $invoicedate){
-            $invoicedate=$this->mySQLDate($invoicedate);
-            $sql="CALL spsavesupplierinvoice({$this->clientid},'{$refno}','{$invoiceno}',{$supplierid},'{$invoicedate}',{$_SESSION['userid']})";
-            $rst=$this->connect()->query($sql);
-            //echo $sql."<br/>";
-            echo "success";
-        }
-
-        public function getSupplierInvoices($supplierid,$status,$startdate,$enddate){
-            $startdate=$this->mySQLDate($startdate);
-            $enddate=$this->mySQLDate($enddate);
-            $sql="CALL spgetsupplierinvoices({$this->clientid},{$supplierid},'{$status}','{$startdate}','{$enddate}')";
-            $rst=$this->connect()->query($sql);
-            echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
-        }
-
-        public function getInvoiceGRNDetails($id){
-            $sql="CALL spgetinvoicegrns({$this->clientid},{$id})";
-            $rst=$this->connect()->query($sql);
-            echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
-
+    public function checkSupplierName($id, $name)
+    {
+        $sql = "CALL spchecksuppliername({$this->clientid},{$id},'{$name}')";
+        $rst = $this->connect()->query($sql);
+        if ($rst->rowCount() > 0) {
+            return true;
+        } else {
+            return false;
         }
     }
+
+    public function saveSupplier($supplierid, $suppliername, $physicaladdress, $postaladdress, $mobile, $email, $creditlimit, $supplierpinno)
+    {
+        if (!$this->checkSupplierName($supplierid, $suppliername)) {
+            $sql = "CALL spsavesupplier({$this->clientid},{$supplierid},'{$suppliername}','{$physicaladdress}','{$postaladdress}',{$creditlimit},'{$mobile}' ,
+                '{$supplierpinno}','{$email}',{$this->userid})";
+            // echo $sql."<br/>";
+            $rst = $this->connect()->query($sql);
+            echo "success";
+        } else {
+            echo "exists";
+        }
+    }
+
+    public function getSupplierDetails($supplierid)
+    {
+        $sql = "CALL spgetsupplierdetails({$this->clientid},{$supplierid})";
+        $rst = $this->connect()->query($sql);
+        echo json_encode($rst->fetch(PDO::FETCH_ASSOC));
+    }
+
+    public function deleteSupplier($supplierid)
+    {
+        $sql = "CALL spdeletesupplier({$this->clientid},{$supplierid},{$_SESSION['userid']})";
+        $rst = $this->connect()->query($sql);
+        echo "The supplier has been deleted successfully.";
+    }
+
+    public function getSuppliers()
+    {
+        $sql = "CALL spgetsuppliers({$this->clientid})";
+        $rst = $this->connect()->query($sql);
+        echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    public function savetempinvoicedetails($refno, $grnno)
+    {
+        $sql = "CALL spsavetempsupplierinvoice({$this->clientid},'{$refno}','{$grnno}')";
+        //echo $sql."<br/>";
+        $rst = $this->connect()->query($sql);
+    }
+
+    public function saveinvoice($refno, $invoiceno, $supplierid, $invoicedate)
+    {
+        $invoicedate = $this->mySQLDate($invoicedate);
+        $sql = "CALL spsavesupplierinvoice({$this->clientid},'{$refno}','{$invoiceno}',{$supplierid},'{$invoicedate}',{$_SESSION['userid']})";
+        $rst = $this->connect()->query($sql);
+        //echo $sql."<br/>";
+        echo "success";
+    }
+
+    public function getSupplierInvoices($supplierid, $status, $startdate, $enddate)
+    {
+        $startdate = $this->mySQLDate($startdate);
+        $enddate = $this->mySQLDate($enddate);
+        $sql = "CALL spgetsupplierinvoices({$this->clientid},{$supplierid},'{$status}','{$startdate}','{$enddate}')";
+        // echo $sql;
+        // echo "<br/>";
+        $rst = $this->connect()->query($sql);
+        echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    public function getInvoiceGRNDetails($id)
+    {
+        $sql = "CALL spgetinvoicegrns({$this->clientid},{$id})";
+        $rst = $this->connect()->query($sql);
+        echo json_encode($rst->fetchAll(PDO::FETCH_ASSOC));
+
+    }
+}
 ?>

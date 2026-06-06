@@ -6,14 +6,28 @@ $(document).ready(function(){
         errordiv=$("#errors"),
         report=$("#report"),
         reportdetails=$("#reportdetails"),
-        reportnamefield=$("#reportname")
+        reportnamefield=$("#reportname");
     
-    startdatefield.datepicker({dateFormat: 'dd-M-yy'})
-    enddatefield.datepicker({dateFormat: 'dd-M-yy'})
+    startdatefield.datepicker({maxDate: new Date(), dateFormat: 'dd-M-yy'})
+    enddatefield.datepicker({maxDate: new Date(), dateFormat: 'dd-M-yy'})
 
-    alldates.prop("checked",true)
-    startdatefield.prop("disabled",true)
-    enddatefield.prop("disabled",true)
+    // Helper to format date as dd-M-yy (e.g. 02-Jun-2026)
+    function formatDate(date) {
+        var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var day = date.getDate();
+        var month = months[date.getMonth()];
+        var year = date.getFullYear();
+        if (day < 10) day = '0' + day;
+        return day + '-' + month + '-' + year;
+    }
+
+    // Set default filter to last 24 hours
+    var today = new Date();
+    var yesterday = new Date(Date.now() - 86400000);
+
+    alldates.prop("checked", false);
+    startdatefield.prop("disabled", false).val(formatDate(yesterday));
+    enddatefield.prop("disabled", false).val(formatDate(today));
     
     alldates.on("click",function(){
        if(alldates.prop("checked")) {
@@ -85,5 +99,7 @@ $(document).ready(function(){
         errordiv.html("")
     })
 
-   
+    // Pre-select Sales report and trigger programmatic search on load
+    reportnamefield.val("sales");
+    searchbutton.trigger('click');
 })

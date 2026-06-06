@@ -1,29 +1,37 @@
 $(document).ready(function(){
-    var addvoucherbutton=$("#addvoucher"),
+    var addvoucherbutton=$("#addvoucher, #addvoucher-floating"),
         costcenterlist=$("#costcenter"),
         supplierlist=$("#supplier"),
         statuslist=$("#status"),
         paymentmodelist=$("#paymentmode"),
         alldates=$("#alldates"),
         startdatefield=$("#startdate"),
-        enddatefield=$("#enddate")
-        alldates.prop("checked",true)
-        startdatefield.prop("disabled",true)
-        enddatefield.prop("disabled",true),
+        enddatefield=$("#enddate"),
         errordiv=$("#errors"),
+        errordiv1=$("#results1"),
         filterbutton=$("#filterpayments"),
         searchresults=$("#results")
+    
+    alldates.prop("checked",false)
+    startdatefield.prop("disabled",false)
+    enddatefield.prop("disabled",false)
     
     getPointsOfSale(costcenterlist,'all')
     getPaymentModes(paymentmodelist,'all')
     getSuppliers(supplierlist,'all')
     
-    $.datepicker.setDefaults({
-        dateFormat: 'dd-M-yy'
-    });
+    var today = new Date();
+    var yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
 
-    startdatefield.datepicker()
-    enddatefield.datepicker()
+    startdatefield.flatpickr({
+        dateFormat: 'd-M-Y',
+        defaultDate: yesterday
+    });
+    enddatefield.flatpickr({
+        dateFormat: 'd-M-Y',
+        defaultDate: today
+    });
 
     alldates.on("click",function(){
         if(alldates.prop("checked")){
@@ -77,24 +85,78 @@ $(document).ready(function(){
                 },function(data){
                     var results=""
                     for(var i=0;i<data.length;i++){
-                        results+="<tr><td>"+parseInt(i+1)+"</td>"
+                        results+="<tr><td></td>"
+                        results+="<td>"+parseInt(i+1)+"</td>"
                         results+="<td>"+data[i].voucherdate+"</td>"
                         results+="<td>"+data[i].voucherno+"</td>"
                         results+="<td>"+data[i].suppliername+"</td>"
                         results+="<td>"+data[i].posname+"</td>"
                         //results+="<td>"+data[i].invoicenumber+"</td>"
-                        results+="<td>"+$.number(data[i].vouchertotal)+"</td>"
+                        results+="<td class='text-right'>"+$.number(data[i].vouchertotal)+"</td>"
                         results+="<td>"+data[i].paymentmodedescription+"</td>"
                         results+="<td>"+data[i].accountcode+" - "+data[i].accountname+"</td>"
                         results+="<td>"+data[i].referenceno+"</td>"
                         results+="<td>"+data[i].status+"</td>"
-                        results+="<td><a href='javascript void(0)' class='print' data-id='"+data[i].voucherid+"' data-voucherno='"+data[i].voucherno+"'><span><i class='fas fa-print fa-sm mt-1'></i></span></a></td>"
-                        results+="<td><a href='javascript void(0)' class='edit' data-id='"+data[i].voucherid+"' data-voucherno='"+data[i].voucherno+"'><span><i class='fas fa-edit fa-sm mt-1'></i></span></a></td>"
-                        results+="<td><a href='javascript void(0)' class='approve' data-id='"+data[i].voucherid+"'><span><i class='fas fa-thumbs-up fa-sm mt-1'></i></span></a></td>"
-                        results+="<td><a href='javascript void(0)' class='delete' data-id='"+data[i].voucherid+"'><span><i class='fas fa-trash-alt fa-sm mt-1'></i></span></a></td></tr>"
-                        //console.log(results)
+                        results+="<td class='text-center'>"
+                        results+="<div class='dropdown'>"
+                        results+="<a href='javascript:void(0)' class='text-secondary' data-toggle='dropdown' data-boundary='viewport' aria-haspopup='true' aria-expanded='false'>"
+                        results+="<i class='fas fa-ellipsis-v fa-lg'></i>"
+                        results+="</a>"
+                        results+="<div class='dropdown-menu dropdown-menu-right'>"
+                        results+="<a class='dropdown-item print' href='javascript:void(0)' data-id='"+data[i].voucherid+"' data-voucherno='"+data[i].voucherno+"'><i class='fas fa-print fa-fw mr-2 text-primary'></i>Print</a>"
+                        results+="<a class='dropdown-item edit' href='javascript:void(0)' data-id='"+data[i].voucherid+"' data-voucherno='"+data[i].voucherno+"'><i class='fas fa-edit fa-fw mr-2 text-warning'></i>Edit</a>"
+                        results+="<a class='dropdown-item approve' href='javascript:void(0)' data-id='"+data[i].voucherid+"'><i class='fas fa-thumbs-up fa-fw mr-2 text-success'></i>Approve</a>"
+                        results+="<a class='dropdown-item delete' href='javascript:void(0)' data-id='"+data[i].voucherid+"'><i class='fas fa-trash-alt fa-fw mr-2 text-danger'></i>Delete</a>"
+                        results+="</div>"
+                        results+="</div>"
+                        results+="</td></tr>"
                     }
-                    searchresults.find("tbody").html(results)
+                    if ($.fn.DataTable.isDataTable(searchresults)) {
+                        searchresults.DataTable().destroy();
+                    }
+                    searchresults.find("tbody").html(results);
+                    searchresults.DataTable({
+                        responsive: {
+                            details: {
+                                type: 'column',
+                                target: 0
+                            }
+                        },
+                        pageLength: 15,
+                        lengthMenu: [[10, 15, 25, 50, -1], [10, 15, 25, 50, "All"]],
+                        dom: "<'row mb-2'<'col-12'B>><'row mb-3'<'col-6'l><'col-6'f>>rtip",
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                className: 'btn btn-success',
+                                text: '<i class="fas fa-file-excel mr-1"></i> Excel'
+                            },
+                            {
+                                extend: 'csv',
+                                className: 'btn btn-secondary',
+                                text: '<i class="fas fa-file-csv mr-1"></i> CSV'
+                            },
+                            {
+                                extend: 'pdf',
+                                className: 'btn btn-danger',
+                                text: '<i class="fas fa-file-pdf mr-1"></i> PDF'
+                            },
+                            {
+                                extend: 'print',
+                                className: 'btn btn-info',
+                                text: '<i class="fas fa-print mr-1"></i> Printer'
+                            }
+                        ],
+                        columnDefs: [
+                            { className: 'dtr-control', orderable: false, targets: 0 },
+                            { responsivePriority: 1, orderable: false, targets: 11 }, // Action column (highest priority, not sortable)
+                            { responsivePriority: 2, targets: 2 },  // Payment Date
+                            { responsivePriority: 3, targets: 3 },  // Voucher #
+                            { responsivePriority: 4, targets: 4 },  // Supplier
+                            { responsivePriority: 5, targets: 6 }   // Amount Paid
+                        ],
+                        order: [[ 3, "desc" ]]
+                    });
                 }
             )
         }else{
@@ -253,4 +315,9 @@ $(document).ready(function(){
         var url ="../printpaymentvoucher.php?voucherid="+id
         var win = window.open(url, '_blank');
     })
+
+    // Automatically load data on page load
+    setTimeout(function() {
+        filterbutton.click();
+    }, 100);
 })

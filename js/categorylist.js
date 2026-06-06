@@ -1,5 +1,5 @@
 $(document).ready(function(){
-    const addbutton=$("#addcategory"),
+    const addbutton=$("#addcategory, #addcategory_fab"),
         backbutton=$("#goback"),
         categorylist=$("#categorylist"),
         categorytable=$("#categorytable"),
@@ -101,35 +101,62 @@ $(document).ready(function(){
     $.getJSON(
         "../controllers/getcategories.php",
         function(data){
-            //console.log(data)
             var results=''
             for (var i = 0; i < data.length; i++) {
-                // data[i].categoryid
+                var addedby = data[i].addedbyname || "System";
                 results+="<tr><td>"+parseInt(i+1)+"</td>"
                 results+="<td>"+data[i].categoryname+"</td>"
                 results+="<td>"+data[i].prefix+"</td>"
                 results+="<td>"+data[i].currentno+"</td>"
-                results+="<td>"+data[i].dateadded+"</td>"
-                results+="<td>"+data[i].addedbyname+"</td>"
-                results+="<td><a href='categorydetails.php?id="+data[i].categoryid+"'><span><i class='fas fa-edit fa-sm' ></i></span></a></td>"
-                results+="<td><a href='javascript void(0)' class='delete' data-id='"+data[i].categoryid+"'><span><i class='fas fa-trash-alt fa-sm'></span></i></a></td>" 
-                results+="</tr>"
+                results+="<td class='d-none d-md-table-cell'>"+data[i].dateadded+"</td>"
+                results+="<td class='d-none d-lg-table-cell'>"+addedby+"</td>"
+                 results+="<td class='text-right' style='padding-right: 20px;'>"
+                 results+="<div class='dropdown'>"
+                  results+="<a class='text-secondary px-2 dropdown-toggle dropdown-toggle-nocaret' href='#' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false' style='cursor: pointer; display: inline-block; padding: 4px 8px;'>"
+                  results+="<i class='fal fa-ellipsis-v' style='font-size: 1.3rem;'></i>"
+                  results+="</a>"
+                 results+="<div class='dropdown-menu dropdown-menu-right shadow-sm'>"
+                 results+="<a class='dropdown-item py-1' href='categorydetails.php?id="+data[i].categoryid+"' style='font-size:0.8rem;'><i class='fal fa-edit mr-2 text-primary' style='font-size: 0.78rem;'></i>Edit</a>"
+                 results+="<a class='dropdown-item delete py-1' href='#' data-id='"+data[i].categoryid+"' style='font-size:0.8rem;'><i class='fal fa-trash-alt mr-2 text-danger' style='font-size: 0.78rem;'></i>Delete</a>"
+                 results+="</div>"
+                 results+="</div>"
+                 results+="</td>"
+                 results+="</tr>"
             } 
            
-           // console.log(results)
             $(results).appendTo(categorylist)
             categorytable.DataTable({ 
-                dom: 'Bfrtip',
+                dom: '<"dt-buttons-container mb-3"B><"dt-controls-container d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-3"lf>rtip',
                 buttons: [
-                'copy', 'csv', 'excel', 'pdf', 'print'
-            ]})
+                    {
+                        extend: 'csvHtml5',
+                        text: '<i class="fal fa-file-csv mr-1"></i> CSV',
+                        className: 'btn btn-xs btn-primary mr-2'
+                    },
+                    {
+                        extend: 'excelHtml5',
+                        text: '<i class="fal fa-file-excel mr-1"></i> Excel',
+                        className: 'btn btn-xs btn-success mr-2'
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        text: '<i class="fal fa-file-pdf mr-1"></i> PDF',
+                        className: 'btn btn-xs btn-danger mr-2'
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fal fa-print mr-1"></i> Print',
+                        className: 'btn btn-xs btn-info'
+                    }
+                ]
+            })
         }
     )
     // listen to delete click event
     categorylist.on("click",".delete",function(e){
         e.preventDefault();
         var id = $(this).attr('data-id');
-        var parent = $(this).parent("td").parent("tr");
+        var parent = $(this).closest("tr");
         var itemname=parent.find("td").eq(1).text()
         bootbox.dialog({
            // title: "Confirm Item Removal!",

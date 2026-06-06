@@ -280,3 +280,13 @@ body{
     font-size: 10px !important;
   }
 }
+
+/* Adjust submenu font size and reduce indent on mobile and tablet viewports */
+@media (max-width: 991.98px) {
+  .sidebar .nav-links li .sub-menu {
+    padding-left: 40px !important;
+  }
+  .sidebar .nav-links li .sub-menu a {
+    font-size: 13.5px !important;
+  }
+}

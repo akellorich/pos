@@ -5,6 +5,16 @@
     class purchaseorder extends db{
 
         public function saveTempPurchaseOrderItem($refno,$itemcode,$quantity,$unitprice,$taxable,$taxinclusive){
+            // If the itemcode is not numeric (e.g. alphanumeric barcode 'BR00002'), perform a fallback database lookup to get the correct productid
+            if (!is_numeric($itemcode) && !empty($itemcode)) {
+                $pdo = $this->connect();
+                $stmt = $pdo->prepare("SELECT productid FROM `products` WHERE `itemcode` = ? AND `clientid` = ?");
+                $stmt->execute([$itemcode, $this->clientid]);
+                $foundId = $stmt->fetchColumn();
+                if ($foundId !== false) {
+                    $itemcode = $foundId;
+                }
+            }
             $sql="CALL spsavetemppurchaseorderitem({$this->branchid},'{$refno}','{$itemcode}',{$quantity},{$unitprice},{$taxable},{$taxinclusive})";
             // echo $sql."<br/>";
             $rst=$this->connect()->query($sql);

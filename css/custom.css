@@ -391,6 +391,8 @@ table, select, text, .dropdown-menu, .form-control{
 
 .parentgroupname{
   padding-left: 10px;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
 }
 
 .subgroupname{
@@ -573,7 +575,7 @@ table, select, text, .dropdown-menu, .form-control{
 }
 
 #receiptlist{
-  margin-left:-25px!important;
+  margin-left:0!important;
 }
 
 .containergroup .table{
@@ -710,4 +712,118 @@ label.active
   display: flex;
   justify-content:flex-end;
   align-items: center;
+}
+
+/* Premium Global DataTable overrides */
+.dataTables_wrapper .dataTables_length select {
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    padding: 4px 24px 4px 8px !important;
+    outline: none;
+    min-width: 65px !important;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    padding: 6px 12px;
+    outline: none;
+    margin-left: 8px;
+    transition: border-color 0.2s ease;
+}
+
+.dataTables_wrapper .dataTables_filter input:focus {
+    border-color: #2b5c8f;
+}
+
+/* Premium Global DataTable Buttons Formatter matching the reference design */
+.dt-buttons-container {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.dt-buttons {
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+    gap: 12px !important;
+    float: none !important;
+}
+
+.dt-buttons .btn {
+    flex: 1 !important;
+    margin: 0 !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    font-size: 0.85rem !important;
+    padding: 6px 16px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: none !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease !important;
+}
+
+.dt-buttons .btn:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+    opacity: 0.95 !important;
+}
+
+.dt-buttons .btn:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Button color overrides matching the visual spectrum in the design */
+.dt-buttons .buttons-excel {
+    background-color: #28a745 !important;
+    color: #ffffff !important;
+}
+
+.dt-buttons .buttons-csv {
+    background-color: #6c757d !important;
+    color: #ffffff !important;
+}
+
+.dt-buttons .buttons-pdf {
+    background-color: #dc3545 !important;
+    color: #ffffff !important;
+}
+
+.dt-buttons .buttons-print {
+    background-color: #17a2b8 !important;
+    color: #ffffff !important;
+}
+
+/* Shrunk icon sizes for all individual export buttons globally */
+.dt-buttons .btn i {
+    font-size: 0.95rem !important;
+    margin-right: 6px !important;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 767.98px) {
+    .dt-buttons {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+    }
+    
+    .dt-buttons .btn {
+        flex: 1 !important;
+        padding: 4px 10px !important;
+        font-size: 0.75rem !important;
+        height: 30px !important;
+    }
+}
+
+/* Ensure accordion stretches to full width on mobile/tablet viewports to align with other cards */
+@media (max-width: 991.98px) {
+    .myaccordion {
+        max-width: none !important;
+        margin: 10px 0 !important;
+    }
 }

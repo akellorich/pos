@@ -26,7 +26,7 @@ BEGIN
         p.itemname, 
         c.customername, 
         m.description AS paymentmode, 
-        u.firstname AS servedby, 
+        CONCAT_WS(' ', u.firstname, u.lastname) AS servedby, 
         pos.posname AS posname
     FROM `possales` s
     JOIN `possalesdetails` sd ON s.possaleid = sd.possaleid

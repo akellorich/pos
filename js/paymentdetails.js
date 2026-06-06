@@ -26,11 +26,39 @@ $(document).ready(function(){
         addinvoicestolistbutton=$("#addinvoicestolist")
     autogeneratevoucher.prop("checked",true)
     vouchernofield.prop("disabled",true)
-    datefield.datepicker({maxDate: new Date()})
-
-    $.datepicker.setDefaults({
-        dateFormat: 'dd-M-yy'
+    datefield.flatpickr({
+        maxDate: new Date(),
+        dateFormat: 'd-M-Y',
+        defaultDate: new Date()
     });
+
+    function initPaymentDetailsDataTable() {
+        if ($.fn.DataTable.isDataTable(paymentdetails)) {
+            paymentdetails.DataTable().destroy();
+        }
+        paymentdetails.DataTable({
+            responsive: {
+                details: {
+                    type: 'column',
+                    target: 0
+                }
+            },
+            paging: false,
+            searching: false,
+            info: false,
+            ordering: false,
+            columnDefs: [
+                { className: 'dtr-control', orderable: false, targets: 0 },
+                { responsivePriority: 1, targets: 2 },  // Invoice #
+                { responsivePriority: 2, targets: 3 },  // Invoice Amount
+                { responsivePriority: 3, targets: 6 },  // Balance
+                { responsivePriority: 4, targets: 7 },  // Pay
+                { responsivePriority: 5, targets: 8 }   // Remove action button
+            ]
+        });
+    }
+
+    initPaymentDetailsDataTable();
 
     function getDropdownListValues(){
         var dfd= new $.Deferred()
@@ -73,21 +101,19 @@ $(document).ready(function(){
                                 getvoucheritems:true,
                                 id:id
                             },function(data){
-                                var linetotal,results
+                                var linetotal,results = ""
                                 
                                 for(var i=0;i<data.length;i++){
-                                    linetotal=parseFloat(data[0].quantity)*parseFloat(data[0].unitprice)
-                                    //console.log(linetotal)
-                                    results+="<tr><td>"+data[i].itemcode+"</td><td>"+data[i].description+"</td><td data-id='"+data[i].accountcharged+"'>"+data[i].accountname+"</td><td class='numericfield invoiceamount'>"+$.number(data[i].unitprice,2)+"</td><td class='numericfield invoicebalance'>"+$.number(data[i].unitprice,2)+"</td><td class='numericfield amountpaid linetotal'>"+$.number(data[i].unitprice,2)+"</td>"
-                                    // add edit and delete buttons
-                                    // results+="<td><a href='javascript void(0)' class='editdata' data-id='"+randomId()+"'><span><i class='fas fa-edit fa-sm'></i></span></a></td>"
-                                    results+="<td><a href='javascript void(0)' class='deletedata' data-id='"+randomId()+"'><span><i class='fas fa-trash-alt fa-sm'></i></span></a></td></tr>"
-                                
+                                    linetotal=parseFloat(data[i].quantity)*parseFloat(data[i].unitprice)
+                                    var item_invoicedate = data[i].invoicedate || "";
+                                    results+="<tr><td></td><td class='invoicedate'>"+item_invoicedate+"</td><td class='invoice' id='"+data[i].itemcode+"'>"+data[i].itemcode+"</td><td class='numericfield invoiceamount'>"+$.number(data[i].unitprice,2)+"</td><td>"+data[i].description+"</td><td data-id='"+data[i].accountcharged+"'>"+data[i].accountname+"</td><td class='numericfield invoicebalance'>"+$.number(data[i].unitprice,2)+"</td><td class='numericfield amountpaid linetotal'>"+$.number(data[i].unitprice,2)+"</td>"
+                                    results+="<td><a href='javascript void(0)' class='removeinvoice' data-id='"+randomId()+"'><span><i class='fas fa-trash-alt fa-sm'></i></span></a></td></tr>"
                                 }
                                 paymentdetails.find("tbody").html(results)
                                 // perform totals
                                 performTotals()
                                 totalfield.html($.number(getItemsTotal()))
+                                initPaymentDetailsDataTable()
                             }
                         )
                     }else{
@@ -125,7 +151,11 @@ $(document).ready(function(){
 
     function clearForm(){
         clearPaymentDetails()
+        if ($.fn.DataTable.isDataTable(paymentdetails)) {
+            paymentdetails.DataTable().destroy();
+        }
         paymentdetails.find("tbody").html("")
+        initPaymentDetailsDataTable()
         datefield.val("")
         totalfield.html("0.00")
         invoicenofield.val("")
@@ -166,7 +196,7 @@ $(document).ready(function(){
     paymentdetails.on("click",".deletedata",function(e){
         e.preventDefault()
         var parent = $(this).parent("td").parent("tr");
-        var itemname=parent.find("td").eq(1).text()
+        var itemname=parent.find("td").eq(2).text()
         bootbox.dialog({
            // title: "Confirm Item Removal!",
             message: "Are you sure you want to DELETE <strong>"+itemname+"</strong>?",
@@ -182,9 +212,13 @@ $(document).ready(function(){
                     label: "Yes, Remove",
                     className: "btn-danger",
                     callback: function() {
+                        if ($.fn.DataTable.isDataTable(paymentdetails)) {
+                            paymentdetails.DataTable().destroy();
+                        }
                         parent.remove()
                         // recompute totals
                         totalfield.html($.number(getItemsTotal()))
+                        initPaymentDetailsDataTable()
                         $('.bootbox').modal('hide');
                     }
                 }
@@ -265,10 +299,10 @@ $(document).ready(function(){
             paymentdetails.find("tbody tr").each(function(){
                 var ths=$(this),
                     quantity=1,        
-                    invoiceno=ths.find("td").eq(0).text(),
-                    description=ths.find("td").eq(1).text(),
-                    accountcharged =ths.find("td").eq(2).attr("data-id")
-                    unitprice= ths.find("td").eq(5).text()
+                    invoiceno=ths.find("td").eq(2).text(),
+                    description=ths.find("td").eq(4).text(),
+                    accountcharged =ths.find("td").eq(5).attr("data-id")
+                    unitprice= ths.find("td").eq(7).text()
                     unitprice=unitprice.replace(",","")   
                 data.push({invoicenumber:invoiceno,description:description,quantity:quantity,unitprice:unitprice,accountcharged:accountcharged})
             })
@@ -323,16 +357,16 @@ $(document).ready(function(){
             quantity=0, 
             unitprice=0
         $('#paymentdetails tr').each(function(row, tr){
-            quantity=1//$(tr).find('td:eq(2)').text()
-            unitprice= $(tr).find('td:eq(5)').text()
+            quantity=1//$(tr).find('td:eq(3)').text()
+            unitprice= $(tr).find('td:eq(7)').text()
             //quantity=quantity.replace(",","")
             unitprice=unitprice.replace(",","")
             TableData[row]={
-                "invoicenumber" : $(tr).find('td:eq(0)').text(),
-                "description" : $(tr).find('td:eq(1)').text(),
+                "invoicenumber" : $(tr).find('td:eq(2)').text(),
+                "description" : $(tr).find('td:eq(4)').text(),
                 "quantity" :quantity,
                 "unitprice" :unitprice,
-                "accountcharged" : $(tr).find('td:eq(2)').attr("data-id")
+                "accountcharged" : $(tr).find('td:eq(5)').attr("data-id")
             }    
         }); 
         TableData.shift()  // first row will be empty - so remove
@@ -453,8 +487,9 @@ $(document).ready(function(){
         $(".invoice").each(function(){
             if($(this).prop("checked")){
                 var parent=$(this).parent("td").parent("tr")
-                var invoiceno,invoiceamount,added=0,invoicebalance, accountcharged,accountname
+                var invoiceno,invoiceamount,added=0,invoicebalance, accountcharged,accountname, invoicedate
                 invoiceno=parent.find("td").eq(1).text()
+                invoicedate=parent.find("td").eq(2).text()
                 invoiceamount=parent.find("td").eq(3).text()
                 invoicepaid=parent.find("td").eq(4).text()
                 invoicebalance=parent.find("td").eq(5).text()
@@ -469,21 +504,25 @@ $(document).ready(function(){
                 })
 
                 if(added==0){
-                    results+="<tr><td class='invoice' id='"+invoiceno+"'>"+invoiceno+"</td>"
+                    results+="<tr><td></td><td class='invoicedate'>"+invoicedate+"</td><td class='invoice' id='"+invoiceno+"'>"+invoiceno+"</td>"
+                    results+="<td class='invoiceamount'>"+invoiceamount+"</td>"
                     results+="<td>Payment towards invoice #"+invoiceno+"</td>"
                     results+="<td data-id='"+accountcharged+"'>"+accountname+"</td>"
-                    results+="<td class='invoiceamount'>"+invoiceamount+"</td>"
                     results+="<td class='invoicebalance'>"+invoicebalance+"</td>"
                     results+="<td class='amountpaid'>"+invoicebalance+"</td>"
                     results+="<td><a href='javascript void(0)' class='removeinvoice'><span><i class='fas fa-trash-alt fa-sm'></i></span></a></td></tr>"
                 }
             }
         })
-        $(results).appendTo(paymentdetails)
+        if ($.fn.DataTable.isDataTable(paymentdetails)) {
+            paymentdetails.DataTable().destroy();
+        }
+        $(results).appendTo(paymentdetails.find("tbody"))
         // perform totals
         performTotals()
         // hide modal
         $("#supplierinvoicesmodal").modal('hide')
+        initPaymentDetailsDataTable()
     })
 
     function performTotals(){
@@ -518,7 +557,7 @@ $(document).ready(function(){
     //listen to remove invoice from the list
     paymentdetails.on("click",".removeinvoice",function(e){
         var parent=$(this).parent("td").parent("tr")
-        var invoiceno= parent.find("td").eq(0).text()
+        var invoiceno= parent.find("td").eq(2).text()
 
         e.preventDefault();
         bootbox.dialog({
@@ -536,9 +575,13 @@ $(document).ready(function(){
                     label: "Yes, Remove",
                     className: "btn-danger",
                     callback: function() {
+                        if ($.fn.DataTable.isDataTable(paymentdetails)) {
+                            paymentdetails.DataTable().destroy();
+                        }
                         //console.log(parent)
                         parent.remove()
                         performTotals()
+                        initPaymentDetailsDataTable()
                         $('.bootbox').modal('hide');
                     }
                 }
@@ -547,7 +590,7 @@ $(document).ready(function(){
     })
 
     paymentdetails.on('click',".amountpaid",function(){
-        var parent = $(this).parent("tr");
+        var parent = $(this).closest("tr");
          bootbox.prompt({
              title:"Change Amount",
              size: 'small',
@@ -555,12 +598,16 @@ $(document).ready(function(){
              inputType: 'number',
              callback: function (result) {
                  if(parseFloat(result)>0){
+                     if ($.fn.DataTable.isDataTable(paymentdetails)) {
+                         paymentdetails.DataTable().destroy();
+                     }
                      // quantity is on the 5th col
-                     var quantity= 1//parent.find("td").eq(5).text(),
+                     var quantity= 1//parent.find("td").eq(7).text(),
                          linetotal=parseFloat(result*quantity)
                      // unitprice is coulmn number 2 and extended price is col 4
-                     parent.find("td").eq(5).text(linetotal)
+                     parent.find("td").eq(7).text(linetotal)
                      performTotals()
+                     initPaymentDetailsDataTable()
                      //computeTotalAmountPaid()
                  } 
              }

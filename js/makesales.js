@@ -243,7 +243,7 @@ $(document).ready(function(){
             missingitems=false
         salesitems.find("tbody tr").each(function(){
             var $this=$(this),
-                itemcode=$this.find("td").eq(0).text(),
+                itemcode=$this.attr("data-productid"),
                 unitprice=$this.find("td").eq(2).text(),
                 discount=$this.find("td").eq(3).text(),
                 quantity=$this.find("td").eq(6).text(),
@@ -339,8 +339,14 @@ $(document).ready(function(){
                 function(data){
                     // generate receipt
                     try {
-                        let response = JSON.parse(data);
-                        if(response.status == "success" || response.receiptno){
+                        let response;
+                        if (typeof data === 'object') {
+                            response = data;
+                        } else if (isJSON(data)) {
+                            response = JSON.parse(data);
+                        }
+
+                        if (response && (response.status == "success" || response.receiptno)) {
                             let str = response.receiptno;
                             let printreceipt = response.printreceipt;
 
@@ -355,10 +361,10 @@ $(document).ready(function(){
                             errors = "Sale finalized successfully! <br/> Receipt Number: <strong>" + str + "</strong>"
                             errordiv.html(showAlert("success", errors))
                         } else {
-                            errordiv.html(showAlert("warning", data.toString()))
+                            errordiv.html(showAlert("warning", typeof data === 'object' ? JSON.stringify(data) : data.toString()))
                         }
                     } catch(e) {
-                        errordiv.html(showAlert("warning", data.toString()))
+                        errordiv.html(showAlert("warning", typeof data === 'object' ? JSON.stringify(data) : data.toString()))
                     }
                     // hide payment details
                     paymentsmodal.modal("hide")
@@ -412,16 +418,19 @@ $(document).ready(function(){
                 if (Object.keys(data).length===0){
                     errors="No product with similar code found"
                     errordiv.html(showAlert("info",errors))
+                }else if (data[0].disallowsale == 1){
+                    errors = `Selling is disallowed for <strong>${data[0].itemname}</strong>.`
+                    errordiv.html(showAlert("danger",errors))
                 }else{
                     errordiv.html("")
                     // check if there are quantities in stock for the item
-                    if(Number(data[0].itembalance)<=0){
+                    if(Number(data[0].itembalance)<=0 && Number(data[0].allownegativesales)==0){
                         errors=`<strong>${data[0].itemname}</strong> has <strong>${data[0].itembalance}</strong> quantities in stock hence can't be sold.`
                         errordiv.html(showAlert("info",errors))
                     }else{
                         let sellingprice=data[0].sellingprice,
                             randomno=randomId()
-                        productdetails+=`<tr class='clickable-row' data-id='${randomno}' data-productid='${data[0].productid}' data-serializable='${data[0].serializable}' data-serial-nos=''><td>${data[0].itemcode}</td>`
+                        productdetails+=`<tr class='clickable-row' data-id='${randomno}' data-productid='${data[0].productid}' data-serializable='${data[0].serializable}' data-serial-nos='' data-allownegativesales='${data[0].allownegativesales}'><td>${data[0].itemcode}</td>`
                         productdetails+=`<td>${data[0].itemname}</td>`
                         productdetails+=`<td class='price'>${data[0].sellingprice}</td>`
                         productdetails+=`<td>${data[0].discount}</td>`
@@ -597,8 +606,9 @@ $(document).ready(function(){
                     // check if quantity in stock exeeds quantity to be sold
                     const unitprice= parent.find("td").eq(4).text(),
                         linetotal=Number(result*unitprice),
-                        stockquantity=Number(parent.find("td").eq(5).text())
-                    if(stockquantity>Number(result)){
+                        stockquantity=Number(parent.find("td").eq(5).text()),
+                        allowNegative=parent.attr("data-allownegativesales") == "1"
+                    if(stockquantity>=Number(result) || allowNegative){
                         parent.find("td").eq(6).text(result)
                         parent.find("td").eq(8).text(linetotal)
                         overalltotal.html($.number(getItemsTotal(),2))
@@ -673,7 +683,7 @@ $(document).ready(function(){
             TableData=[];
             salesitems.find("tbody tr").each(function(){
                 var $this=$(this),
-                    itemcode=$this.find("td").eq(0).text(),
+                    itemcode=$this.attr("data-productid"),
                     description=$this.find("td").eq(1).text(),
                     unitprice=$this.find("td").eq(4).text(),
                     discount=$this.find("td").eq(3).text(),
@@ -1242,7 +1252,7 @@ $(document).ready(function(){
                 var results=''
                 for(var i=0;i<data.length;i++){
                     var selected=data[i].default==1?"selected":""
-                    results+=`<option value='${data[i].id}' ${selected}>${data[i].description}</option>`
+                    results+=`<option value='${data[i].id}' ${selected}>${data[i].categoryname || data[i].description}</option>`
                 }
                 customercategorylist.html(results)
             }

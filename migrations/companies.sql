@@ -26,7 +26,7 @@ CREATE TABLE `mainoutlets` (
 /*Data for the table `mainoutlets` */
 
 INSERT  INTO `mainoutlets`(`outletname`,`database`) VALUES 
-('Test Account','spzcnhia_pos');
+('Headquarters','rgvddxtv_pos');
 
 
 /* Procedure structure for procedure `spgetcompanies` */
@@ -35,7 +35,7 @@ INSERT  INTO `mainoutlets`(`outletname`,`database`) VALUES
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`spzcnhia`@`localhost` PROCEDURE `spgetcompanies`()
+/*!50003 CREATE DEFINER=`rgvddxtv`@`localhost` PROCEDURE `spgetcompanies`()
 BEGIN
 	select * from `mainoutlets` order by `outletname`;
     END */$$

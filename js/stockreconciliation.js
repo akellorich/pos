@@ -13,19 +13,61 @@ $(document).ready(function(){
         posnamelist=$("#posname"),
         categoryfield=$("#category")
 
+    // Intercept errordiv.html to display notifications as modals on mobile/tablet view
+    const originalHtml = errordiv.html;
+    errordiv.html = function(content) {
+        if (!content) {
+            return originalHtml.call(errordiv, "");
+        }
+        
+        const $temp = $("<div>").html(content);
+        const $alert = $temp.find(".alert");
+        
+        if ($alert.length > 0) {
+            const message = $alert.find(".alert-message").text().trim() || $alert.text().trim();
+            const isTransient = message.toLowerCase().includes("processing") || message.toLowerCase().includes("please wait");
+            
+            if ($(window).width() < 992 && !isTransient) {
+                let type = "info";
+                let btnClass = "btn-info";
+                
+                if ($alert.hasClass("alert-success")) {
+                    type = "success";
+                    btnClass = "btn-success";
+                } else if ($alert.hasClass("alert-danger")) {
+                    type = "danger";
+                    btnClass = "btn-danger";
+                } else if ($alert.hasClass("alert-warning")) {
+                    type = "warning";
+                    btnClass = "btn-warning";
+                }
+                
+                // Get the exact showAlert formatted alert HTML (showing header)
+                const modalHtml = showAlert(type, message, 0);
+                
+                bootbox.dialog({
+                    message: modalHtml,
+                    centerVertical: true,
+                    className: "alert-modal-centered",
+                    buttons: {
+                        close: {
+                            label: '<i class="fas fa-times mr-1" style="font-size: inherit;"></i> Close',
+                            className: 'btn-primary btn-sm'
+                        }
+                    }
+                });
+                return this;
+            }
+        }
+        return originalHtml.call(errordiv, content);
+    };
+
     let errors=""
 
     itemcodefield.keypress(function(event){	
         var keycode = (event.keyCode ? event.keyCode : event.which);
         if(keycode == '13'){
-            // check if supplier has been selected
-            if(supplierslist.val()!=""){
-               getProduct()
-            }else{
-                errors="Please select a supplier first"
-                errordiv.html(showAlert("info",errors))
-            }
-            
+            getProduct();
         } 
     })   
     
@@ -51,8 +93,8 @@ $(document).ready(function(){
             purchaseitems.find("tbody>tr").each(function(){
                 $this=$(this)
                 itemid=$this.find("td").eq(0).attr("data-id")
-                quantity=$this.find("td").eq(5).text()
-                unitprice=$this.find("td").eq(2).text()
+                quantity=$this.find("td").eq(5).text().replace(/,/g, '').trim()
+                unitprice=$this.find("td").eq(2).text().replace(/,/g, '').trim()
                 itemslist.push({"itemid":itemid,"quantity":quantity,"unitprice":unitprice})
             })
             // check if no item was entered into the list
@@ -94,11 +136,27 @@ $(document).ready(function(){
         window.location.href="main.php"
     })
 
+    function formatNumber(num) {
+        let val = parseFloat(num);
+        if (isNaN(val)) return "0.00";
+        return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatQty(num) {
+        let val = parseFloat(num);
+        if (isNaN(val)) return "0";
+        if (val % 1 === 0) {
+            return val.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        } else {
+            return val.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 4 });
+        }
+    }
+
     function getItemsTotal(){
         var sum = 0;
         // iterate through each td based on class and add the values
         $(".linetotal").each(function() {
-            var value = $(this).text();
+            var value = $(this).text().replace(/,/g, '').trim();
             // add only if the value is number
             if(!isNaN(value) && value.length != 0) {
                 sum += parseFloat(value);
@@ -124,7 +182,7 @@ $(document).ready(function(){
         return TableData
     }*/
 
-    itemcodefield.on("keyup",function(){
+                    itemcodefield.on("keyup",function(){
         var name=itemcodefield.val()
         if(name.length>2){
             $.getJSON(    
@@ -137,44 +195,190 @@ $(document).ready(function(){
                     var results="<ul class='searchresults'>"
                     searchresults.html("")
                     if(data.length>0){
+                        // Find all item codes currently in the table
+                        let existingCodes = [];
+                        purchaseitems.find("tbody tr").each(function(){
+                            existingCodes.push($(this).find("td").eq(0).text().trim());
+                        });
+
+                        // Check if all found items are already in the table
+                        let allCheckedInTable = true;
                         for(i=0;i<data.length;i++){
-                            results+="<li id='"+data[i].itemcode+"'>"+data[i].itemname+"</li>"
+                            if(!existingCodes.includes(data[i].itemcode)){
+                                allCheckedInTable = false;
+                                break;
+                            }
+                        }
+
+                        // Render Select All row
+                        let selectAllChecked = allCheckedInTable ? "checked" : "";
+                        results+=`<li class='select-all-row font-weight-bold'>
+                            <input type='checkbox' id='selectAllSearchItems' ${selectAllChecked}>
+                            <span>Select All</span>
+                        </li>`
+
+                        for(i=0;i<data.length;i++){
+                            let isChecked = existingCodes.includes(data[i].itemcode) ? "checked" : "";
+                            results+=`<li data-code='${data[i].itemcode}'>
+                                <input type='checkbox' class='search-item-checkbox' ${isChecked}>
+                                <span>${data[i].itemname} (${data[i].itemcode})</span>
+                            </li>`
                         }
                         results+="</ul>"
-                        // console.log(results)
+                        
+                        // Append the sticky Apply button bar at the bottom of the list
+                        results+=`<div class='search-apply-bar p-2 border-top bg-light text-right' style='position: sticky; bottom: 0; z-index: 10;'>
+                            <button type='button' id='apply-item' class='btn btn-outline-primary btn-sm'><i class='fas fa-sync fa-fw fa-sm mr-1'></i> Apply</button>
+                        </div>`
+
                         $(results).appendTo(searchresults)
                         searchresults.show()
-                    }  else{
-
                     }
                 }
             )
+        } else {
+            searchresults.hide();
         }
     })
 
-    // listen to the click event of search term when clicked
-    searchresults.on("click","li",function(){
-        var itemcode=''
-        itemcode=$(this).attr("id")
-        itemcodefield.val(itemcode)
-        getProduct()
-        searchresults.hide()
-        itemcodefield.val("")
-        itemcodefield.focus()
-    })
+    // listen to click events inside search results (just toggle checkboxes)
+    searchresults.on("click", "li:not(.select-all-row)", function(e) {
+        const $li = $(this);
+        const $checkbox = $li.find(".search-item-checkbox");
+        
+        if (!$(e.target).is(".search-item-checkbox")) {
+            $checkbox.prop("checked", !$checkbox.prop("checked"));
+        }
 
-    function getProduct(){
+        // Update "Select All" checkbox state
+        const allItemsCount = searchresults.find(".search-item-checkbox").length;
+        const checkedItemsCount = searchresults.find(".search-item-checkbox:checked").length;
+        $("#selectAllSearchItems").prop("checked", allItemsCount === checkedItemsCount);
+
+        itemcodefield.focus();
+    });
+
+    // click handler for Select All row
+    searchresults.on("click", "li.select-all-row", function(e) {
+        if (!$(e.target).is("#selectAllSearchItems")) {
+            const $cb = $("#selectAllSearchItems");
+            $cb.prop("checked", !$cb.prop("checked")).trigger("change");
+        }
+    });
+
+    // change handler for Select All checkbox
+    searchresults.on("change", "#selectAllSearchItems", function() {
+        const isChecked = $(this).prop("checked");
+        searchresults.find(".search-item-checkbox").prop("checked", isChecked);
+    });
+
+    // listen to the Apply button click event (delegated to searchresults)
+    searchresults.on("click", "#apply-item", function() {
+        const checkedItems = searchresults.find(".search-item-checkbox:checked");
+        if (checkedItems.length > 0) {
+            checkedItems.each(function() {
+                const itemcode = $(this).closest("li").attr("data-code");
+                getProduct(itemcode);
+            });
+        } else {
+            const code = itemcodefield.val().trim();
+            if (code) {
+                getProduct(code);
+            }
+        }
+        searchresults.hide();
+        itemcodefield.val("");
+        itemcodefield.focus();
+    });
+
+    $("#load-all-items").on("click", function() {
+        errordiv.html(showAlert("info", "Loading all inventory items. Please wait...", 1));
+        
+        $.getJSON(
+            "../controllers/productoperations.php",
+            {
+                filterproductbyname: 1,
+                name: "",
+                posid: posnamelist.val() || 0
+            },
+            function(data) {
+                if (data && data.length > 0) {
+                    let existingCodes = [];
+                    purchaseitems.find("tbody tr").each(function() {
+                        existingCodes.push($(this).find("td").eq(0).text().trim());
+                    });
+                    
+                    let addedCount = 0;
+                    let productdetails = "";
+                    
+                    for (let i = 0; i < data.length; i++) {
+                        let item = data[i];
+                        if (!existingCodes.includes(item.itemcode)) {
+                            productdetails += `<tr><td data-id="${item.productid}">${item.itemcode}</td>`
+                            productdetails += "<td>" + item.itemname + "</td>"
+                            productdetails += `<td class='text-right unitprice d-none d-md-table-cell'>${formatNumber(item.buyingprice)}</td>`
+                            productdetails += `<td class='text-right discount d-none d-md-table-cell'>0.00</td>`
+                            productdetails += `<td class='text-right extprice d-none d-md-table-cell'>${formatNumber(item.buyingprice)}</td>`
+                            productdetails += `<td class='text-right quantity'>1</td>`
+                            productdetails += `<td class='text-right linetotal d-none d-md-table-cell'>${formatNumber(item.buyingprice)}</td>`
+                            productdetails += "<td><a href='#' class='delete' data-id='" + randomId() + "'><span><i class='fas fa-trash fa-sm' id='" + item.itemcode + "' name='" + item.itemcode + "'></i></span></a></td></tr>"
+                            addedCount++;
+                        }
+                    }
+                    
+                    if (addedCount > 0) {
+                        $(productdetails).appendTo(purchaseitems.find("tbody"));
+                        overalltotal.html(formatNumber(getItemsTotal()));
+                        errordiv.html(showAlert("success", `Loaded ${addedCount} new inventory items successfully.`, 1));
+                        setTimeout(function() {
+                            errordiv.html("");
+                        }, 2000);
+                    } else {
+                        errordiv.html(showAlert("info", "All inventory items are already in the list.", 1));
+                        setTimeout(function() {
+                            errordiv.html("");
+                        }, 2000);
+                    }
+                } else {
+                    errordiv.html(showAlert("danger", "No inventory items found to load."));
+                }
+            }
+        ).fail(function() {
+            errordiv.html(showAlert("danger", "An error occurred while loading inventory items."));
+        });
+    });
+
+    $(document).on("click", function(e) {
+        if (!$(e.target).closest("#itemcode, #searchproducts").length) {
+            searchresults.hide();
+        }
+    });
+
+    function getProduct(code){
+         var codeToFetch = code || itemcodefield.val();
+         if (!codeToFetch) return;
+
+         // Check if already in the table to prevent duplicates
+         let exists = false;
+         purchaseitems.find("tbody tr").each(function(){
+             if ($(this).find("td").eq(0).text().trim() === codeToFetch) {
+                 exists = true;
+             }
+         });
+         if (exists) {
+             errordiv.html("");
+             return;
+         }
+
          // display progress
          errordiv.html(showAlert("info","Processing. Please wait ...",1))
-        //  errors="<p class='alert alert-info'> Fetching product. Please wait ...</p>"
-        //  $(errors).appendTo(errordiv)
          var productdetails=""
 
          $.getJSON(
              "../controllers/productoperations.php",
              {
                 getproductdetails:true,
-                productcode:itemcodefield.val(),
+                productcode:codeToFetch,
                 storeid:0,
                 customerid:0
              },
@@ -188,11 +392,11 @@ $(document).ready(function(){
                      errordiv.html("")
                      productdetails+=`<tr><td data-id="${data[0].productid}">${data[0].itemcode}</td>`
                      productdetails+="<td>"+data[0].itemname+"</td>"
-                     productdetails+="<td class='unitprice'>"+data[0].buyingprice+"</td>"
-                     productdetails+="<td>0.00</td>"
-                     productdetails+="<td>"+data[0].buyingprice+"</td>"
-                     productdetails+="<td class='quantity'>1</td>"
-                     productdetails+="<td class='linetotal'>"+data[0].buyingprice+"</td>"
+                     productdetails+=`<td class='text-right unitprice d-none d-md-table-cell'>${formatNumber(data[0].buyingprice)}</td>`
+                     productdetails+=`<td class='text-right discount d-none d-md-table-cell'>0.00</td>`
+                     productdetails+=`<td class='text-right extprice d-none d-md-table-cell'>${formatNumber(data[0].buyingprice)}</td>`
+                     productdetails+=`<td class='text-right quantity'>1</td>`
+                     productdetails+=`<td class='text-right linetotal d-none d-md-table-cell'>${formatNumber(data[0].buyingprice)}</td>`
                      productdetails+="<td><a href='#' class='delete' data-id='"+randomId()+"'><span><i class='fas fa-trash fa-sm' id='"+data[0].itemcode+"' name='"+data[0].itemcode+"'></i></span></a></td></tr>"
                      $(productdetails).appendTo(purchaseitems.find("tbody"))
                      // display overall total
@@ -208,6 +412,7 @@ $(document).ready(function(){
         e.preventDefault();
         var id = $(this).attr('data-id');
         var parent = $(this).parent("td").parent("tr");
+        var itemcode = parent.find("td").eq(0).text().trim();
         var itemname=parent.find("td").eq(1).text()
         bootbox.dialog({
            // title: "Confirm Item Removal!",
@@ -224,8 +429,9 @@ $(document).ready(function(){
                     label: "Yes, Remove",
                     className: "btn-danger btn-sm",
                     callback: function() {
-                        //console.log(parent)
                         parent.remove()
+                        // Uncheck in search results checklist if open
+                        searchresults.find(`li[data-code='${itemcode}'] .search-item-checkbox`).prop("checked", false);
                         overalltotal.html(getItemsTotal())
                         $('.bootbox').modal('hide');
                     }
@@ -234,9 +440,10 @@ $(document).ready(function(){
         })
     })
 
+
     function clearForm(){
         purchaseitems.find("tbody").html("")
-        overalltotal.html(0.00)
+        overalltotal.html(formatNumber(0))
         supplierslist.val("")
         termsfield.val("")
         itemcodefield.val("")
@@ -249,47 +456,73 @@ $(document).ready(function(){
         errordiv.html("")
     })
 
-    // listen to change quantity event
-    purchaseitems.on("click",".quantity",function(e){
-        // console.log($(this).html())
-         var parent = $(this).parent("tr");
-         bootbox.prompt({
-             title:"Enter New Quantity",
-             size: 'small',
-             message: "Enter quantity required",
-             inputType: 'number',
-             callback: function (result) {
-                 if(parseFloat(result)>0){
-                     var unitprice= parent.find("td").eq(4).text(),
-                         linetotal=parseFloat(result*unitprice)
-                     parent.find("td").eq(5).text(result)
-                     parent.find("td").eq(6).text(linetotal)
-                     overalltotal.html(getItemsTotal())
-                 } 
-             }
-         });
-     })
+    $("#reset-all").on("click", function() {
+        purchaseitems.find("tbody tr").each(function() {
+            const $row = $(this);
+            $row.find(".quantity").text("0");
+            $row.find(".linetotal").text("0.00");
+        });
+        overalltotal.html(formatNumber(0));
+    });
 
-     purchaseitems.on("click",".unitprice",function(e){
-        // console.log($(this).html())
-         var parent = $(this).parent("tr");
-         bootbox.prompt({
-             title:"Enter New Price",
-             size: 'small',
-             message: "Enter Price required",
-             inputType: 'number',
-             callback: function (result) {
-                 if(parseFloat(result)>=0){
-                     var quantity= parent.find("td").eq(5).text(),
-                         linetotal=parseFloat(result*quantity)
-                     parent.find("td").eq(2).text(result)
-                     parent.find("td").eq(6).text(linetotal)
-                     parent.find("td").eq(4).text(result)
-                     overalltotal.html(getItemsTotal())
-                 } 
-             }
-         });
-     })
+    // listen to change quantity or unitprice event via contenteditable
+    purchaseitems.on("click", ".quantity, .unitprice", function (e) {
+        const $cell = $(this);
+        if ($cell.attr("contenteditable") !== "true") {
+            $cell.attr("contenteditable", "true");
+            $cell.focus();
+            
+            // Select all text in contenteditable cell
+            document.execCommand('selectAll', false, null);
+        }
+    });
+
+    purchaseitems.on("focusout keydown input", ".quantity, .unitprice", function (e) {
+        const $cell = $(this);
+        const parent = $cell.closest("tr");
+        
+        if (e.type === "keydown") {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                $cell.blur();
+            }
+            return;
+        }
+        
+        // Read values safely
+        let rawVal = $cell.text().replace(/,/g, '').trim();
+        let numericVal = parseFloat(rawVal) || 0;
+        
+        if ($cell.hasClass("quantity")) {
+            const rawUnitPrice = parent.find("td").eq(4).text().replace(/,/g, '').trim();
+            const unitprice = parseFloat(rawUnitPrice) || 0;
+            const linetotal = numericVal * unitprice;
+            
+            if (e.type === "focusout") {
+                $cell.removeAttr("contenteditable");
+                $cell.text(formatQty(numericVal));
+                parent.find("td").eq(6).text(formatNumber(linetotal));
+            } else {
+                parent.find("td").eq(6).text(formatNumber(linetotal));
+            }
+        } else if ($cell.hasClass("unitprice")) {
+            const rawQty = parent.find("td").eq(5).text().replace(/,/g, '').trim();
+            const quantity = parseFloat(rawQty) || 0;
+            const linetotal = numericVal * quantity;
+            
+            if (e.type === "focusout") {
+                $cell.removeAttr("contenteditable");
+                parent.find("td").eq(2).text(formatNumber(numericVal));
+                parent.find("td").eq(4).text(formatNumber(numericVal));
+                parent.find("td").eq(6).text(formatNumber(linetotal));
+            } else {
+                parent.find("td").eq(4).text(formatNumber(numericVal));
+                parent.find("td").eq(6).text(formatNumber(linetotal));
+            }
+        }
+        
+        overalltotal.html(formatNumber(getItemsTotal()));
+    });
 
      /*
      var purchaseid=0

@@ -23,6 +23,7 @@ function showAlert(type,message,hideheading=0){
             }
             alert+="<div class='alert-message'>"+message+"</div></div> "
             break;
+        case "error":
         case "danger":
             alert="<div class='alert alert-danger alert-white rounded'>"
             alert+="<button type='button' data-dismiss='alert' aria-hidden='true' class='close'></button>"
@@ -46,6 +47,7 @@ function showAlert(type,message,hideheading=0){
             }
             alert+="<div class='alert-message'>"+message+"</div></div> "
             break;
+        case "progress":
         case "processing":
                 alert="<div class='alert alert-info alert-white rounded'>"
                 alert+="<button type='button' data-dismiss='alert' aria-hidden='true' class='close'></button>"

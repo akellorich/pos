@@ -1294,9 +1294,9 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spcheckpaymentvoucherno`($id int,$voucherno varchar(50))
+/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spcheckpaymentvoucherno`($branchid int, $id int,$voucherno varchar(50))
 BEGIN
-	select * from `paymentvouchers` where `id`<>$id and `voucherno`=$voucherno;
+	SELECT * FROM `paymentvouchers` WHERE `branchid` = $branchid AND `paymentvoucherid`<>$id AND `voucherno`=$voucherno;
     END */$$
 DELIMITER ;
 
@@ -1743,36 +1743,40 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spgetaccountspayableaginganalysis`($basedate datetime)
+/*!50003 CREATE PROCEDURE `spgetaccountspayableaginganalysis`($branchid INT, $basedate DATETIME)
 BEGIN
 	SET @basedate=$basedate;
 	SET @cutoffdate=(SELECT DATE_FORMAT(`cutoffdate`,'%Y-%m-%d') FROM `startingparameters`);
 	
-	SELECT  ifnull(suppliername,'TOTAL') as suppliername,SUM(amountoverdue) AS `total`,
+	SELECT  IFNULL(suppliername,'TOTAL') AS suppliername,SUM(amountoverdue) AS `total`,
 		SUM(IF(`range`='1',amountoverdue,0)) AS `thirty`,  
 		SUM(IF(`range`='31',amountoverdue,0)) AS `sixty`,
 		SUM(IF(`range`='61',amountoverdue,0)) AS `ninenty` ,
 		SUM(IF(`range`='91',amountoverdue,0)) AS `onetwenty` ,
 		SUM(IF(`range`='120+',amountoverdue,0)) AS `aboveonetwenty` 
-	FROM (SELECT i.id AS invoiceid,s.`supplierid`,suppliername,`invoiceno`,
-	CASE 
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d')) BETWEEN 1 AND 30 THEN '1' 
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d')) BETWEEN 31 AND 60 THEN '31'
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d')) BETWEEN 61 AND 90 THEN '61'
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d')) BETWEEN 91 AND 120 THEN '91'
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d'))>=120 THEN '120+' 
-	END `range`,
-	SUM(`quantity`*`unitprice`) -
-	IFNULL((SELECT SUM(`quantity`*`unitprice`) FROM `paymentvouchers` v, `paymentvoucherdetails` vd 
-	WHERE v.`id`=vd.`voucherid` AND `supplier`=s.supplierid AND `invoicenumber`=`invoiceno` AND DATE_FORMAT(v.`date`,'%Y-%m-%d')<=@basedate),0) AS amountoverdue
-	FROM `supplierinvoice` i,`supplierinvoicedetails` id, `suppliers` s
-	WHERE i.`id`=id.`invoiceid` AND s.`supplierid`=i.`supplierid` 
-	and DATE_FORMAT(`invoicedate`,'%Y-%m-%d')>=@cutoffdate
-	GROUP BY i.id ,s.`supplierid`,suppliername,`invoiceno`,`status`,DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d'))
-	ORDER BY `invoicedate` DESC, `invoiceno`) AS tab1
+	FROM (
+		SELECT i.supplierinvoiceid AS invoiceid,s.`supplierid`,suppliername,`invoiceno`,
+		CASE 
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d')) BETWEEN 1 AND 30 THEN '1' 
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d')) BETWEEN 31 AND 60 THEN '31'
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d')) BETWEEN 61 AND 90 THEN '61'
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d')) BETWEEN 91 AND 120 THEN '91'
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d'))>=120 THEN '120+' 
+		END AS `range`,
+		SUM(`quantity`*`unitprice`) -
+		IFNULL((SELECT SUM(`quantity`*`unitprice`) FROM `paymentvouchers` v, `paymentvoucherdetails` vd 
+		WHERE v.`paymentvoucherid`=vd.`voucherid` AND `supplier`=s.supplierid AND `invoicenumber`=`invoiceno` 
+		AND v.branchid = $branchid AND DATE_FORMAT(v.`date`,'%Y-%m-%d')<=@basedate),0) AS amountoverdue
+		FROM `supplierinvoice` i,`supplierinvoicedetails` id, `suppliers` s
+		WHERE i.`supplierinvoiceid`=id.`invoiceid` AND s.`supplierid`=i.`supplierid` 
+		AND i.branchid = $branchid
+		AND DATE_FORMAT(`invoicedate`,'%Y-%m-%d')>=@cutoffdate
+		GROUP BY i.supplierinvoiceid ,s.`supplierid`,suppliername,`invoiceno`,`status`,DATEDIFF(@basedate,DATE_FORMAT(`invoicedate`,'%Y-%m-%d'))
+		ORDER BY `invoicedate` DESC, `invoiceno`
+	) AS tab1
 	GROUP BY suppliername
-	with rollup;
-    END */$$
+	WITH ROLLUP;
+END */$$
 DELIMITER ;
 
 /* Procedure structure for procedure `spgetaccountsreceivableaginganalysis` */
@@ -1781,7 +1785,7 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spgetaccountsreceivableaginganalysis`($basedate datetime)
+/*!50003 CREATE PROCEDURE `spgetaccountsreceivableaginganalysis`($branchid INT, $basedate DATETIME)
 BEGIN
 	SET @cutoffdate=(SELECT DATE_FORMAT(`cutoffdate`,'%Y-%m-%d') FROM `startingparameters`);
 	SET @basedate=$basedate;
@@ -1793,24 +1797,26 @@ BEGIN
 		SUM(IF(`range`='onetwenty',`balance`,0)) AS `onetwenty` ,
 		SUM(IF(`range`='aboveonetwenty',`balance`,0)) AS `aboveonetwenty` 
 	FROM(
-	SELECT c.`customerid`, p.id,c.`customername`,
-	CASE 
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d'))<=30 THEN 'thirty' 
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d')) BETWEEN 31 AND 60 THEN 'sixty'
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d')) BETWEEN 61 AND 90 THEN 'ninety'
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d')) BETWEEN 91 AND 120 THEN 'onetwenty'
-		WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d'))>120 THEN 'aboveonetwenty' 
-	END `range`,
-	pp.amount -
-	IFNULL((SELECT SUM(`amount`) FROM `customerreceiptdetails` WHERE `possaleid`=p.`id`),0) /**/ AS balance
-	FROM `possales` p, `possalesdetails` pd, `possalespayments` pp, `customers` c
-	WHERE p.`id`=pd.`possaleid` AND pp.`possaleid`=p.`id` AND pp.`paymentmode`=4  AND c.`customerid`=p.`customerid`-- AND p.`customerid`=$customerid  
-	AND  pp.amount - IFNULL((SELECT SUM(`amount`) FROM `customerreceiptdetails` WHERE `possaleid`=p.`id`),0)>0
-	AND DATE_FORMAT(`receiptdate`,'%Y-%m-%d')>=@cutoffdate
-	GROUP BY c.`customerid`,p.id,c.`customername`) AS tab1
+		SELECT c.`customerid`, p.possaleid AS id,c.`customername`,
+		CASE 
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d'))<=30 THEN 'thirty' 
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d')) BETWEEN 31 AND 60 THEN 'sixty'
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d')) BETWEEN 61 AND 90 THEN 'ninety'
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d')) BETWEEN 91 AND 120 THEN 'onetwenty'
+			WHEN DATEDIFF(@basedate,DATE_FORMAT(`receiptdate`,'%Y-%m-%d'))>120 THEN 'aboveonetwenty' 
+		END AS `range`,
+		pp.amount -
+		IFNULL((SELECT SUM(`amount`) FROM `customerreceiptdetails` WHERE `possaleid`=p.`possaleid`),0) AS balance
+		FROM `possales` p, `possalesdetails` pd, `possalespayments` pp, `customers` c
+		WHERE p.`possaleid`=pd.`possaleid` AND pp.`possaleid`=p.`possaleid` AND pp.`paymentmode`=4 AND c.`customerid`=p.`customerid`
+		AND p.branchid = $branchid
+		AND pp.amount - IFNULL((SELECT SUM(`amount`) FROM `customerreceiptdetails` WHERE `possaleid`=p.`possaleid`),0)>0
+		AND DATE_FORMAT(`receiptdate`,'%Y-%m-%d')>=@cutoffdate
+		GROUP BY c.`customerid`,p.possaleid,c.`customername`
+	) AS tab1
 	GROUP BY customername
 	WITH ROLLUP;
-    END */$$
+END */$$
 DELIMITER ;
 
 /* Procedure structure for procedure `spgetallusers` */
@@ -1848,28 +1854,28 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spgetbalancesheet`($startdate datetime,$enddate datetime)
+/*!50003 CREATE PROCEDURE `spgetbalancesheet`($branchid INT, $startdate DATETIME, $enddate DATETIME)
 BEGIN
-	
-	SET @startdate=$startdate,@enddate=$enddate;
-	SELECT 'PROFIT' `accountcode`,CASE WHEN SUM(`debit`-`credit`)>0 THEN 'Profit Before Tax' ELSE 'Loss Before Tax' END `accountname`,'Financed By' classname,
-	'Profit / Loss'`groupname`,SUM(`credit`-`debit`) AS `total`
+	SET @startdate = $startdate, @enddate = $enddate;
+	SELECT 'PROFIT' AS `accountcode`, CASE WHEN SUM(`debit`-`credit`)>0 THEN 'Profit Before Tax' ELSE 'Loss Before Tax' END AS `accountname`, 'Financed By' AS classname,
+	'Profit / Loss' AS `groupname`, SUM(`credit`-`debit`) AS `total`
 	FROM `glaccounts` g, `gltransactions` t, `glaccountgroups` p, `glaccountclasses` c
 	WHERE g.`id`=t.`glaccount` AND p.`id`=g.`groupid` AND p.`glaccountclass`=c.`id` 
-	AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate
-	AND classname IN('Income','Expense')
+	  AND t.branchid = $branchid
+	  AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate
+	  AND classname IN('Income','Expense')
 		
 	UNION 
-	SELECT `accountcode`,`accountname`,classname,
-	`groupname`,ABS(SUM(`debit`-`credit`)) AS `total`
+	SELECT `accountcode`, `accountname`, classname,
+	`groupname`, ABS(SUM(`debit`-`credit`)) AS `total`
 	FROM `glaccounts` g, `gltransactions` t, `glaccountgroups` p, `glaccountclasses` c
 	WHERE g.`id`=t.`glaccount` AND p.`id`=g.`groupid` AND p.`glaccountclass`=c.`id` 
-	AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate
-	AND classname NOT IN('Income','Expense')
-	GROUP BY `accountcode`,`accountname` , `groupname`
-	ORDER BY classname ,`accountcode`;
-	
-    END */$$
+	  AND t.branchid = $branchid
+	  AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate
+	  AND classname NOT IN('Income','Expense')
+	GROUP BY `accountcode`, `accountname`, `groupname`
+	ORDER BY classname, `accountcode`;
+END */$$
 DELIMITER ;
 
 /* Procedure structure for procedure `spgetbestcustomer` */
@@ -2393,10 +2399,28 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spgetdiscountreport`($startdate datetime,$enddate datetime)
+/*!50003 CREATE PROCEDURE `spgetdiscountreport`($branchid INT, $startdate DATETIME, $enddate DATETIME)
 BEGIN
-	/*SET @startdate=date_format($startdate,'%d-%m-%Y');
-	SET @enddate=date_format($enddate,'%d-%m-%Y');*/
+	SET @startdate = $startdate;
+	SET @enddate = $enddate;
+	
+	SELECT * FROM (
+		SELECT p.`itemcode` AS `Item Code`, `itemname` AS `Item Name`, FORMAT(`buyingprice`, 0) AS `Buying Price`, FORMAT(`sellingprice`, 0) AS `Selling Price`, FORMAT(SUM(quantity), 2) AS `Units Sold`, 
+		FORMAT(SUM(quantity*unitprice), 2) AS `Total Sales`, FORMAT(SUM(discount), 2) AS `Discount`
+		FROM `products` p, `possales` s, `possalesdetails` sd
+		WHERE p.`productid` = sd.`itemcode` AND sd.`possaleid` = s.`possaleid`
+		AND s.`branchid` = $branchid
+		AND `receiptdate` BETWEEN @startdate AND @enddate AND IFNULL(s.deleted, 0) = 0
+		GROUP BY p.`itemcode`, `itemname`, `buyingprice`, `sellingprice` 
+		ORDER BY itemname
+	) AS q1
+	UNION
+	SELECT '' AS `Item Code`, 'TOTAL' AS `Item Name`, 0 AS `Buying Price`, 0 AS `Selling Price`, FORMAT(SUM(quantity), 2) AS `Units Sold`, FORMAT(SUM(quantity*unitprice), 2) AS `Total Sales`, FORMAT(SUM(discount), 2) AS `Discount`
+	FROM `products` p, `possales` s, `possalesdetails` sd
+	WHERE p.`productid` = sd.`itemcode` AND sd.`possaleid` = s.`possaleid` AND IFNULL(s.deleted, 0) = 0
+	AND s.`branchid` = $branchid
+	AND `receiptdate` BETWEEN @startdate AND @enddate;
+ENDdate=date_format($enddate,'%d-%m-%Y');*/
 	SET @startdate=$startdate;
 	SET @enddate=$enddate;
 	
@@ -2493,24 +2517,24 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spgetglstatement`($startdate datetime,$enddate datetime,$accountid int)
+/*!50003 CREATE PROCEDURE `spgetglstatement`($branchid INT, $startdate DATETIME, $enddate DATETIME, $accountid INT)
 BEGIN
-    
-	SET @startdate=$startdate,@enddate=$enddate,@accountid=$accountid;
-	SET @openingbalancedate=DATE_SUB(@startdate, INTERVAL 1 DAY );
-	set @cutoffdate=(select date_format(`cutoffdate`,'%Y-%m-%d') from `startingparameters`);
+	SET @startdate = $startdate, @enddate = $enddate, @accountid = $accountid;
+	SET @openingbalancedate = DATE_SUB(@startdate, INTERVAL 1 DAY);
+	SET @cutoffdate = (SELECT DATE_FORMAT(`cutoffdate`,'%Y-%m-%d') FROM `startingparameters`);
 	
-	SELECT `accountcode`,`accountname`,`classname`, DATE_FORMAT(`transactiondate`,'%d-%b-%Y') AS `transactiondate`,`referenceno`, `narration`, `debit`,`credit`,
-	CONCAT(`firstname`,' ',`middlename`) AS `addedby` ,
-	IFNULL((SELECT SUM(IFNULL(`debit`,0)-IFNULL(`credit`,0)) FROM `gltransactions` WHERE `glaccount`=a.id AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @cutoffdate and @openingbalancedate),0) `openingbalance`,
-	IFNULL((SELECT SUM(IFNULL(`debit`,0)) FROM `gltransactions` WHERE `glaccount`=a.id AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate),0) `debits`,
-	IFNULL((SELECT SUM(IFNULL(`credit`,0)) FROM `gltransactions` WHERE `glaccount`=a.id AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate),0) `credits` ,
-	IFNULL((SELECT SUM(IFNULL(`debit`,0)-IFNULL(`credit`,0)) FROM `gltransactions` WHERE `glaccount`=a.id  AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @cutoffdate AND @enddate),0) AS `closingbalance`
+	SELECT `accountcode`, `accountname`, `classname`, DATE_FORMAT(`transactiondate`,'%d-%b-%Y') AS `transactiondate`, `referenceno`, `narration`, `debit`, `credit`,
+	CONCAT(`firstname`,' ',`middlename`) AS `addedby`,
+	IFNULL((SELECT SUM(IFNULL(`debit`,0)-IFNULL(`credit`,0)) FROM `gltransactions` WHERE `glaccount`=a.id AND `branchid`=$branchid AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @cutoffdate and @openingbalancedate),0) AS `openingbalance`,
+	IFNULL((SELECT SUM(IFNULL(`debit`,0)) FROM `gltransactions` WHERE `glaccount`=a.id AND `branchid`=$branchid AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate),0) AS `debits`,
+	IFNULL((SELECT SUM(IFNULL(`credit`,0)) FROM `gltransactions` WHERE `glaccount`=a.id AND `branchid`=$branchid AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate),0) AS `credits`,
+	IFNULL((SELECT SUM(IFNULL(`debit`,0)-IFNULL(`credit`,0)) FROM `gltransactions` WHERE `glaccount`=a.id AND `branchid`=$branchid AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @cutoffdate AND @enddate),0) AS `closingbalance`
 	FROM `glaccounts` a, `glaccountgroups` g, `glaccountclasses` c, `user` u, `gltransactions` t
-	WHERE a.`groupid`=g.`id` AND g.`glaccountclass`=c.id  AND a.`id`=t.`glaccount` AND t.`addedby`=u.`id`
-	AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate AND a.`id`=@accountid
+	WHERE a.`groupid`=g.`id` AND g.`glaccountclass`=c.id AND a.`id`=t.`glaccount` AND t.`addedby`=u.`userid`
+	  AND t.branchid = $branchid
+	  AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate AND a.`id`=@accountid
 	ORDER BY `transactiondate`;
-    END */$$
+END */$$
 DELIMITER ;
 
 /* Procedure structure for procedure `spgetglsubgroups` */
@@ -2901,11 +2925,11 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spgetpaymentvoucherdetails`($id varchar(50))
+/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spgetpaymentvoucherdetails`($branchid int, $id varchar(50))
 BEGIN
-	select p.id,`voucherno`, DATE_FORMAT(`date`,'%d-%b-%Y')`date`,`dateadded`,`addedby`,`paymentmode`,`pos`,`supplier`,`invoicenumber`,`cashbookaccount`,`referenceno`,`status`,`lastmodifiedby`,`lastmodifieddate` 
-	from `paymentvouchers` p, paymentvoucherdetails pd  
-	where p.`id`=pd.`voucherid` and voucherno=$id;
+	SELECT p.paymentvoucherid AS id,`voucherno`, DATE_FORMAT(`date`,'%d-%b-%Y')`date`,`dateadded`,`addedby`,`paymentmode`,`pos`,`supplier`,`invoicenumber`,`cashbookaccount`,`referenceno`,`status`,`lastmodifiedby`,`lastmodifieddate` 
+	FROM `paymentvouchers` p, paymentvoucherdetails pd  
+	WHERE p.`branchid` = $branchid AND p.`paymentvoucherid`=pd.`voucherid` AND voucherno=$id;
     END */$$
 DELIMITER ;
 
@@ -2915,287 +2939,45 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spgetpaymentvouchers`($supplierid int,$posid int, $stat varchar(50),$paymentmode int, $startdate datetime,$enddate datetime,$pettycashvoucher boolean)
+/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spgetpaymentvouchers`($branchid int, $supplierid int,$posid int, $stat varchar(50),$paymentmode int, $startdate datetime,$enddate datetime,$pettycashvoucher boolean)
 BEGIN
-	if $pettycashvoucher=0 then 
-		-- Get payment vouchers 
-		if $supplierid=0 then 
-			begin
-				if $posid=0 then 
-					begin
-						if $stat='all' then 
-							begin
-								if $paymentmode=0 then
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers`  where voucherdate between $startdate and $enddate  AND `pettycashvoucher`=0
-									order by voucherno,voucherdate;
-								else
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate and paymentmodeid=$paymentmode AND `pettycashvoucher`=0
-									ORDER BY voucherno,voucherdate;
-								end if;
-							end;
-						else
-							BEGIN
-								IF $paymentmode=0 THEN
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers`  WHERE voucherdate BETWEEN $startdate AND $enddate and `status`=$stat  AND `pettycashvoucher`=0
-									ORDER BY voucherno,voucherdate;
-								ELSE
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND paymentmodeid=$paymentmode  AND `status`=$stat  AND `pettycashvoucher`=0
-									ORDER BY voucherno,voucherdate;
-								END IF;
-							END;
-						end if;
-					end;
-				else
-					BEGIN
-						IF $stat='all' THEN 
-							BEGIN
-								IF $paymentmode=0 THEN
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate and `posid`=$posid AND `pettycashvoucher`=0
-									ORDER BY voucherno,voucherdate;
-								ELSE
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND paymentmodeid=$paymentmode  AND `posid`=$posid AND `pettycashvoucher`=0
-									ORDER BY voucherno,voucherdate;
-								END IF;
-							END;
-						ELSE
-							BEGIN
-								IF $paymentmode=0 THEN
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND `status`=$stat  AND `posid`=$posid AND `pettycashvoucher`=0
-									ORDER BY voucherno,voucherdate;
-								ELSE
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND paymentmodeid=$paymentmode  AND `status`=$stat AND `posid`=$posid AND `pettycashvoucher`=0 
-									ORDER BY voucherno,voucherdate;
-								END IF;
-							END;
-						END IF;
-					END;
-				end if;
-			end;
-		else
-			BEGIN
-				IF $posid=0 THEN 
-					BEGIN
-						IF $stat='all' THEN 
-							BEGIN
-								IF $paymentmode=0 THEN
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate and `supplierid`=$supplierid AND `pettycashvoucher`=0
-									ORDER BY voucherno,voucherdate;
-								ELSE
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND paymentmodeid=$paymentmode  AND `supplierid`=$supplierid AND `pettycashvoucher`=0
-									ORDER BY voucherno,voucherdate;
-								END IF;
-							END;
-						ELSE
-							BEGIN
-								IF $paymentmode=0 THEN
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND `status`=$stat  AND `supplierid`=$supplierid AND `pettycashvoucher`=0
-									ORDER BY voucherno,voucherdate;
-								ELSE
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND paymentmodeid=$paymentmode  AND `status`=$stat  AND `supplierid`=$supplierid AND `pettycashvoucher`=0
-									ORDER BY voucherno,voucherdate;
-								END IF;
-							END;
-						END IF;
-					END;
-				ELSE
-					BEGIN
-						IF $stat='all' THEN 
-							BEGIN
-								IF $paymentmode=0 THEN
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND `posid`=$posid  AND `supplierid`=$supplierid AND `pettycashvoucher`=0
-									ORDER BY voucherno,voucherdate;
-								ELSE
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND paymentmodeid=$paymentmode  AND `posid`=$posid  AND `supplierid`=$supplierid AND `pettycashvoucher`=0
-									ORDER BY voucherno,voucherdate;
-								END IF;
-							END;
-						ELSE
-							BEGIN
-								IF $paymentmode=0 THEN
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND `status`=$stat  AND `posid`=$posid  AND `supplierid`=$supplierid AND `pettycashvoucher`=0
-									ORDER BY voucherno,voucherdate;
-								ELSE
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND paymentmodeid=$paymentmode  AND `status`=$stat AND `posid`=$posid  AND `supplierid`=$supplierid AND `pettycashvoucher`=0
-									ORDER BY voucherno,voucherdate;
-								END IF;
-							END;
-						END IF;
-					END;
-				end if;
-			END;
-		end if;
-	else
-		-- get pettycash vouchers
-		IF $supplierid=0 THEN 
-			BEGIN
-				IF $posid=0 THEN 
-					BEGIN
-						IF $stat='all' THEN 
-							BEGIN
-								IF $paymentmode=0 THEN
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate and `pettycashvoucher`=1
-									ORDER BY voucherno,voucherdate;
-								ELSE
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND paymentmodeid=$paymentmode  AND `pettycashvoucher`=1
-									ORDER BY voucherno,voucherdate;
-								END IF;
-							END;
-						ELSE
-							BEGIN
-								IF $paymentmode=0 THEN
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND `status`=$stat  AND `pettycashvoucher`=1
-									ORDER BY voucherno,voucherdate;
-								ELSE
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND paymentmodeid=$paymentmode  AND `status`=$stat  AND `pettycashvoucher`=1
-									ORDER BY voucherno,voucherdate;
-								END IF;
-							END;
-						END IF;
-					END;
-				ELSE
-					BEGIN
-						IF $stat='all' THEN 
-							BEGIN
-								IF $paymentmode=0 THEN
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND `posid`=$posid AND `pettycashvoucher`=1
-									ORDER BY voucherno,voucherdate;
-								ELSE
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND paymentmodeid=$paymentmode  AND `posid`=$posid AND `pettycashvoucher`=1
-									ORDER BY voucherno,voucherdate;
-								END IF;
-							END;
-						ELSE
-							BEGIN
-								IF $paymentmode=0 THEN
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND `status`=$stat  AND `posid`=$posid AND `pettycashvoucher`=1
-									ORDER BY voucherno,voucherdate;
-								ELSE
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND paymentmodeid=$paymentmode  AND `status`=$stat AND `posid`=$posid  AND `pettycashvoucher`=1
-									ORDER BY voucherno,voucherdate;
-								END IF;
-							END;
-						END IF;
-					END;
-				END IF;
-			END;
-		ELSE
-			BEGIN
-				IF $posid=0 THEN 
-					BEGIN
-						IF $stat='all' THEN 
-							BEGIN
-								IF $paymentmode=0 THEN
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers`  WHERE voucherdate BETWEEN $startdate AND $enddate AND `supplierid`=$supplierid AND `pettycashvoucher`=1
-									ORDER BY voucherno,voucherdate;
-								ELSE
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers`  WHERE voucherdate BETWEEN $startdate AND $enddate AND paymentmodeid=$paymentmode  AND `supplierid`=$supplierid AND `pettycashvoucher`=1
-									ORDER BY voucherno,voucherdate;
-								END IF;
-							END;
-						ELSE
-							BEGIN
-								IF $paymentmode=0 THEN
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND `status`=$stat  AND `supplierid`=$supplierid AND `pettycashvoucher`=1
-									ORDER BY voucherno,voucherdate;
-								ELSE
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND paymentmodeid=$paymentmode  AND `status`=$stat  AND `supplierid`=$supplierid AND `pettycashvoucher`=1
-									ORDER BY voucherno,voucherdate;
-								END IF;
-							END;
-						END IF;
-					END;
-				ELSE
-					BEGIN
-						IF $stat='all' THEN 
-							BEGIN
-								IF $paymentmode=0 THEN
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND `posid`=$posid  AND `supplierid`=$supplierid AND `pettycashvoucher`=1
-									ORDER BY voucherno,voucherdate;
-								ELSE
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers`  WHERE voucherdate BETWEEN $startdate AND $enddate AND paymentmodeid=$paymentmode  AND `posid`=$posid  AND `supplierid`=$supplierid AND `pettycashvoucher`=1
-									ORDER BY voucherno,voucherdate;
-								END IF;
-							END;
-						ELSE
-							BEGIN
-								IF $paymentmode=0 THEN
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers` WHERE voucherdate BETWEEN $startdate AND $enddate AND `status`=$stat  AND `posid`=$posid  AND `supplierid`=$supplierid AND `pettycashvoucher`=1
-									ORDER BY voucherno,voucherdate;
-								ELSE
-									SELECT voucherid,pettycashvoucher,voucherno,DATE_FORMAT(voucherdate,'%d-%b-%Y') voucherdate,paymentmodeid,paymentmodedescription,posid,posname,
-									supplierid,suppliername,invoicenumber,cashbookaccountid,accountcode,accountname,referenceno,`status`,vouchertotal,userid,username 
-									FROM `vwpaymentvouchers`  WHERE voucherdate BETWEEN $startdate AND $enddate AND paymentmodeid=$paymentmode  AND `status`=$stat AND `posid`=$posid  AND `supplierid`=$supplierid AND `pettycashvoucher`=1
-									ORDER BY voucherno,voucherdate;
-								END IF;
-							END;
-						END IF;
-					END;
-				END IF;
-			END;
-		END IF;
-	end if;
+	SELECT 
+		voucherid,
+		pettycashvoucher,
+		voucherno,
+		DATE_FORMAT(voucherdate, '%d-%b-%Y') AS voucherdate,
+		paymentmodeid,
+		paymentmodedescription,
+		posid,
+		posname,
+		supplierid,
+		suppliername,
+		invoicenumber,
+		cashbookaccountid,
+		accountcode,
+		accountname,
+		referenceno,
+		`status`,
+		vouchertotal,
+		userid,
+		username
+	FROM vwpaymentvouchers
+	WHERE 
+		-- Multi-tenant scoping with legacy fallback
+		(branchid = $branchid OR branchid IS NULL OR branchid = 0)
+		-- Date range filtering (type-safe, ignores time component)
+		AND DATE(voucherdate) BETWEEN DATE($startdate) AND DATE($enddate)
+		-- Petty Cash vs Normal Payment Voucher filtering
+		AND pettycashvoucher = $pettycashvoucher
+		-- Dynamic supplier filtering
+		AND ($supplierid = 0 OR supplierid = $supplierid)
+		-- Dynamic POS filtering
+		AND ($posid = 0 OR posid = $posid)
+		-- Dynamic status filtering
+		AND ($stat = 'all' OR `status` = $stat)
+		-- Dynamic payment mode filtering
+		AND ($paymentmode = 0 OR paymentmodeid = $paymentmode)
+	ORDER BY voucherno, voucherdate;
     END */$$
 DELIMITER ;
 
@@ -3388,47 +3170,57 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spgetposstockbalanceasatdate`($asatdate datetime,$posid int)
+/*!50003 CREATE PROCEDURE `spgetposstockbalanceasatdate`($branchid INT, $asatdate DATETIME, $posid INT)
 BEGIN	
+	SET @startdate = (SELECT DATE_SUB($asatdate, INTERVAL 1 DAY));
+	SET @basedate = DATE(IFNULL((SELECT `stockcutoffdate` FROM `startingparameters`), NOW())); 
 	
-	SET @startdate= (SELECT DATE_SUB($asatdate, INTERVAL 1 DAY));
-	set @basedate=date(IFNULL((SELECT `stockcutoffdate` FROM `startingparameters`),NOW())); 
-	-- This is the cut off date 
-	SELECT `itemcode`,`itemname`,`buyingprice`,`sellingprice`, 
-	
-	-- Compute opening Balance
-	/*-- Transfers In
-	IFNULL((SELECT SUM(`quantity`) FROM `stocktransfer` s, `stocktransferdetails` sd WHERE s.`id`=sd.`transferid` AND `destinationtype`='pos' AND `destinationid`=$posid AND 
-	DATE(`dateadded`) between @basedate and @startdate AND sd.`itemcode`=p.`productid`),0) -
-	-- Less Transfers Out
-	IFNULL((SELECT SUM(`quantity`) FROM `stocktransfer` s, `stocktransferdetails` sd WHERE s.`id`=sd.`transferid` AND `sourcetype`='pos' AND `sourceid`=$posid AND 
-	DATE(`dateadded`) between @basedate AND @startdate AND sd.`itemcode`=p.`productid`),0) -
-	-- Less Sales 
-	IFNULL((SELECT SUM(quantity) FROM `possales` s,`possalesdetails` sd WHERE s.`id`=sd.`possaleid` AND
-	DATE(`receiptdate`) between @basedate AND @startdate
-	AND s.`pointofsaleid`=$posid AND s.deleted=0 AND sd.`itemcode`=p.`productid` and ifnull(`deleted`,0)=0),0) +
-	-- Add Reconciled balance 
-	ifnull((select sum(quantity) from `stockreconciledbalance` sb join `stockreconciledbalancedetails` sd on sd.`reconciliationid`=sb.`id`
-	and `itemid`=p.productid and date(`reconciliationdate`)<=$asatdate and `category`='outlet' and `posid`=$posid),0)
-	AS `openingbalance`,*/
-	`fn_getitemstorebalanceasat`(productid,$posid,@startdate) openingbalance,
+	SELECT `itemcode`, `itemname`, `buyingprice`, `sellingprice`, 
+	`fn_getitemstorebalanceasat`(productid, $posid, @startdate) AS openingbalance,
 	
 	-- Compute Day's Transfers and Sales
-	IFNULL((SELECT SUM(`quantity`) FROM `stocktransfer` s, `stocktransferdetails` sd WHERE s.`id`=sd.`transferid` AND `destinationtype`='pos' AND `destinationid`=$posid AND 
-	DATE(`dateadded`)>=@basedate AND DATE(`dateadded`)=$asatdate AND sd.`itemcode`=p.`productid`),0) AS transfersin,
-	IFNULL((SELECT SUM(`quantity`) FROM `stocktransfer` s, `stocktransferdetails` sd WHERE s.`id`=sd.`transferid` AND `sourcetype`='pos' AND `sourceid`=$posid AND 
-	DATE(`dateadded`)>=@basedate AND DATE(`dateadded`)=$asatdate AND sd.`itemcode`=p.`productid`),0) AS transfersout,
+	IFNULL((
+		SELECT SUM(`quantity`) 
+		FROM `stocktransfer` s, `stocktransferdetails` sd 
+		WHERE s.`stocktransferid` = sd.`transferid` 
+		  AND `destinationtype` = 'pos' 
+		  AND `destinationid` = $posid 
+		  AND s.`branchid` = $branchid
+		  AND DATE(`dateadded`) >= @basedate 
+		  AND DATE(`dateadded`) = $asatdate 
+		  AND sd.`itemcode` = p.`productid`
+	), 0) AS transfersin,
+	
+	IFNULL((
+		SELECT SUM(`quantity`) 
+		FROM `stocktransfer` s, `stocktransferdetails` sd 
+		WHERE s.`stocktransferid` = sd.`transferid` 
+		  AND `sourcetype` = 'pos' 
+		  AND `sourceid` = $posid 
+		  AND s.`branchid` = $branchid
+		  AND DATE(`dateadded`) >= @basedate 
+		  AND DATE(`dateadded`) = $asatdate 
+		  AND sd.`itemcode` = p.`productid`
+	), 0) AS transfersout,
 	
 	-- Compute Days Sales
-	IFNULL((SELECT SUM(quantity) FROM `possales` s,`possalesdetails` sd WHERE s.`id`=sd.`possaleid` AND 
-	DATE(`receiptdate`)>=@basedate AND DATE(`receiptdate`)=$asatdate
-	AND s.`pointofsaleid`=$posid AND s.deleted=0 AND sd.`itemcode`=p.`productid` AND IFNULL(`deleted`,0)=0),0) AS sales
+	IFNULL((
+		SELECT SUM(quantity) 
+		FROM `possales` s, `possalesdetails` sd 
+		WHERE s.`possaleid` = sd.`possaleid` 
+		  AND s.`branchid` = $branchid
+		  AND DATE(`receiptdate`) >= @basedate 
+		  AND DATE(`receiptdate`) = $asatdate
+		  AND s.`pointofsaleid` = $posid 
+		  AND s.deleted = 0 
+		  AND sd.`itemcode` = p.`productid` 
+		  AND IFNULL(`deleted`, 0) = 0
+	), 0) AS sales
 	
 	FROM `categories` c, `products` p
-	WHERE p.`categoryid`=c.`categoryid` 
-	
+	WHERE p.`categoryid` = c.`categoryid` 
 	ORDER BY itemname, p.itemcode;
-    END */$$
+END */$$
 DELIMITER ;
 
 /* Procedure structure for procedure `spgetproductbycategory` */
@@ -3514,14 +3306,48 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spgetprofitabilityreport`($startdate varchar(50),$enddate varchar(50),$posid int)
+/*!50003 CREATE PROCEDURE `spgetprofitabilityreport`($branchid INT, $startdate VARCHAR(50), $enddate VARCHAR(50), $posid INT)
 BEGIN
-	if $posid=0 then 
-		SELECT m.`itemcode`,`itemname`, FORMAT(`buyingprice`,2) AS `Buying Price`, FORMAT(AVG(`unitprice`),2) AS sellingprice, FORMAT(SUM(`quantity`),2) AS unitssold, 
-		FORMAT(SUM(`buyingprice`*`quantity`),2) AS  `Total Purchases`, FORMAT(SUM((`unitprice`-IFNULL(discount,0))* `quantity`),2) AS  `Total Sales`,
-		FORMAT((SUM((`unitprice`-IFNULL(discount,0))*`quantity`))- (`buyingprice`*SUM(`quantity`)),2) AS Margin
+	IF $posid = 0 THEN 
+		SELECT m.`itemcode`, `itemname`, FORMAT(`buyingprice`, 2) AS `Buying Price`, FORMAT(AVG(`unitprice`), 2) AS sellingprice, FORMAT(SUM(`quantity`), 2) AS unitssold, 
+		FORMAT(SUM(`buyingprice` * `quantity`), 2) AS `Total Purchases`, FORMAT(SUM((`unitprice` - IFNULL(discount, 0)) * `quantity`), 2) AS `Total Sales`,
+		FORMAT((SUM((`unitprice` - IFNULL(discount, 0)) * `quantity`)) - (`buyingprice` * SUM(`quantity`)), 2) AS Margin
 		FROM `products` m, `possales` p, `possalesdetails` pd
-		WHERE m.`productid`=pd.`itemcode` AND pd.`possaleid`=p.`id` AND DATE_FORMAT(p.`receiptdate`,'%Y-%m-%d') BETWEEN $startdate AND $enddate
+		WHERE m.`productid` = pd.`itemcode` AND pd.`possaleid` = p.`possaleid` AND p.`branchid` = $branchid AND DATE_FORMAT(p.`receiptdate`, '%Y-%m-%d') BETWEEN $startdate AND $enddate
+		AND IFNULL(p.`deleted`, 0) = 0
+		GROUP BY `itemcode`, `itemname`, `buyingprice`
+		UNION 
+		SELECT 'TOTAL: ' AS itemcode, '' AS itemname,
+		FORMAT(AVG(`buyingprice`), 2) AS `Buying Price`, FORMAT(AVG(`unitprice`), 2) AS sellingprice, FORMAT(SUM(`quantity`), 2) AS unitssold, 
+		FORMAT(SUM(`buyingprice` * `quantity`), 2) AS `Total Purchases`, 
+		FORMAT(SUM(`quantity` * (`unitprice` - IFNULL(discount, 0))), 2) AS `Total Sales`,
+		FORMAT(SUM((`unitprice` - IFNULL(discount, 0)) * `quantity`) - SUM(`buyingprice` * `quantity`), 2) AS Margin
+		FROM `products` m, `possales` p, `possalesdetails` pd
+		WHERE m.`productid` = pd.`itemcode` AND pd.`possaleid` = p.`possaleid` AND p.`branchid` = $branchid AND DATE_FORMAT(p.`receiptdate`, '%Y-%m-%d') BETWEEN $startdate AND $enddate
+		AND IFNULL(p.`deleted`, 0) = 0
+		;
+	ELSE
+		SELECT m.`itemcode`, `itemname`, FORMAT(`buyingprice`, 2) AS `Buying Price`, FORMAT(AVG(`unitprice`), 2) AS sellingprice, FORMAT(SUM(`quantity`), 2) AS unitssold, 
+		FORMAT(SUM(`buyingprice` * `quantity`), 2) AS `Total Purchases`, FORMAT(SUM((`unitprice` - IFNULL(discount, 0)) * `quantity`), 2) AS `Total Sales`,
+		FORMAT((SUM((`unitprice` - IFNULL(discount, 0)) * `quantity`)) - (`buyingprice` * SUM(`quantity`)), 2) AS Margin
+		FROM `products` m, `possales` p, `possalesdetails` pd
+		WHERE m.`productid` = pd.`itemcode` AND pd.`possaleid` = p.`possaleid` AND p.`branchid` = $branchid
+		AND DATE_FORMAT(p.`receiptdate`, '%Y-%m-%d') BETWEEN $startdate AND $enddate AND `pointofsaleid` = $posid
+		AND IFNULL(p.`deleted`, 0) = 0
+		GROUP BY `itemcode`, `itemname`, `buyingprice`
+		UNION 
+		SELECT 'TOTAL: ' AS itemcode, '' AS itemname,
+		FORMAT(AVG(`buyingprice`), 2) AS `Buying Price`, FORMAT(AVG(`unitprice`), 2) AS sellingprice, FORMAT(SUM(`quantity`), 2) AS unitssold, 
+		FORMAT(SUM(`buyingprice` * `quantity`), 2) AS `Total Purchases`, 
+		FORMAT(SUM(`quantity` * (`unitprice` - IFNULL(discount, 0))), 2) AS `Total Sales`,
+		FORMAT(SUM((`unitprice` - IFNULL(discount, 0)) * `quantity`) - SUM(`buyingprice` * `quantity`), 2) AS Margin
+		FROM `products` m, `possales` p, `possalesdetails` pd
+		WHERE m.`productid` = pd.`itemcode` AND pd.`possaleid` = p.`possaleid` AND p.`branchid` = $branchid AND DATE_FORMAT(p.`receiptdate`, '%Y-%m-%d') BETWEEN $startdate AND $enddate 
+		AND IFNULL(p.`deleted`, 0) = 0
+		AND `pointofsaleid` = $posid 
+		;
+	END IF;
+    ENDdate
 		and ifnull(p.`deleted`,0)=0
 		GROUP BY `itemcode`,`itemname`,`buyingprice`
 		UNION 
@@ -3564,18 +3390,19 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spgetprofitandlossaccount`($startdate datetime,$enddate datetime)
+/*!50003 CREATE PROCEDURE `spgetprofitandlossaccount`($branchid INT, $startdate DATETIME, $enddate DATETIME)
 BEGIN
-	SET @startdate=$startdate,@enddate=$enddate;
-	SELECT `accountcode`,`accountname`,classname,
+	SET @startdate = $startdate, @enddate = $enddate;
+	SELECT `accountcode`, `accountname`, classname,
 	ABS(SUM(`debit`-`credit`)) AS `total`
 	FROM `glaccounts` g, `gltransactions` t, `glaccountgroups` p, `glaccountclasses` c
 	WHERE g.`id`=t.`glaccount` AND p.`id`=g.`groupid` AND p.`glaccountclass`=c.`id` 
-	AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate
-	AND classname IN('Income','Expense')
-	GROUP BY `accountcode`,`accountname` 
-	ORDER BY classname DESC,`accountcode`;
-    END */$$
+	  AND t.branchid = $branchid
+	  AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate
+	  AND classname IN('Income','Expense')
+	GROUP BY `accountcode`, `accountname` 
+	ORDER BY classname DESC, `accountcode`;
+END */$$
 DELIMITER ;
 
 /* Procedure structure for procedure `spgetprofitandlossaccountdetails` */
@@ -3584,20 +3411,19 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spgetprofitandlossaccountdetails`($startdate datetime,$enddate datetime)
+/*!50003 CREATE PROCEDURE `spgetprofitandlossaccountdetails`($branchid INT, $startdate DATETIME, $enddate DATETIME)
 BEGIN
-    
-	SET @startdate=date_format($startdate,'%Y-%m-%d');
-	SET @enddate=DATE_FORMAT($enddate,'%Y-%m-%d');
-	SELECT `classname`,`accountcode`,`accountname`,SUM(IFNULL(debit,0)-IFNULL(credit,0)) AS amount
-	FROM `glaccounts` g,`gltransactions` t, `glaccountgroups` r,`glaccountclasses` c
+	SET @startdate = DATE_FORMAT($startdate, '%Y-%m-%d');
+	SET @enddate = DATE_FORMAT($enddate, '%Y-%m-%d');
+	SELECT `classname`, `accountcode`, `accountname`, SUM(IFNULL(debit,0)-IFNULL(credit,0)) AS amount
+	FROM `glaccounts` g, `gltransactions` t, `glaccountgroups` r, `glaccountclasses` c
 	WHERE g.`groupid`=r.`id` AND r.`glaccountclass`=c.`id` AND c.classname IN('Expense','Income')
-	AND g.`accountcode` NOT IN(SELECT account FROM `glaccountsettings`) 
-	AND t.`glaccount`=g.`id`
-	AND DATE_FORMAT(transactiondate,'%Y-%m-%d') BETWEEN @startdate AND @enddate
-	GROUP BY  `classname`,`accountcode`,`accountname`;
-	
-    END */$$
+	  AND g.`accountcode` NOT IN(SELECT account FROM `glaccountsettings`) 
+	  AND t.`glaccount`=g.`id`
+	  AND t.branchid = $branchid
+	  AND DATE_FORMAT(transactiondate, '%Y-%m-%d') BETWEEN @startdate AND @enddate
+	GROUP BY `classname`, `accountcode`, `accountname`;
+END */$$
 DELIMITER ;
 
 /* Procedure structure for procedure `spgetprofitandlossaccountheader` */
@@ -3606,112 +3432,117 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spgetprofitandlossaccountheader`(
-    IN $startdate DATETIME,
-    IN $enddate DATETIME
-)
+/*!50003 CREATE PROCEDURE `spgetprofitandlossaccountheader`($branchid INT, $startdate DATETIME, $enddate DATETIME)
 BEGIN
-    -- Trim date inputs to ensure no time portion
-    SET @startdate = DATE($startdate);
-    SET @enddate = DATE($enddate);
-
-    -- Get Sales and COGS account IDs using JOINs
-    SELECT g.id INTO @salesaccount
-    FROM glaccounts g
-    JOIN glaccountsettings s ON g.accountcode = s.account
-    WHERE s.description = 'Sales'
-    LIMIT 1;
-
-    SELECT g.id INTO @stockaccount
-    FROM glaccounts g
-    JOIN glaccountsettings s ON g.accountcode = s.account
-    WHERE s.description = 'Cost of Goods Sold'
-    LIMIT 1;
-
-    -- Cutoff date for stock
-    SELECT DATE(cutoffdate) INTO @cutoffdate FROM startingparameters;
-
-    -- Sales amount
-    SELECT SUM(pd.quantity * pd.unitprice) INTO @salesamount
-    FROM possales p
-    JOIN possalesdetails pd ON p.id = pd.possaleid
-    WHERE p.receiptdate BETWEEN @startdate AND @enddate
-      AND IFNULL(p.deleted, 0) = 0;
-
-    -- Purchases
-    SELECT SUM(gd.quantity * pd.unitprice) INTO @purchases
-    FROM goodsreceived g
-    JOIN goodsreceiveddetails gd ON g.grnno = gd.grnno
-    JOIN purchaseorders po ON gd.purchaseorderno = po.purchaseorderno
-    JOIN purchaseorderdetails pd ON po.id = pd.purchaseorderid AND gd.itemcode = pd.itemcode
-    WHERE g.datereceived BETWEEN @startdate AND @enddate;
-
-    -- Get last reconciliation before start date
-    SELECT id, DATE(reconciliationdate) INTO @reconciliationid, @reconciliationdate
-    FROM stockreconciledbalance
-    WHERE reconciliationdate < @startdate
-    ORDER BY reconciliationdate DESC
-    LIMIT 1;
-
-    -- Tentative start = one day before range
-    SET @tentativestartdate = DATE_SUB(@startdate, INTERVAL 1 DAY);
-
-    -- Opening stock from last reconciliation
-    SELECT SUM(sb.quantity * sb.unitprice) INTO @openingstock
-    FROM stockreconciledbalancedetails sb
-    JOIN stockreconciledbalance s ON sb.reconciliationid = s.id
-    WHERE s.id = @reconciliationid;
-
-    -- Purchases since reconciliation
-    SELECT SUM(gd.quantity * p.buyingprice) INTO @purchasessincelastreconciliation
-    FROM goodsreceiveddetails gd
-    JOIN products p ON gd.itemcode = p.productid
-    WHERE gd.grnno IN (
-        SELECT grnno FROM goodsreceived
-        WHERE datereceived BETWEEN @reconciliationdate AND @tentativestartdate
-    );
-
-    -- Sales since reconciliation
-    SELECT SUM(pd.quantity * r.buyingprice) INTO @salessincelastreconciliation
-    FROM possales p
-    JOIN possalesdetails pd ON p.id = pd.possaleid
-    JOIN products r ON pd.itemcode = r.productid
-    WHERE p.receiptdate BETWEEN @reconciliationdate AND @tentativestartdate
-      AND IFNULL(p.deleted, 0) = 0;
-
-    -- Adjust opening stock
-    SET @openingstock = IFNULL(@openingstock, 0) 
-                        + IFNULL(@purchasessincelastreconciliation, 0) 
-                        - IFNULL(@salessincelastreconciliation, 0);
-
-    -- Purchases since start
-    SELECT SUM(gd.quantity * p.buyingprice) INTO @purchasessincestartdate
-    FROM goodsreceiveddetails gd
-    JOIN products p ON gd.itemcode = p.productid
-    WHERE gd.grnno IN (
-        SELECT grnno FROM goodsreceived
-        WHERE datereceived BETWEEN @startdate AND @enddate
-    );
-
-    -- Sales since start
-    SELECT SUM(pd.quantity * r.buyingprice) INTO @salessincestartdate
-    FROM possales p
-    JOIN possalesdetails pd ON p.id = pd.possaleid
-    JOIN products r ON pd.itemcode = r.productid
-    WHERE p.receiptdate BETWEEN @startdate AND @enddate
-      AND IFNULL(p.deleted, 0) = 0;
-
-    -- Compute closing stock
-    SET @closingstock = IFNULL(@openingstock, 0) 
-                        + IFNULL(@purchasessincestartdate, 0) 
-                        - IFNULL(@salessincestartdate, 0);
-
-    -- Final result
-    SELECT  
-        ROUND(IFNULL(@salesamount, 0), 2) AS sales, 
-	ROUND(IFNULL(@openingstock, 0), 2) AS openingstock,
-	ROUND(IFNULL(@purchases, 0), 2) AS purchases, 
-	ROUND(IFNULL(@closingstock, 0), 2) AS closingstock;
+	SET @salesaccount = (SELECT id FROM glaccounts WHERE `accountcode`=(SELECT `account` FROM `glaccountsettings` WHERE `description`='Sales'));
+	SET @stockaccount = (SELECT id FROM glaccounts WHERE `accountcode`=(SELECT `account` FROM `glaccountsettings` WHERE `description`='Cost of Goods Sold'));
+	SET @startdate = DATE_FORMAT($startdate, '%Y-%m-%d');
+	SET @enddate = DATE_FORMAT($enddate, '%Y-%m-%d');
+	SET @cutoffdate = DATE_FORMAT((SELECT `cutoffdate` FROM `startingparameters`), '%Y-%m-%d');
+	
+	SET @salesamount = IFNULL((
+		SELECT SUM(quantity*unitprice) 
+		FROM possales p, possalesdetails pd 
+		WHERE p.possaleid = pd.possaleid 
+		  AND p.branchid = $branchid
+		  AND DATE_FORMAT(p.receiptdate, '%Y-%m-%d') BETWEEN @startdate AND @enddate 
+		  AND IFNULL(p.deleted, 0) = 0
+	), 0);
+	
+	SET @purchases = (
+		SELECT SUM(gd.quantity*pd.unitprice) 
+		FROM goodsreceived g, goodsreceiveddetails gd, purchaseorders p, purchaseorderdetails pd 
+		WHERE g.`grnno` = gd.`grnno` 
+		  AND p.purchaseorderid = pd.`purchaseorderid` 
+		  AND gd.`purchaseorderno` = p.purchaseorderno 
+		  AND pd.`itemcode` = gd.`itemcode` 
+		  AND g.branchid = $branchid
+		  AND p.branchid = $branchid
+		  AND DATE_FORMAT(g.`datereceived`, '%Y-%m-%d') BETWEEN @startdate AND @enddate
+	);
+	
+	SET @startdate = DATE_SUB(@startdate, INTERVAL 1 DAY);
+	SET @reconcilliationid = IFNULL((
+		SELECT `stockreconciledbalanceid` 
+		FROM `stockreconciledbalance` 
+		WHERE branchid = $branchid 
+		  AND DATE_FORMAT(`reconciliationdate`, '%Y-%m-%d') < @startdate 
+		ORDER BY `reconciliationdate` DESC LIMIT 1
+	), 0);
+	
+	SET @reconciliationdate = IFNULL((
+		SELECT DATE_FORMAT(`reconciliationdate`, '%Y-%m-%d') 
+		FROM `stockreconciledbalance` 
+		WHERE branchid = $branchid 
+		  AND DATE_FORMAT(`reconciliationdate`, '%Y-%m-%d') < @startdate 
+		ORDER BY `reconciliationdate` DESC LIMIT 1
+	), @startdate);
+	
+	SET @tentativestartdate = DATE_SUB(@startdate, INTERVAL 1 DAY);
+	
+	SET @openingstock = IFNULL((
+		SELECT SUM(quantity*unitprice) 
+		FROM `stockreconciledbalance` s, `stockreconciledbalancedetails` sb 
+		WHERE s.`stockreconciledbalanceid` = sb.`reconciliationid` 
+		  AND s.branchid = $branchid 
+		  AND s.`stockreconciledbalanceid` = @reconcilliationid
+	), 0);
+	
+	-- Get purchases since last reconciliation
+	SET @purchasessincelastreconciliation = IFNULL((
+		SELECT SUM(quantity*buyingprice) 
+		FROM goodsreceiveddetails g, products p 
+		WHERE p.`productid` = g.`itemcode` 
+		  AND grnno IN (
+			  SELECT grnno 
+			  FROM `goodsreceived` 
+			  WHERE branchid = $branchid 
+				AND DATE_FORMAT(datereceived, '%Y-%m-%d') BETWEEN @reconciliationdate AND @tentativestartdate
+		  )
+	), 0);
+	
+	-- Get sales since last reconciliation
+	SET @salessincelastreconciliation = IFNULL((
+		SELECT SUM(quantity*buyingprice) 
+		FROM `possales` p, `possalesdetails` pd, products r 
+		WHERE p.`possaleid` = pd.`possaleid` 
+		  AND r.`productid` = pd.`itemcode` 
+		  AND p.branchid = $branchid 
+		  AND DATE_FORMAT(`receiptdate`, '%Y-%m-%d') BETWEEN @reconciliationdate AND @tentativestartdate 
+		  AND IFNULL(p.deleted, 0) = 0
+	), 0);
+	
+	-- Compute the correct opening balance (using correct opening stock variable)
+	SET @openingstock = @openingstock + @purchasessincelastreconciliation - @salessincelastreconciliation;
+	
+	-- Get purchases since start date
+	SET @purchasessincestartdate = IFNULL((
+		SELECT SUM(quantity*buyingprice) 
+		FROM goodsreceiveddetails g, products p 
+		WHERE p.`productid` = g.`itemcode` 
+		  AND grnno IN (
+			  SELECT grnno 
+			  FROM `goodsreceived` 
+			  WHERE branchid = $branchid 
+				AND DATE_FORMAT(datereceived, '%Y-%m-%d') BETWEEN @startdate AND @enddate
+		  )
+	), 0);
+	
+	-- Get sales since start date
+	SET @salessincestartdate = IFNULL((
+		SELECT SUM(quantity*buyingprice) 
+		FROM `possales` p, `possalesdetails` pd, products r 
+		WHERE p.`possaleid` = pd.`possaleid` 
+		  AND r.`productid` = pd.`itemcode` 
+		  AND p.branchid = $branchid 
+		  AND DATE_FORMAT(`receiptdate`, '%Y-%m-%d') BETWEEN @startdate AND @enddate 
+		  AND IFNULL(p.deleted, 0) = 0
+	), 0);
+	
+	-- Compute the closing stock
+	SET @closingstock = @openingstock + @purchasessincestartdate - @salessincestartdate;
+	
+	SELECT @salesamount AS `sales`, @openingstock AS `openingstock`, @purchases AS `purchases`, @closingstock AS `closingstock`;
 END */$$
 DELIMITER ;
 
@@ -4929,20 +4760,23 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spgettrialbalance`($startdate datetime,$enddate datetime)
+/*!50003 CREATE PROCEDURE `spgettrialbalance`($branchid INT, $startdate DATETIME, $enddate DATETIME)
 BEGIN
-	SET @startdate=$startdate,@enddate=$enddate;
-	SELECT IFNULL(CONCAT(accountcode,' - ',accountname),'TOTAL') accountname, 
+	SET @startdate = $startdate, @enddate = $enddate;
+	SELECT IFNULL(CONCAT(accountcode,' - ',accountname),'TOTAL') AS accountname, 
 		SUM(IF(`total`>0,`total`,0)) AS debit,
-		SUM(IF(`total`<0,ABS(`total`),0)) AS credit FROM
-	(SELECT `accountcode`,`accountname`,
-	SUM(`debit`-`credit`) AS `total`
-	FROM `glaccounts` g, `gltransactions` t
-	WHERE g.`id`=t.`glaccount`  AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate
-	GROUP BY `accountcode`,`accountname` ORDER BY `accountcode` ) tab1
+		SUM(IF(`total`<0,ABS(`total`),0)) AS credit 
+	FROM (
+		SELECT `accountcode`, `accountname`,
+		SUM(`debit`-`credit`) AS `total`
+		FROM `glaccounts` g, `gltransactions` t
+		WHERE g.`id`=t.`glaccount` AND t.branchid = $branchid AND DATE_FORMAT(`transactiondate`,'%Y-%m-%d') BETWEEN @startdate AND @enddate
+		GROUP BY `accountcode`, `accountname` 
+		ORDER BY `accountcode`
+	) tab1
 	GROUP BY accountname
 	WITH ROLLUP;
-    END */$$
+END */$$
 DELIMITER ;
 
 /* Procedure structure for procedure `spgetuninvoicedgrns` */
@@ -5575,82 +5409,79 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spsavepaymentvoucher`($refno varchar(50),$id int,$voucherdate datetime,$voucherno varchar(50),$pos int,$supplier int,
+/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spsavepaymentvoucher`($branchid int, $refno varchar(50),$id int,$voucherdate datetime,$voucherno varchar(50),$pos int,$supplier int,
 	$paymentmode int,$cashbookaccount int,$reference varchar(50),$generatevoucherno int,$userid INt,$pettycash boolean,$craterefund boolean)
 BEGIN
 	DECLARE $productid INT;	
-	declare $narration varchar(1000);
+	DECLARE $narration VARCHAR(1000);
 	SET $pettycash = IFNULL($pettycash,0);
 	SET $craterefund=IFNULL($craterefund,0);
-	-- declare $id int;
 	
-	
-	if $id=0 then 
-		begin
-			start transaction;
+	IF $id=0 THEN 
+		BEGIN
+			START TRANSACTION;
 				-- generate voucher number
-				if $generatevoucherno=1 then
+				IF $generatevoucherno=1 THEN
 					SET $voucherno=`fngeneratepaymentvoucherno`();
-					update serials set currentno=currentno+1 where `documenttype`='Voucher Number';
-				end if;
+					UPDATE serials SET currentno=currentno+1 WHERE `documenttype`='Voucher Number';
+				END IF;
 				-- return voucher number	
 				SELECT $voucherno AS voucherno;
 				-- Add data to crate inventory
-				if $craterefund=1 then 
-					set $productid=(select `productid` from `cratesinventorysettings`);
-					set $narration='Crate Deposit Refund';
-					insert into `cratesinventory`(`productid`,`quantity`,`unitprice`,`dateadded`,`narration`,`reference`,`addedby`)
-					select $productid,quantity,unitprice,now(),$narration,`invoicenumber`,$userid FROM `temppaymentvoucherdetails` WHERE `refno`=$refno;
+				IF $craterefund=1 THEN 
+					SET $productid=(SELECT `productid` FROM `cratesinventorysettings`);
+					SET $narration='Crate Deposit Refund';
+					INSERT INTO `cratesinventory`(`productid`,`quantity`,`unitprice`,`dateadded`,`narration`,`reference`,`addedby`)
+					SELECT $productid,quantity,unitprice,NOW(),$narration,`invoicenumber`,$userid FROM `temppaymentvoucherdetails` WHERE `refno`=$refno;
 					-- Create temp order details
 					INSERT INTO `temppurchaseorder`(`refno`,`itemcode`,`quantity`,`unitprice`)
-					select $refno,$productid,quantity,unitprice from `temppaymentvoucherdetails` WHERE `refno`=$refno;
+					SELECT $refno,$productid,quantity,unitprice FROM `temppaymentvoucherdetails` WHERE `refno`=$refno;
 					-- Save order
-					call `spsavepurchaseorder`(0,$refno,$supplier,'Crate Deposit Refund',$userid);
-					select max(`id`) into @poid from `purchaseorders`;
+					CALL `spsavepurchaseorder`(0,$refno,$supplier,'Crate Deposit Refund',$userid);
+					SELECT MAX(`id`) INTO @poid FROM `purchaseorders`;
 					-- Receive Order
-					select `id` into @warehouseid from `warehouses` order by `id` limit 1;
-					select `purchaseorderno` into @pono from `purchaseorders` where `id`=@poid;
+					SELECT `id` INTO @warehouseid FROM `warehouses` ORDER BY `id` LIMIT 1;
+					SELECT `purchaseorderno` INTO @pono FROM `purchaseorders` WHERE `id`=@poid;
 					-- Get quantity from temp voucher details
-					SELECT quantity into @quantity FROM `temppaymentvoucherdetails` WHERE `refno`=$refno;
-					call `spsavetempgoodsreceived`($refno,@pono,$productid,@quantity,'');
-					call `spsavegoodsreceived`($refno,@warehouseid,$supplier,$voucherno,$userid,0,'');
-				end if;
-				-- update invoice as used
-				-- update `supplierinvoice` set `status`='Paid' where `supplierid`=$supplier and `invoiceno`=$invoicenumber;
+					SELECT quantity INTO @quantity FROM `temppaymentvoucherdetails` WHERE `refno`=$refno;
+					CALL `spsavetempgoodsreceived`($refno,@pono,$productid,@quantity,'');
+					CALL `spsavegoodsreceived`($refno,@warehouseid,$supplier,$voucherno,$userid,0,'');
+				END IF;
 				
 				-- insert voucher details
-				INSERT INTO `paymentvouchers`(`voucherno`,`date`,`addedby`,`paymentmode`,`pos`,`supplier`,`cashbookaccount`,`referenceno`,`status`,`dateadded`,`pettycashvoucher`)
-				VALUES($voucherno,$voucherdate,$userid,$paymentmode,$pos,$supplier,$cashbookaccount,$reference,'Pending',NOW(),$pettycash);
+				INSERT INTO `paymentvouchers`(`branchid`,`voucherno`,`date`,`addedby`,`paymentmode`,`pos`,`supplier`,`cashbookaccount`,`referenceno`,`status`,`dateadded`,`pettycashvoucher`)
+				VALUES($branchid,$voucherno,$voucherdate,$userid,$paymentmode,$pos,$supplier,$cashbookaccount,$reference,'Pending',NOW(),$pettycash);
 			
-				SET $id=(SELECT MAX(id) FROM `paymentvouchers`);
+				SET $id=(SELECT MAX(paymentvoucherid) FROM `paymentvouchers`);
 				
 				-- insert voucher items
-				INSERT INTO `paymentvoucherdetails`(`voucherid`,`itemcode`,`description`,`quantity`,`unitprice`,`accountcharged`,`invoicenumber`)
-				SELECT $id,`itemcode`,`description`,`quantity`,`unitprice`,`accountcharged`,`invoicenumber` FROM `temppaymentvoucherdetails` WHERE `refno`=$refno;
+				INSERT INTO `paymentvoucherdetails`(`branchid`,`voucherid`,`itemcode`,`description`,`quantity`,`unitprice`,`accountcharged`,`invoicenumber`)
+				SELECT $branchid,$id,`itemcode`,`description`,`quantity`,`unitprice`,`accountcharged`,`invoicenumber` FROM `temppaymentvoucherdetails` WHERE `refno`=$refno;
 				
 				-- remove temporary data
-				delete  FROM `temppaymentvoucherdetails` WHERE `refno`=$refno;
-			commit;
-		end;
-	else
-		begin
-			start transaction;
+				DELETE  FROM `temppaymentvoucherdetails` WHERE `refno`=$refno;
+			COMMIT;
+		END;
+	ELSE
+		BEGIN
+			START TRANSACTION;
 				-- return voucher number	
 				SELECT $voucherno AS voucherno;
 				-- delete previous value entries
-				delete from `paymentvoucherdetails` where `voucherid`=$id;
+				DELETE FROM `paymentvoucherdetails` WHERE `voucherid`=$id;
 				-- modify voucher details
-				update `paymentvouchers` set `voucherno`=$voucherno,`paymentmode`=$paymentmode,`pos`=$pos,`supplier`=$supplier,
-				`cashbookaccount`=$cashbookaccount,`referenceno`=$reference,`lastmodifiedby`=$userid,`lastmodifieddate`=now()
-				where `id`=$id;
+				UPDATE `paymentvouchers` SET `voucherno`=$voucherno,`paymentmode`=$paymentmode,`pos`=$pos,`supplier`=$supplier,
+				`cashbookaccount`=$cashbookaccount,`referenceno`=$reference,`lastmodifiedby`=$userid,`lastmodifieddate`=NOW(),
+				`pettycashvoucher`=$pettycash
+				WHERE `paymentvoucherid`=$id AND `branchid`=$branchid;
 				-- add vouchers items
-				INSERT INTO `paymentvoucherdetails`(`voucherid`,`itemcode`,`description`,`quantity`,`unitprice`,`accountcharged`,`invoicenumber`)
-				SELECT $id,`itemcode`,`description`,`quantity`,`unitprice`,`accountcharged`,`invoicenumber` FROM `temppaymentvoucherdetails` WHERE `refno`=$refno;
+				INSERT INTO `paymentvoucherdetails`(`branchid`,`voucherid`,`itemcode`,`description`,`quantity`,`unitprice`,`accountcharged`,`invoicenumber`)
+				SELECT $branchid,$id,`itemcode`,`description`,`quantity`,`unitprice`,`accountcharged`,`invoicenumber` FROM `temppaymentvoucherdetails` WHERE `refno`=$refno;
 				-- remove temporary data
 				DELETE FROM `temppaymentvoucherdetails` WHERE `refno`=$refno;
-			commit;
-		end;
-	end if;
+			COMMIT;
+		END;
+	END IF;
 	
     END */$$
 DELIMITER ;
@@ -6573,10 +6404,10 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spsavetepmpaymentvoucherdetails`($refno varchar(50),$itemcode varchar(50),$description varchar(500),$quantity decimal(10,3),$unitprice decimal(10,2),$accountcharged int,$invoicenumber varchar(50))
+/*!50003 CREATE DEFINER=`wovijlbc`@`localhost` PROCEDURE `spsavetepmpaymentvoucherdetails`($branchid int, $refno varchar(50),$itemcode varchar(50),$description varchar(500),$quantity decimal(10,3),$unitprice decimal(10,2),$accountcharged int,$invoicenumber varchar(50))
 BEGIN
-	insert into `temppaymentvoucherdetails`(`refno`,`itemcode`,`description`,`quantity`,`unitprice`,`accountcharged`,`invoicenumber`)
-	values($refno,$itemcode,$description,$quantity,$unitprice,$accountcharged,$invoicenumber);
+	INSERT INTO `temppaymentvoucherdetails`(`branchid`,`refno`,`itemcode`,`description`,`quantity`,`unitprice`,`accountcharged`,`invoicenumber`)
+	VALUES($branchid,$refno,$itemcode,$description,$quantity,$unitprice,$accountcharged,$invoicenumber);
     END */$$
 DELIMITER ;
 

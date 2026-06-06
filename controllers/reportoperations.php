@@ -38,13 +38,13 @@
         $basedate=$_GET['basedate'];
         $report->getAccountsReceivableAgingAnlysis($basedate);
     }
-    if(isset($_GET['getcustomerstatement'])){
+    if(isset($_GET['getcustomerstatement']) && isset($_GET['customerid']) && !empty($_GET['customerid'])){
         $startdate=$_GET['startdate'];
         $enddate=$_GET['enddate'];
         $customerid=$_GET['customerid'];
         $report->getCustomerStatement($customerid,$startdate,$enddate);
     }
-    if(isset($_GET['getcustomeraginganalysis'])){
+    if(isset($_GET['getcustomeraginganalysis']) && isset($_GET['customerid']) && !empty($_GET['customerid'])){
         $basedate=$_GET['basedate'];
         $customerid=$_GET['customerid'];
         $report->getCustomerAgingAnalysis($customerid,$basedate);
@@ -144,6 +144,11 @@
         $enddate=$_GET['enddate'];
         $daterange=$_GET['range'];
         $report->getsalesbycustomervalue($startdate,$enddate,$daterange);
+    }
+    if(isset($_GET['getcustomerperformance'])){
+        $startdate=$_GET['startdate'];
+        $enddate=$_GET['enddate'];
+        $report->getcustomerperformance($startdate,$enddate);
     }
     if(isset($_GET['getdashboardheader'])){
         $date=$_GET['date'];

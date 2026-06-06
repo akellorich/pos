@@ -700,4 +700,14 @@ $(document).ready(function(){
         )
         activitymaterialsummarymodal.modal("show")
     })
+
+    // Toggle Setup collapsible panel text & icons
+    $('#filterCollapse').on('show.bs.collapse', function () {
+        $('#toggleFiltersBtn span').text('Close');
+        $('#toggleFiltersBtn i').removeClass('fa-cog').addClass('fa-times');
+    });
+    $('#filterCollapse').on('hide.bs.collapse', function () {
+        $('#toggleFiltersBtn span').text('Setup');
+        $('#toggleFiltersBtn i').removeClass('fa-times').addClass('fa-cog');
+    });
 })

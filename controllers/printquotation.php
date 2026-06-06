@@ -11,7 +11,7 @@ $db=new db();
 $quoteno=$_GET['quoteno'];
 
 // get institutional details
-$sql="CALL spgetinstitutiondetails()";
+$sql="CALL spgetinstitutiondetails({$db->clientid})";
 $rst=$db->getData($sql)->fetch();
 
 $sql="CALL sp_getquotationheaderdetails('{$quoteno}')";

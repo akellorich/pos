@@ -3,7 +3,7 @@
     
     class User extends db{
 
-        private function generateSalt($length = 30) {
+        public function generateSalt($length = 30) {
             return bin2hex(random_bytes($length / 2));
         }
 
@@ -194,14 +194,14 @@
         }
 
         function saveUserPrivilege($userid,$object,$valid,$branchid=null){
-            $branchid = $branchid ?? $this->branchid;
+            $branchid = (!empty($branchid)) ? $branchid : $this->branchid;
             $sql="CALL spsaveuserprivilege ({$this->clientid},{$userid},{$branchid},{$object},{$valid},{$this->userid})";
             $rst=$this->connect()->query($sql); 
         }
 
         function checkUserPrivilege($objectid,$branchid=null){
             $userid=$this->userid;
-            $branchid = $branchid ?? $this->branchid;
+            $branchid = (!empty($branchid)) ? $branchid : $this->branchid;
             $sql="CALL spvalidateuserprivilege({$branchid},{$userid},{$objectid})";
             $rst=$this->connect()->query($sql);
             if($rst->rowCount()){
@@ -222,7 +222,7 @@
         }
 
         function getUserRoles($userid){
-            $sql="CALL spgetuserroles({$this->clientid},{$userid})";
+            $sql="CALL spgetuserroles({$userid})";
             return $this->getJSON($sql);
         }
 
@@ -268,13 +268,13 @@
         }
 
         function  getUserPrivileges($userid, $branchid = null){
-            $branchid = $branchid ?? $this->branchid;
+            $branchid = (!empty($branchid)) ? $branchid : $this->branchid;
             $sql="CALL spgetuserprivileges({$this->clientid},{$userid},{$branchid})";
             return $this->getJSON($sql);
         }
 
          function getUsernameFromUserId($userid){
-            $sql="CALL spgetusernamefromuserid({$this->clientid},{$userid})";
+            $sql="CALL spgetusernamefromuserid({$userid})";
             //echo $sql."<br/>";
             $rst=$this->getData($sql);
             if($rst->rowCount()){
@@ -344,35 +344,35 @@
 
         function saverequisitionprivilege($userid,$approvallevelid,$departmentid,$valid){
             // echo $_SESSION['userid'];
-            $sql="CALL sp_saverequisitionprivilege({$this->clientid},{$userid},{$approvallevelid},{$departmentid},{$valid},{$this->userid})";
+            $sql="CALL sp_saverequisitionprivilege({$userid},{$approvallevelid},{$departmentid},{$valid},{$this->userid})";
             // echo $sql."<br/>";
             $this->getData($sql);
             return "success";
         }
 
         function getuserrequisitionapprovalprivileges($userid){
-            $sql="CALL `sp_getuserrequisitionapprovalprivileges`({$this->clientid},{$userid})";
+            $sql="CALL `sp_getuserrequisitionapprovalprivileges`({$userid})";
             return $this->getJSON($sql);
         }
 
         function getuserswithprivileges($objectid){
-            $sql="CALL sp_getuserswithprivilege({$this->clientid},$objectid)";
+            $sql="CALL sp_getuserswithprivilege($objectid)";
             return $this->getData($sql);
         }
 
         function savepurchaseorderprivilege($userid,$approvallevelid,$departmentid,$valid){
-            $sql="CALL sp_savepurchaseorderprivilege({$this->clientid},{$userid},{$approvallevelid},{$departmentid},{$valid},{$this->userid})";
+            $sql="CALL sp_savepurchaseorderprivilege({$userid},{$approvallevelid},{$departmentid},{$valid},{$this->userid})";
             $this->getData($sql);
             return "success";
         }
 
         function getuserpurchaseorderapprovalprivileges($userid){
-            $sql="CALL `sp_getuserpurchaseorderapprovalprivileges`({$this->clientid},{$userid})";
+            $sql="CALL `sp_getuserpurchaseorderapprovalprivileges`({$userid})";
             return $this->getJSON($sql);
         }
 
         function saveusersignature($userid,$documentname){
-            $sql="CALL `sp_saveusersignature`({$this->clientid},{$userid},'{$documentname}')";
+            $sql="CALL `sp_saveusersignature`({$userid},'{$documentname}')";
             $this->getData($sql);
             return "success";
         }
@@ -385,7 +385,7 @@
 
         function resetuserpin($userid,$pin,$pinsalt){
             $pin=hash('SHA256',$pin.$pinsalt);
-            $sql="CALL `sp_resetuserpin`({$this->clientid},{$userid},'{$pin}','{$pinsalt}')";
+            $sql="CALL `sp_resetuserpin`({$userid},'{$pin}','{$pinsalt}')";
             $this->getData($sql);
             return ["status"=>"success","message"=>"user PIN reset successfully"];
         }
@@ -415,12 +415,19 @@
                             $branchid = isset($row['defaultbranchid']) ? $row['defaultbranchid'] : 1;
                             $_SESSION['branchid']=$branchid;
                             $_SESSION['branchname'] = isset($row['branchname']) ? $row['branchname'] : "Default Branch";
+
                             $_SESSION['username']=$row['firstname'].' '.$row['middlename'];
                             $_SESSION['userfirstname']=$row['firstname'];
                             $_SESSION['userothernames']=$row['middlename'].' '.$row['lastname'];
                             $_SESSION['systemadmin']=$row['systemadmin'];
                             $_SESSION['userimage']='../../images/blankavatar.jpg';
-                            return ["status"=>"success"];
+                            
+                            // Check for active session
+                            $sql_session = "CALL `sp_checksessionid`({$branchid}, {$row['userid']})";
+                            $rst_session = $this->connect()->query($sql_session);
+                            $has_session = $rst_session->rowCount() > 0;
+                            
+                            return ["status"=>"success", "hassession" => $has_session];
                         }  
                     }else{
                         return ["status"=>"account inactive"];

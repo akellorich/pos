@@ -8,10 +8,12 @@ $(document).ready(function(){
             creditlimitfield=$("#creditlimit"),
             savebutton=$("#savesupplier"),
             errordiv=$("#errors"), 
-            gotolist=$("#goback"),
-            errors="",
-            categorylist=$("#productcategory"),
-            productslist=$("#productname"),
+            gotolist=$("#goback");
+    
+    let errors = "";
+    
+    const   categorylist=$("#productcategory"),
+            productslist=$("#productname-checkboxes"),
             saveproducts=$("#supplierproductsform"),
             errordiv1=$("#errorsproduct"),
             supplieridfield=$("#supplierid"),
@@ -34,13 +36,20 @@ $(document).ready(function(){
             supplierpinfield=$("#supplierpin")
 
     alldates.prop("checked",true)
-    startdatefield.datepicker()
-    enddatefield.datepicker()
+    startdatefield.flatpickr({
+        dateFormat: "d-M-Y"
+    })
+    enddatefield.flatpickr({
+        dateFormat: "d-M-Y"
+    })
+
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
     statementstartdate=$("#statementstartdate")
     statementenddate=$("#statementenddate")
-    statementstartdate.datepicker({dateFormat: 'dd-M-yy', maxDate: new Date()})
-    statementenddate.datepicker({dateFormat: 'dd-M-yy', maxDate: new Date()})
+    statementstartdate.flatpickr({dateFormat: 'd-M-Y', maxDate: 'today', defaultDate: threeMonthsAgo})
+    statementenddate.flatpickr({dateFormat: 'd-M-Y', maxDate: 'today', defaultDate: 'today'})
 
     generatestatement=$("#generatestatement")
 
@@ -71,9 +80,9 @@ $(document).ready(function(){
         }
     })
 
-    inputfield.on("input",()=>{
+    $("input, select").on("input change",()=>{
         errordiv.html("")
-        errordiv1.htm("")
+        errordiv1.html("")
         errordiv2.html("")
     })
     
@@ -151,6 +160,7 @@ $(document).ready(function(){
 
                 results+="<table class='table table-sm table-striped'><thead><th>Date</th><th>Reference</th><th>Narrative</th><th class='text-right'>Invoice</th><th class='text-right'>Payment</th><th class='text-right'>Balance</th></thead><tbody>"
                 for(var i=0;i<data.length;i++){
+                    if(data[i].reference == null) continue;
                     runningbalance+=parseFloat(data[i].invoiceamount)-parseFloat(data[i].invoicepayment)
                     results+="<tr><td>"+data[i].date+"</td>"
                     results+="<td>"+data[i].reference+"</td>"
@@ -244,7 +254,7 @@ $(document).ready(function(){
                     }else if(data=="exists"){
                         errordiv.html(showAlert("info","Supplier already exists in the system"))
                     }else{
-                        errordiv.html(showAlert("danger",`Sorry an error occured ${data}`,1))
+                        errordiv.html(showAlert("info",`Sorry an error occured ${data}`,1))
                     }
                 }
             )
@@ -261,10 +271,8 @@ $(document).ready(function(){
     })
 
     // filter product by category
-    categorylist.on("click",function(){
-        $("#productname option:selected").each(function(){
-            $(this).prop("selected",false)
-        })
+    categorylist.on("change",function(){
+        productslist.find("input[type='checkbox']").prop("checked",false)
         getFilterProducts().done(function(){
             //productslist.multiselect('rebuild')
             //productslist.multiselect('refresh')   
@@ -281,8 +289,16 @@ $(document).ready(function(){
             },
             function(data){
                 var results=""
-                for(var i=0;i<data.length;i++){
-                    results+="<option value='"+data[i].productid+"'>"+data[i].itemname+"</option>"
+                if(data.length > 0) {
+                    for(var i=0;i<data.length;i++){
+                        results += `
+                            <div class="custom-control custom-checkbox mb-1">
+                                <input type="checkbox" name="productname[]" class="custom-control-input" id="prod_${data[i].productid}" value="${data[i].productid}">
+                                <label class="custom-control-label small" for="prod_${data[i].productid}">${data[i].itemname}</label>
+                            </div>`;
+                    }
+                } else {
+                    results = "<p class='text-muted small mb-0'>No products found in this category.</p>";
                 }
                 productslist.html(results)
                 deferred.resolve()
@@ -297,36 +313,27 @@ $(document).ready(function(){
         var form_data=$(this).serialize()
         supplierid=supplieridfield.val()
         if(supplierid==0){
-            errors="<p class='alert alert-danger'>Please save the supplier first.</p>"
-            errordiv1.html(errors)
+            errordiv1.html(showAlert("info", "Please save the supplier first."))
         }else{
-            if(productslist.val()==""){
-                errors="<p class='alert alert-info'>Please select a product</p>"
-                errordiv1.html(errors)
+            if(productslist.find("input[type='checkbox']:checked").length == 0){
+                errordiv1.html(showAlert("info", "Please select at least one product"))
             }else{
-                errors="<p class='alert alert-info'>Processing ...</p>"
-                errordiv1.html(errors)
+                errordiv1.html(showAlert("info", "Processing ...", 1))
                 $.ajax({
                     url:"../controllers/productoperations.php",
                     method:"POST",
                     data:form_data,
                     success: function(data){
                         var results=$.trim(data.toString())
-                        // console.log(results.length)
                         if(results=="success"){
-                            errors="<p class='alert alert-success'>Supplier's product(s) saved successfully</p>"
+                            errordiv1.html(showAlert("success", "Supplier's product(s) saved successfully"))
                             // reset fields
-                            $("#productname option:selected").each(function(){
-                                $(this).prop("selected",false)
-                            })
+                            productslist.find("input[type='checkbox']").prop("checked",false)
                             // refresh list
-                            $('#productname').multiselect('refresh')   
                             getSupplierProducts()
-
                         }else{
-                            errors="<p class='alert alert-danger'>"+results+"</p>"
+                            errordiv1.html(showAlert("info", results))
                         }
-                        errordiv1.html(errors)
                     }
                 })  
             }
@@ -474,6 +481,7 @@ $(document).ready(function(){
             },
             function(data){
                 idfield.val(data.supplierid)
+                supplieridfield.val(data.supplierid)
                 suppliernamefield.val( data.suppliername),
                 physicaladdressfield.val( data.physicaladdress)
                 postaladdressfield.val(data.postaladdress)

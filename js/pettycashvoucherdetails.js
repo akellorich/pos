@@ -13,19 +13,34 @@ $(document).ready(function(){
         narrationfield=$("#narration"),
         amountfield=$("#amount"),
         errorsdiv=$("#errors"),
-        totalfield=$("#totalfield"),
-        savevoucherbutton=$("#savevoucher"),
+        totalfield=$("#totalfield, #totalfield-mobile"),
+        savevoucherbutton=$("#savevoucher, #savevoucher-mobile"),
         generatevouchernofield=$("#autogenerate"),
         idfield=$("#idfield"),
         paymentmodereferencefield=$("#referencenumber"),
-        clearbutton=$("#clearvoucher")
+        clearbutton=$("#clearvoucher, #clearvoucher-mobile")
 
     autogenerate.prop("checked",true)
     vouchernofield.prop("disabled",true)
     // totalfield.html("12345.00")
     // set the datepicker field
-    voucherdatefield.datepicker({maxDate: new Date(),dateFormat: 'dd-M-yy'})
-    //$.datepicker.setDefaults({})
+    voucherdatefield.flatpickr({
+        maxDate: new Date(),
+        dateFormat: 'd-M-Y'
+    })
+    
+    // Toggle Step 1 Parameters on Mobile/Tablet Card Header Button Click
+    $("#toggle-step1").on("click", function(e){
+        e.preventDefault();
+        var cardBody = $(".parameters-wrapper .card-body");
+        cardBody.slideToggle(200);
+        var icon = $(this).find("i");
+        if (icon.hasClass("fa-chevron-up")) {
+            icon.removeClass("fa-chevron-up").addClass("fa-chevron-down");
+        } else {
+            icon.removeClass("fa-chevron-down").addClass("fa-chevron-up");
+        }
+    });
 
 
     // get voucher parameters
@@ -63,10 +78,8 @@ $(document).ready(function(){
                                 for(var i=0;i<data.length;i++){
                                     linetotal=parseFloat(data[0].quantity)*parseFloat(data[0].unitprice)
                                     //console.log(linetotal)
-                                    results+="<tr><td>"+parseFloat(i+1)+"</td><td>"+data[i].itemcode+"</td><td>"+data[i].description+"</td><td data-id='"+data[0].accountcharged+"'>"+data[0].accountname+"</td><td class='numericfield linetotal'>"+$.number(linetotal,2)+"</td>"
-                                    // add edit and delete buttons
-                                    results+="<td><a href='javascript void(0)' class='editdata' data-id='"+randomId()+"'><span><i class='fas fa-edit fa-sm mt-1'></i></span></a></td>"
-                                    results+="<td><a href='javascript void(0)' class='deletedata' data-id='"+randomId()+"'><span><i class='fas fa-trash-alt fa-sm mt-1'></i></span></a></td></tr>"
+                                    results+="<tr><td>"+parseFloat(i+1)+"</td><td class='d-none d-md-table-cell'>"+data[i].itemcode+"</td><td>"+data[i].description+"</td><td class='d-none d-md-table-cell' data-id='"+data[0].accountcharged+"'>"+data[0].accountname+"</td><td class='numericfield linetotal text-right'>"+$.number(linetotal,2)+"</td>"
+                                    results+="<td class='text-center'><div class='dropdown'><button class='btn btn-sm btn-link text-dark dropdown-toggle p-0' type='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i class='fas fa-ellipsis-v'></i></button><div class='dropdown-menu dropdown-menu-right'><a class='dropdown-item editdata text-dark' href='javascript:void(0)' data-id='"+randomId()+"'><i class='fas fa-edit fa-fw mr-1'></i>Edit</a><a class='dropdown-item deletedata text-danger' href='javascript:void(0)' data-id='"+randomId()+"'><i class='fas fa-trash-alt fa-fw mr-1 text-danger'></i>Delete</a></div></div></td></tr>"
                                 
                                 }
                                 itemslist.find("tbody").html(results)
@@ -120,15 +133,17 @@ $(document).ready(function(){
         if(errors==""){
             errorsdiv.html("")
             itemdetails=itemslist.find("tbody")
+            if (itemdetails.find("td[colspan]").length > 0) {
+                itemdetails.empty();
+            }
             listitems=itemdetails.children().length
             itemcount=parseFloat(listitems)+1
             item="<tr><td>"+itemcount+"</td>"
-            item+="<td>"+reference+"</td>"
+            item+="<td class='d-none d-md-table-cell'>"+reference+"</td>"
             item+="<td>"+narration+"</td>"
-            item+="<td data-id='"+accountcharged+"'>"+accountchargedname+"</td>"
-            item+="<td class='linetotal'>"+$.number(amount,2)+"</td>"
-            item+="<td><a href='javascript void(0)' class='editdata' data-id='"+randomId()+"'><span><i class='fas fa-edit fa-sm mt-1'></i></span></a></td>"
-            item+="<td><a href='javascript void(0)' class='deletedata' data-id='"+randomId()+"'><span><i class='fas fa-trash-alt fa-sm mt-1'></i></span></a></td></tr>"
+            item+="<td class='d-none d-md-table-cell' data-id='"+accountcharged+"'>"+accountchargedname+"</td>"
+            item+="<td class='linetotal text-right'>"+$.number(amount,2)+"</td>"
+            item+="<td class='text-center'><div class='dropdown'><button class='btn btn-sm btn-link text-dark dropdown-toggle p-0' type='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i class='fas fa-ellipsis-v'></i></button><div class='dropdown-menu dropdown-menu-right'><a class='dropdown-item editdata text-dark' href='javascript:void(0)' data-id='"+randomId()+"'><i class='fas fa-edit fa-fw mr-1'></i>Edit</a><a class='dropdown-item deletedata text-danger' href='javascript:void(0)' data-id='"+randomId()+"'><i class='fas fa-trash-alt fa-fw mr-1 text-danger'></i>Delete</a></div></div></td></tr>"
             $(item).appendTo(itemdetails)
             // perform totals
             //console.log($.number(performTotal()))
@@ -184,7 +199,7 @@ $(document).ready(function(){
     function  clearForm(){
         clearItems()  
         clearvoucherparameters()
-        itemslist.find("tbody").html("")
+        itemslist.find("tbody").html('<tr><td colspan="7" class="text-center text-muted py-4">No items added to this voucher yet.</td></tr>')
     }
     // empty errors on any input field change
     $("input").on("input",function(){
@@ -194,7 +209,7 @@ $(document).ready(function(){
     // listen to edit data
     itemslist.on("click",".editdata",function(e){
         e.preventDefault()
-        var parent = $(this).parent("td").parent("tr")
+        var parent = $(this).closest("tr")
         var reference=parent.find("td").eq(1).text(),
             narration=parent.find("td").eq(2).text(),
             accountcharged=parent.find("td").eq(3).attr("data-id")//eq(2).text(),
@@ -208,12 +223,15 @@ $(document).ready(function(){
         amountfield.val(amount)
         
         parent.remove()
+        if (itemslist.find("tbody").children().length === 0) {
+            itemslist.find("tbody").html('<tr><td colspan="7" class="text-center text-muted py-4">No items added to this voucher yet.</td></tr>')
+        }
         // recompute totals
         totalfield.html($.number(performTotal()))
     })
 
     itemslist.on("click",".deletedata",function(e){
-        var parent=$(this).parent("td").parent("tr")
+        var parent=$(this).closest("tr")
         var description= parent.find("td").eq(2).text()
 
         e.preventDefault();
@@ -232,8 +250,10 @@ $(document).ready(function(){
                     label: "Yes, Remove",
                     className: "btn-danger",
                     callback: function() {
-                        //console.log(parent)
                         parent.remove()
+                        if (itemslist.find("tbody").children().length === 0) {
+                            itemslist.find("tbody").html('<tr><td colspan="7" class="text-center text-muted py-4">No items added to this voucher yet.</td></tr>')
+                        }
                         totalfield.html($.number(performTotal()))
                         $('.bootbox').modal('hide');
                     }
@@ -245,6 +265,7 @@ $(document).ready(function(){
     savevoucherbutton.on("click",function(){
         // disable save button
         savevoucherbutton.prop("disabled",true)
+        errorsdiv.html("");
         var voucherno=vouchernofield.val(),
             voucherdate=voucherdatefield.val(),
             costcenter=costcenterfield.val(),
@@ -253,7 +274,7 @@ $(document).ready(function(){
             payfrom=payfromfield.val(),
             generatevoucherno=generatevouchernofield.prop("checked")?1:0,
             errors="",
-            voucheritems=itemslist.find("tbody").children().length,
+            voucheritems=itemslist.find("tbody").find("td[colspan]").length > 0 ? 0 : itemslist.find("tbody").children().length,
             data=[],
             id=idfield.val(),
             paymentmodereference=paymentmodereferencefield.val()
@@ -318,26 +339,25 @@ $(document).ready(function(){
                 },function(data){
                     result=$.trim(data.toString())
                     if(result.length==7){
-                        errors="<p class='alert alert-success'><i class='fas fa-check-circle fa-lg fa-fw'></i> The Payment has been saved successfully. Voucher # : <strong>"+result+"</strong></p>"
+                        var successMsg = "The Payment has been saved successfully. Voucher # : <strong>"+result+"</strong>"
                         // clear form
                         clearForm()
                         totalfield.html("0.00")
+                        showNotification("success", successMsg)
                         //print the voucher
                         var url ="../printpaymentvoucher.php?voucherid="+result
                         var win = window.open(url, '_blank')
                     }else if(result=='voucher number exists'){
-                        errors="<p class='alert alert-info'><i class='fas fa-info-circle fa-lg fa-fw'></i> Sorry, the voucher number is already in use.</p>"
+                        showNotification("info", "Sorry, the voucher number is already in use.")
                     }else{
-                        errors="<p class='alert alert-danger'><i class='fas fa-times-circle fa-lg fa-fw'></i> "+result+"</p>"
+                        showNotification("danger", result)
                     }
                     // re-enable save button
                     savevoucherbutton.prop("disabled",false)
-                    errorsdiv.html(errors)
                 }
             )
         }else{
-            errors="<div class='alert alert-info'><i class='fas fa-info-circle fa-lg fa-fw'></i> "+errors+"</div>"
-            errorsdiv.html(errors)
+            showNotification("info", errors)
             // re-enable save button
             savevoucherbutton.prop("disabled",false)
         }
@@ -346,4 +366,31 @@ $(document).ready(function(){
     clearbutton.on("click",function(){
         clearForm()
     })
+
+    function showNotification(type, message) {
+        var isMobileOrTablet = window.innerWidth < 992;
+        var alertHtml = showAlert(type, message);
+        
+        if (isMobileOrTablet) {
+            var modalId = 'notificationModal';
+            var modalHtml = `
+            <div class="modal fade" id="${modalId}" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content" style="border-radius: 8px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                        <div class="modal-body p-4">
+                            ${alertHtml}
+                            <div class="text-right mt-3" style="margin-top: 15px;">
+                                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">OK</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            $('#' + modalId).remove();
+            $('body').append(modalHtml);
+            $('#' + modalId).modal('show');
+        } else {
+            errorsdiv.html(alertHtml);
+        }
+    }
 })

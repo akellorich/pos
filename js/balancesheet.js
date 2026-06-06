@@ -1,26 +1,33 @@
 $(document).ready(function(){
     var startdatefield=$("#startdate"),
-    enddatefield=$("#enddate"),
-    generatebutton=$("#generate"),
-    errordiv=$("#errors"),
-    balancesheet=$("#report")
+        enddatefield=$("#enddate"),
+        generatebutton=$("#generate"),
+        errordiv=$("#errors"),
+        balancesheet=$("#report")
 
-    startdatefield.datepicker({dateFormat: 'dd-M-yy', maxDate: new Date()})
-    enddatefield.datepicker({dateFormat: 'dd-M-yy', maxDate: new Date()})
+    // assign date control datepickers
+    startdatefield.datepicker({
+        dateFormat: 'dd-M-yy',
+        maxDate: new Date()
+    })
+    enddatefield.datepicker({
+        dateFormat: 'dd-M-yy',
+        maxDate: new Date()
+    })
 
     generatebutton.on("click",function(){
         console.log("clicked")
         var errors=""
         if(startdatefield.val()==""){
-            errors="<p class='alert alert-danger'>Please select start date</p>"
+            errors=showAlert("error", "Please select start date");
         }else if(enddatefield.val()==""){
-            errors="<p class='alert alert-danger'>Please select end date</p>"
+            errors=showAlert("error", "Please select end date");
         }else{
             startdate=startdatefield.val()
             enddate=enddatefield.val()
         }
         if(errors==""){
-            errordiv.html("<p class='alert alert-info'>Processing ...</p>")
+            errordiv.html(showAlert("progress", "Processing ..."))
             $.getJSON(
                 "../controllers/reportoperations.php",
                 {
@@ -35,24 +42,24 @@ $(document).ready(function(){
                             classname=data[0].classname,
                             grouptotal=0,
                             classtotal=0
-                            results+="<tr><td colspan='2' class='font-weight-bold text-uppercase'>&nbsp;&nbsp;&nbsp;&nbsp;"+data[0].groupname+"</td<</tr>"
+                        results+="<tr><td colspan='2' class='font-weight-bold text-uppercase'>&nbsp;&nbsp;&nbsp;&nbsp;"+data[0].groupname+"</td></tr>"
                         for (var i=0;i<data.length;i++){
                             if(data[i].classname==classname){
                                 if(data[i].groupname==groupname){
                                     results+="<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+data[i].accountcode +" - "+data[i].accountname+"</td>"
-                                    results+="<td  class='text-right'>"+$.number(+data[i].total,2)+"</td></tr>"
+                                    results+="<td class='text-right'>"+$.number(+data[i].total,2)+"</td></tr>"
                                     grouptotal+=parseFloat(data[i].total)
                                     classtotal+=parseFloat(data[i].total)
                                 }else{
                                     // perform total for group
-                                    results+="<tr class='font-weight-bold'><td>&nbsp;</td><td  class='text-right'>"+$.number(grouptotal,2)+"</td></tr>"
+                                    results+="<tr class='font-weight-bold'><td>&nbsp;</td><td class='text-right'>"+$.number(grouptotal,2)+"</td></tr>"
                                     // add the new group name
-                                     results+="<tr><td colspan='2' class='font-weight-bold text-uppercase'>&nbsp;&nbsp;&nbsp;&nbsp;"+data[i].groupname+"</td<</tr>"
+                                    results+="<tr><td colspan='2' class='font-weight-bold text-uppercase'>&nbsp;&nbsp;&nbsp;&nbsp;"+data[i].groupname+"</td></tr>"
                                     //add the new ledger item
                                     results+="<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+data[i].accountcode +" - "+data[i].accountname+"</td>"
-                                    results+="<td  class='text-right'>"+$.number(+data[i].total,2)+"</td></tr>"
+                                    results+="<td class='text-right'>"+$.number(+data[i].total,2)+"</td></tr>"
                                     // reset total
-                                    grouptotal=0
+                                    grouptotal=parseFloat(data[i].total)
                                     // change group name 
                                     groupname=data[i].groupname
                                     // perform class total
@@ -60,18 +67,18 @@ $(document).ready(function(){
                                 }
                             }else{
                                 // perform group total 
-                                results+="<tr class='font-weight-bold'><td>&nbsp;</td><td  class='text-right'>"+$.number(grouptotal,2)+"</td></tr>"
+                                results+="<tr class='font-weight-bold'><td>&nbsp;</td><td class='text-right'>"+$.number(grouptotal,2)+"</td></tr>"
                                 // add class totals row
-                                results+="<tr class='font-weight-bold text-uppercase'><td>TOTAL "+classname+"</td><td  class='text-right'>"+$.number(classtotal,2)+"</td></tr>"
+                                results+="<tr class='font-weight-bold text-uppercase'><td>TOTAL "+classname+"</td><td class='text-right'>"+$.number(classtotal,2)+"</td></tr>"
                                 // add the new class
                                 results+="<tr><td colspan='2' class='font-weight-bold text-uppercase'>"+data[i].classname+"s</td></tr>"
                                 // add new group
-                                results+="<tr><td colspan='2' class='font-weight-bold text-uppercase'>&nbsp;&nbsp;&nbsp;&nbsp;"+data[i].groupname+"</td<</tr>"
+                                results+="<tr><td colspan='2' class='font-weight-bold text-uppercase'>&nbsp;&nbsp;&nbsp;&nbsp;"+data[i].groupname+"</td></tr>"
                                 // add the new gl item
                                 results+="<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+data[i].accountcode +" - "+data[i].accountname+"</td>"
-                                results+="<td  class='text-right'>"+$.number(+data[i].total,2)+"</td></tr>"
+                                results+="<td class='text-right'>"+$.number(+data[i].total,2)+"</td></tr>"
                                 // reset group total
-                                grouptotal= parseFloat(data[i].total)
+                                grouptotal=parseFloat(data[i].total)
                                 // reset class total
                                 classtotal=parseFloat(data[i].total)
                                 // change group name variable
@@ -81,17 +88,21 @@ $(document).ready(function(){
                             }
                         }
                         // output total the last group in the result set
-                        results+="<tr class='font-weight-bold'><td>&nbsp;</td><td  class='text-right'>"+$.number(grouptotal,2)+"</td></tr>"
+                        results+="<tr class='font-weight-bold'><td>&nbsp;</td><td class='text-right'>"+$.number(grouptotal,2)+"</td></tr>"
                         // output total for the last class in the result set
-                        results+="<tr class='font-weight-bold text-uppercase'><td>TOTAL "+classname+"</td><td  class='text-right'>"+$.number(classtotal,2)+"</td></tr>"
+                        results+="<tr class='font-weight-bold text-uppercase'><td>TOTAL "+classname+"</td><td class='text-right'>"+$.number(classtotal,2)+"</td></tr>"
                         console.log(results)
                         balancesheet.html(results)
                         errordiv.html("")
                     }else{
-                        balancesheet.html("<p class='alert alert-info'>Sorry. No Records matching filter criteria</p>")
+                        var results=showAlert("info", "Sorry. No Records matching filter criteria");
+                        balancesheet.html(results)
+                        errordiv.html("")
                     }
                 }
-            )
+            ).fail(function(jqXHR, textStatus, errorThrown) {
+                errordiv.html(showAlert("error", "Sorry, an error occurred: " + textStatus));
+            })
         }else{
             errordiv.html(errors)
         }

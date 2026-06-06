@@ -211,7 +211,7 @@ $(document).ready(function(){
                 function(data){
                     var results=''
                     for(var i=0;i<data.length;i++){
-                        results+="<input type='checkbox' class='"+data[i].id+" useroutlettoadd' id='"+data[i].id+"'>&nbsp;"+data[i].posname+"<br/>"
+                        results+="<input type='checkbox' class='"+data[i].posid+" useroutlettoadd' id='"+data[i].posid+"'>&nbsp;"+data[i].posname+"<br/>"
                     }
                     nonuseroutlets.html(results)
                 }
@@ -898,8 +898,8 @@ $(document).ready(function(){
                 if(data.length>0){
                     var results="<table class='table table-sm'>"
                     for(var i=0;i<data.length;i++){
-                        results+="<tr><td id='"+data[i].id+"'>"+data[i].posname+"</td>"
-                        results+="<td class='text-align-right'><a href='javascript void(0)' class='deleteuseroutlet text-danger' data-id="+data[i].id+"><span><i class='fas fa-trash-alt fa-lg'></i></span></a></td></tr>"
+                        results+="<tr><td id='"+data[i].useroutletid+"'>"+data[i].posname+"</td>"
+                        results+="<td class='text-align-right'><a href='javascript void(0)' class='deleteuseroutlet text-danger' data-id="+data[i].useroutletid+"><span><i class='fas fa-trash-alt fa-lg'></i></span></a></td></tr>"
                     }
                     results+="</table>"
                 }else{

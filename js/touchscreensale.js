@@ -39,6 +39,8 @@ $(document).ready(() => {
         lponofield = $("#reference")
 
     let changeprices = false
+    window.allowpricechange = false
+    window.allownegativesalesglobally = false
 
     getactivesession()
     getcategories()
@@ -156,6 +158,13 @@ $(document).ready(() => {
     getInstitutionDetails().done((data) => {
         // console.log(data)
         printreceiptfield.prop("checked", data.printreceipt == 1 ? true : false)
+        window.allowpricechange = data.allowpricechange == 1;
+        window.allownegativesalesglobally = data.allownegativesalesglobally == 1;
+        
+        const isTouchscreenV2 = window.location.pathname.includes('touchscreensale_v2');
+        if (isTouchscreenV2 && window.allowpricechange) {
+            changeprices = true;
+        }
     })
 
     // get customer categories
@@ -169,7 +178,7 @@ $(document).ready(() => {
                 var results = ''
                 for (var i = 0; i < data.length; i++) {
                     var selected = data[i].default == 1 ? "selected" : ""
-                    results += `<option value='${data[i].id}' ${selected}>${data[i].description}</option>`
+                    results += `<option value='${data[i].id}' ${selected}>${data[i].categoryname || data[i].description}</option>`
                 }
                 customercategorylist.html(results)
             }
@@ -185,7 +194,7 @@ $(document).ready(() => {
     getproductcategories()
 
     function renderProductCard(product) {
-        let stock = product.available_stock || 0;
+        let stock = parseFloat(product.available_stock) || 0;
         let stockDisplay = stock;
         let stockClass = "";
 
@@ -218,14 +227,28 @@ $(document).ready(() => {
         )
     }
 
-    categories.on("click", "button", function () {
+    categories.on("click", "button", function (e) {
         const categoryid = $(this).attr("data-id")
+        const posid = poslist.val()
+
+        if (posid == "") {
+            products.html("")
+            categories.find("button").removeClass("active")
+            if (e.originalEvent) {
+                errordiv.html(showAlert("info", "Please select outlet first"))
+                poslist.focus()
+            }
+            return
+        }
+
         categories.find("button").removeClass("active")
         $(this).addClass("active")
 
-        const params = categoryid === 'all'
-            ? { getproductlist: true } // Assuming this flag exists for all products
-            : { getproductbycategory: true, categoryid: categoryid };
+        const params = {
+            getproductbycategory: true,
+            categoryid: categoryid === 'all' ? 0 : categoryid,
+            posid: posid
+        }
 
         $.getJSON(
             "../controllers/productoperations.php",
@@ -238,6 +261,15 @@ $(document).ready(() => {
                 products.html(results)
             }
         )
+    })
+
+    poslist.on("change", function () {
+        const activeCategory = categories.find("button.active");
+        if (activeCategory.length > 0) {
+            activeCategory.trigger("click");
+        } else {
+            categories.find('button[data-id="all"]').trigger('click');
+        }
     })
 
     // get product details
@@ -275,10 +307,13 @@ $(document).ready(() => {
                 if (Object.keys(data).length === 0) {
                     errors = "No product with similar code found"
                     errordiv.html(showAlert("info", errors))
+                } else if (data[0].disallowsale == 1) {
+                    errors = `Selling is disallowed for <strong>${data[0].itemname}</strong>.`
+                    errordiv.html(showAlert("danger", errors))
                 } else {
                     errordiv.html("")
                     // check if there are quantities in stock for the item
-                    if (Number(data[0].itembalance) <= 0 && Number(data[0].allownegativesales) == 0) {
+                    if (Number(data[0].itembalance) <= 0 && Number(data[0].allownegativesales) == 0 && !window.allownegativesalesglobally) {
                         errors = `<strong>${data[0].itemname}</strong> has <strong>${data[0].itembalance}</strong> quantities in stock hence can't be sold.`
                         errordiv.html(showAlert("danger", errors))
                     } else {
@@ -286,35 +321,77 @@ $(document).ready(() => {
                             randomno = randomId()
                         let discountValue = 0;
                         let discountLabel = `Discount: 0.00`;
-                        productdetails += `<tr class='clickable-row' data-id='${randomno}' data-productid='${data[0].productid}' data-serializable='${data[0].serializable}' data-serial-nos='' data-allownegativesales=${data[0].allownegativesales}><td>${data[0].itemcode}</td>`
-                        productdetails += `<td class='cart-item-info'>
-                            <div class='item-name'>${data[0].itemname}</div>
-                            <div class='item-barcode'>${data[0].itemcode}</div>
-                            <div class='item-discount'>${discountLabel}</div>
-                        </td>`
-                        productdetails += `<td class='description'></td>`
-                        productdetails += `<td class='price'>${data[0].sellingprice}</td>`
-                        productdetails += `<td class='discount-val'>${discountValue}</td>`
-                        productdetails += `<td >${sellingprice}</td>`
-                        productdetails += `<td >${data[0].itembalance}</td>`
-                        productdetails += `<td class='quantity'>
-                            <div class='qty-pill'>
-                                <button class='qty-btn btn-minus' data-id='${randomno}'>−</button>
-                                <span class='qty-val linetotal-qty'>1</span>
-                                <button class='qty-btn btn-plus' data-id='${randomno}'>+</button>
-                            </div>
-                        </td>`
-                        productdetails += data[0].serializable == 1 ? `<td><button class='btn btn-xs btn-primary addserials' data-id='${randomno}' data-name='${data[0].itemname}'><span><i class='fas fa-plus-circle fa-sm'></i> Add serials numbers</span></button></td>` : `<td>&nbsp</td>`
-                        productdetails += `<td class='linetotal'>${$.number(sellingprice, 2)}</td>`
-                        productdetails += `<td class='cart-item-delete'><a href='javascript:void(0)' class='deletedata' data-id='${randomId()}'><i class='material-symbols-outlined'>close</i></a></td></tr>`
+                        const baseUom = data[0].unitofmeasure || "Piece";
+                        $.getJSON(
+                            "../controllers/productoperations.php",
+                            {
+                                getproductsplitunits: true,
+                                productid: data[0].productid
+                            },
+                            function (splitUnits) {
+                                let uomHtml = '';
+                                if (splitUnits && splitUnits.length > 0) {
+                                    uomHtml = `<select class='uom-select form-control input-sm' style='padding: 2px 6px; height: 28px; font-size: 11px; border-radius: 6px; width: 100%; border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; outline: none; background: white;'>`;
+                                    uomHtml += `<option value='${baseUom}' data-price='${data[0].sellingprice}'>${baseUom} (KES ${data[0].sellingprice})</option>`;
+                                    splitUnits.forEach(function (unit) {
+                                        uomHtml += `<option value='${unit.unitname}' data-price='${unit.unitprice}'>${unit.unitname} (KES ${unit.unitprice})</option>`;
+                                    });
+                                    uomHtml += `</select>`;
+                                } else {
+                                    uomHtml = `<span class='badge badge-default' style='font-size: 11px; font-weight: 600; padding: 4px 8px; color: #475569; background: #f1f5f9; border-radius: 6px;'>${baseUom}</span>`;
+                                }
 
-                        $(productdetails).appendTo(salesitemsdetails.find("tbody"))
-                        // display overall total
-                        let total = getItemsTotal()
-                        overalltotal.html($.number(total, 2))
-                        totalamountpayable.html($.number(total, 2))
-                        // compute totals and balance
-                        computeTotalAmountPaid()
+                                const isTouchscreenV2 = window.location.pathname.includes('touchscreensale_v2');
+                                const isSoldByValue = isTouchscreenV2 && data[0].saleby === 'value';
+
+                                let rowClass = 'clickable-row';
+                                let priceHtml = '';
+                                let qtyHtml = '';
+
+                                if (isSoldByValue) {
+                                    rowClass += ' sold-by-value';
+                                    priceHtml = `<div class='qty-pill price-pill'>
+                                        <button class='qty-btn btn-minus' data-id='${randomno}'>−</button>
+                                        <span class='qty-val-price price-val'>${sellingprice}</span>
+                                        <button class='qty-btn btn-plus' data-id='${randomno}'>+</button>
+                                    </div>`;
+                                    qtyHtml = `<span class='qty-val linetotal-qty'>1.00</span>`;
+                                } else {
+                                    rowClass += ' sold-by-quantity';
+                                    priceHtml = data[0].sellingprice;
+                                    qtyHtml = `<div class='qty-pill'>
+                                        <button class='qty-btn btn-minus' data-id='${randomno}'>−</button>
+                                        <span class='qty-val linetotal-qty'>1</span>
+                                        <button class='qty-btn btn-plus' data-id='${randomno}'>+</button>
+                                    </div>`;
+                                }
+
+                                let productdetails = '';
+                                productdetails += `<tr class='${rowClass}' data-id='${randomno}' data-productid='${data[0].productid}' data-serializable='${data[0].serializable}' data-serial-nos='' data-allownegativesales=${data[0].allownegativesales} data-buyingprice='${data[0].buyingprice || 0}' data-saleby='${data[0].saleby || "quantity"}' data-baseprice='${data[0].sellingprice}'><td>${data[0].itemcode}</td>`
+                                productdetails += `<td class='cart-item-info'>
+                                    <div class='item-name'>${data[0].itemname}</div>
+                                    <div class='item-barcode'>${data[0].itemcode}</div>
+                                    <div class='item-discount'>${discountLabel}</div>
+                                </td>`
+                                productdetails += `<td class='description'></td>`
+                                productdetails += `<td class='price'>${priceHtml}</td>`
+                                productdetails += `<td class='discount-val'>${discountValue}</td>`
+                                productdetails += `<td>${sellingprice}</td>`
+                                productdetails += `<td>${data[0].itembalance}</td>`
+                                productdetails += `<td class='quantity'>${qtyHtml}</td>`
+                                productdetails += data[0].serializable == 1 ? `<td><button class='btn btn-xs btn-primary addserials' data-id='${randomno}' data-name='${data[0].itemname}'><span><i class='fas fa-plus-circle fa-sm'></i> Add serials numbers</span></button></td>` : `<td>&nbsp</td>`
+                                productdetails += `<td class='linetotal'>${$.number(sellingprice, 2)}</td>`
+                                productdetails += `<td class='cart-item-delete'><a href='javascript:void(0)' class='deletedata' data-id='${randomId()}'><i class='material-symbols-outlined'>close</i></a></td>`
+                                productdetails += `<td class='cart-item-uom'>${uomHtml}</td></tr>`
+
+                                $(productdetails).appendTo(salesitemsdetails.find("tbody"))
+                                validateRowBuyingPrice(salesitemsdetails.find("tbody tr").last())
+                                let total = getItemsTotal()
+                                overalltotal.html($.number(total, 2))
+                                totalamountpayable.html($.number(total, 2))
+                                computeTotalAmountPaid()
+                            }
+                        );
                     }
                 }
             }
@@ -327,6 +404,22 @@ $(document).ready(() => {
         e.stopPropagation();
         const $btn = $(this);
         const $row = $btn.closest("tr");
+        const isSoldByValue = $row.attr("data-saleby") === "value";
+
+        if (isSoldByValue) {
+            const $priceSpan = $row.find(".price-val");
+            let currentPrice = parseFloat($priceSpan.text()) || 0;
+            if ($btn.hasClass("btn-plus")) {
+                currentPrice++;
+            } else {
+                if (currentPrice > 1) {
+                    currentPrice--;
+                }
+            }
+            updateValueSoldProduct($row, currentPrice);
+            return;
+        }
+
         const $qtySpan = $row.find(".qty-val");
         const $totalTd = $row.find(".linetotal");
         const price = parseFloat($row.find(".price").text());
@@ -336,7 +429,7 @@ $(document).ready(() => {
         let currentQty = parseInt($qtySpan.text());
 
         if ($btn.hasClass("btn-plus")) {
-            if (currentQty < stock || allowNegative) {
+            if (currentQty < stock || allowNegative || window.allownegativesalesglobally) {
                 currentQty++;
             } else {
                 errordiv.html(showAlert("warning", "Insufficient stock available"));
@@ -352,6 +445,41 @@ $(document).ready(() => {
         $totalTd.text($.number(newTotal, 2));
 
         // Update overall totals
+        const total = getItemsTotal();
+        overalltotal.html($.number(total, 2));
+        totalamountpayable.html($.number(total, 2));
+    });
+
+    salesitemsdetails.on("change", ".uom-select", function () {
+        const $select = $(this);
+        const $row = $select.closest("tr");
+        const $totalTd = $row.find(".linetotal");
+        const selectedOption = $select.find("option:selected");
+        const newPrice = parseFloat(selectedOption.attr("data-price"));
+
+        const isSoldByValue = $row.attr("data-saleby") === "value";
+        if (isSoldByValue) {
+            $row.attr("data-baseprice", newPrice);
+            $row.find("td").eq(5).text(newPrice);
+            
+            // Set value inside price pill to newPrice
+            $row.find(".price-val").text(newPrice.toFixed(2));
+            
+            // Recalculate quantity: value / baseprice = 1.00
+            $row.find(".linetotal-qty").text("1.00");
+            $totalTd.text($.number(newPrice, 2));
+        } else {
+            const $qtySpan = $row.find(".qty-val");
+            $row.find(".price").text(newPrice);
+            $row.find("td").eq(5).text(newPrice);
+
+            const currentQty = parseInt($qtySpan.text());
+            const newTotal = currentQty * newPrice;
+            $totalTd.text($.number(newTotal, 2));
+        }
+
+        validateRowBuyingPrice($row);
+
         const total = getItemsTotal();
         overalltotal.html($.number(total, 2));
         totalamountpayable.html($.number(total, 2));
@@ -389,11 +517,12 @@ $(document).ready(() => {
 
     salesitemsdetails.on("click", ".deletedata", function (e) {
         e.preventDefault();
+        var parent = $(this).closest("tr");
         var id = $(this).attr('data-id');
         var itemname = parent.find(".item-name").text();
         bootbox.dialog({
             // title: "Confirm Item Removal!",
-            message: "Are you sure you want to remove <span style='font-weight: 600;'>" + itemname + "</span> from the list?",
+            message: "<div style='padding-top: 30px; padding-bottom: 5px; font-size: 15px;'>Are you sure you want to remove <span style='font-weight: 600;'>" + itemname + "</span> from the list?</div>",
             buttons: {
                 success: {
                     label: "No, Keep",
@@ -529,30 +658,38 @@ $(document).ready(() => {
 
         let errors = "", TableData = []
         // process all the items 
+        var hasBelowBuyingPrice = false
 
         salesitemsdetails.find("tbody tr").each(function () {
             const $this = $(this),
-                itemcode = $.trim($this.find("td").eq(0).text()),
+                itemcode = $this.attr("data-productid"),
                 description = $.trim($this.find(".item-name").text()),
                 unitprice = $.trim($this.find("td").eq(5).text()),
                 discount = $.trim($this.find("td").eq(4).text()),
                 quantity = $.trim($this.find(".qty-val").text()),
                 serialno = ""
 
+            if (!validateRowBuyingPrice($this)) {
+                hasBelowBuyingPrice = true;
+            }
+
+            const uomSelect = $this.find(".uom-select");
+            const uom = uomSelect.length > 0 ? uomSelect.val() : $.trim($this.find(".cart-item-uom").text());
+
             if ($this.attr("data-serializable") == 1) {
                 if ($this.attr("data-serial-nos") != "") {
                     itemslist = $this.attr("data-serial-nos").split(",")
                     for (var i = 0; i < itemslist.length; i++) {
                         serialno = itemslist[i]
-                        TableData.push({ "itemcode": itemcode, "unitprice": unitprice, "discount": discount, "quantity": quantity, "serialno": serialno, "description": description })
+                        TableData.push({ "itemcode": itemcode, "unitprice": unitprice, "discount": discount, "quantity": quantity, "serialno": serialno, "description": description, "uom": uom })
                     }
-                    $this.removeClass("text-danger")
+                    if (!hasBelowBuyingPrice) $this.removeClass("text-danger")
                 } else {
                     $this.addClass("text-danger")
                     missingitems = true
                 }
             } else {
-                TableData.push({ "itemcode": itemcode, "unitprice": unitprice, "discount": discount, "quantity": quantity, "serialno": "", "description": description })
+                TableData.push({ "itemcode": itemcode, "unitprice": unitprice, "discount": discount, "quantity": quantity, "serialno": "", "description": description, "uom": uom })
             }
         })
 
@@ -564,6 +701,8 @@ $(document).ready(() => {
             errors = "Please select a <strong>Customer</strong>"
         } else if (transactiondate == "") {
             errors = "Please select <strong>Transaction Date</strong>"
+        } else if (hasBelowBuyingPrice) {
+            errors = "Some products are priced <strong>below their buying price</strong>. Please correct highlighted entries."
         }
 
         // check whether they are items added on the list
@@ -639,34 +778,36 @@ $(document).ready(() => {
                 function (data) {
                     // generate receipt
                     try {
-                        if (isJSON(data)) {
-                            let response = JSON.parse(data);
-                            if (response.status == "success" || response.receiptno) {
-                                let str = response.receiptno;
-                                let printreceipt = response.printreceipt;
+                        let response;
+                        if (typeof data === 'object') {
+                            response = data;
+                        } else if (isJSON(data)) {
+                            response = JSON.parse(data);
+                        }
 
-                                if (printreceipt == 1) {
-                                    printReceipt(str)
-                                }
+                        if (response && (response.status == "success" || response.receiptno)) {
+                            let str = response.receiptno;
+                            let printreceipt = response.printreceipt;
 
-                                errordiv.html("")
-                                paymenterror.html("")
-                                clearForm()
-                                errors = "Sale finalized successfully! <br/> Receipt Number: <strong>" + str + "</strong>"
-                                errordiv.html(showAlert("success", errors))
-                                itemcodefield.focus()
-                                $("#itemcode").focus()
-                                // hide payment details
-                                paymentsmodal.modal("hide")
-                            } else {
-                                paymenterror.html(showAlert("warning", data.toString()))
-                            }
+                             if (printreceipt == 1 || printreceiptfield.prop("checked") == true) {
+                                 printReceipt(str)
+                             }
+
+                            errordiv.html("")
+                            paymenterror.html("")
+                            clearForm()
+                            errors = "Sale finalized successfully! <br/> Receipt Number: <strong>" + str + "</strong>"
+                            errordiv.html(showAlert("success", errors))
+                            itemcodefield.focus()
+                            $("#itemcode").focus()
+                            // hide payment details
+                            paymentsmodal.modal("hide")
                         } else {
-                            paymenterror.html(showAlert("danger", data.toString()))
+                            paymenterror.html(showAlert("warning", typeof data === 'object' ? JSON.stringify(data) : data.toString()))
                         }
 
                     } catch (e) {
-                        paymenterror.html(showAlert("warning", data.toString()))
+                        paymenterror.html(showAlert("warning", typeof data === 'object' ? JSON.stringify(data) : data.toString()))
                     }
                     // re-enable save button
                     savebutton.prop("disabled", false)
@@ -939,13 +1080,19 @@ addpayments.on("click", function () {
         tbody = $("#salesitemsdetails tbody"),
         errors = "",
         // process all the items 
-        missingitems = false
+        missingitems = false,
+        hasBelowBuyingPrice = false
+
     salesitemsdetails.find("tbody tr").each(function () {
         var $this = $(this)
 
+        if (!validateRowBuyingPrice($this)) {
+            hasBelowBuyingPrice = true;
+        }
+
         if ($this.attr("data-serializable") == 1) {
             if ($this.attr("data-serial-nos") != "") {
-                $this.removeClass("text-danger")
+                if (!hasBelowBuyingPrice) $this.removeClass("text-danger")
             } else {
                 $this.addClass("text-danger")
                 missingitems = true
@@ -959,6 +1106,8 @@ addpayments.on("click", function () {
     }
     else if (customerid == "") {
         errors = "Please select a <strong>Customer</strong>"
+    } else if (hasBelowBuyingPrice) {
+        errors = "Some products are priced <strong>below their buying price</strong>. Please correct highlighted entries."
     }
 
     // check whether they are items added on the list
@@ -1294,35 +1443,7 @@ addmpesatransactionbutton.on("click", function () {
     mpesaconfirmationmodal.modal("hide")
 })
 
-// listen to unitp price amount column
-salesitemsdetails.on("click", ".price", function (e) {
-    // check if edit is allowed
-    //console.log(changeprices)
-    if (changeprices) {
-        // console.log($(this).html())
-        var parent = $(this).parent("tr");
-        bootbox.prompt({
-            title: "Enter New Price",
-            size: 'small',
-            message: "Enter new Price",
-            inputType: 'number',
-            callback: function (result) {
-                if (parseFloat(result) > 0) {
-                    // quantity is on the 5th col
-                    var quantity = parent.find("td").eq(7).text(),
-                        linetotal = parseFloat(result * quantity)
-                    // unitprice is coulmn number 2 and extended price is col 4
-                    parent.find("td").eq(3).text(result)
-                    parent.find("td").eq(5).text(result)
-                    parent.find("td").eq(8).text(linetotal)
-                    overalltotal.html($.number(getItemsTotal(), 2))
-                    totalamountpayable.html($.number(getItemsTotal(), 2))
-                    computeTotalAmountPaid()
-                }
-            }
-        });
-    }
-})
+
 
 // hold a sale
 holdsale.on("click", function () {
@@ -1361,16 +1482,19 @@ holdsale.on("click", function () {
                 quantity = $.trim($this.find(".qty-val").text()),
                 serialno = ""
 
+            const uomSelect = $this.find(".uom-select");
+            const uom = uomSelect.length > 0 ? uomSelect.val() : $.trim($this.find(".cart-item-uom").text());
+
             if ($this.attr("data-serializable") == 1) {
                 if ($this.attr("data-serial-nos") != "") {
                     itemslist = $this.attr("data-serial-nos").split(",")
                     for (var i = 0; i < itemslist.length; i++) {
                         serialno = itemslist[i]
-                        TableData.push({ "itemcode": itemcode, "description": description, "unitprice": unitprice, "discount": discount, "quantity": quantity, "serialno": serialno })
+                        TableData.push({ "itemcode": itemcode, "description": description, "unitprice": unitprice, "discount": discount, "quantity": quantity, "serialno": serialno, "uom": uom })
                     }
                 }
             } else {
-                TableData.push({ "itemcode": itemcode, "description": description, "unitprice": unitprice, "discount": discount, "quantity": quantity, "serialno": "" })
+                TableData.push({ "itemcode": itemcode, "description": description, "unitprice": unitprice, "discount": discount, "quantity": quantity, "serialno": "", "uom": uom })
             }
         })
         // check that at least an item has been added to the list
@@ -1637,6 +1761,16 @@ salesitemsdetails.on("click", ".qty-val", function (e) {
     const $qtyVal = $(this),
         parent = $qtyVal.closest("tr"),
         allownegativesales = parent.data("allownegativesales")
+
+    const isSoldByValue = parent.attr("data-saleby") === "value";
+    if (isSoldByValue) {
+        const $priceVal = parent.find(".price-val");
+        $priceVal.attr("contenteditable", "true");
+        $priceVal.focus();
+        document.execCommand('selectAll', false, null);
+        return;
+    }
+
     bootbox.prompt({
         title: "Enter New Quantity",
         size: 'small',
@@ -1647,7 +1781,7 @@ salesitemsdetails.on("click", ".qty-val", function (e) {
                 const unitprice = parent.find("td").eq(5).text(),
                     linetotal = Number(result * unitprice),
                     stockquantity = Number(parent.find("td").eq(6).text())
-                if (stockquantity >= Number(result) || Number(allownegativesales) == 1) {
+                if (stockquantity >= Number(result) || Number(allownegativesales) == 1 || window.allownegativesalesglobally) {
                     $qtyVal.text(result)
                     parent.find("td").eq(9).text(linetotal)
                     overalltotal.html($.number(getItemsTotal(), 2))
@@ -1662,35 +1796,151 @@ salesitemsdetails.on("click", ".qty-val", function (e) {
     })
 })
 
-// listen to unitp price amount column
-salesitemsdetails.on("click", ".price", function (e) {
-    // check if edit is allowed
+// listen to price click for sold by value items
+salesitemsdetails.on("click", ".price-val", function (e) {
     errordiv.html("")
-    if (changeprices) {
-        const parent = $(this).parent("tr");
-        bootbox.prompt({
-            title: "Enter New Price",
-            size: 'small',
-            message: "Enter new Price",
-            inputType: 'number',
-            callback: function (result) {
-                if (parseFloat(result) > 0) {
-                    // quantity is on the 5th col
-                    const quantity = parent.find("td").eq(7).text(),
-                        linetotal = parseFloat(result * quantity)
-                    // unitprice is coulmn number 2 and extended price is col 4
-                    parent.find("td").eq(3).text(result)
-                    parent.find("td").eq(5).text(result)
-                    parent.find("td").eq(8).text(linetotal)
-                    overalltotal.html($.number(getItemsTotal(), 2))
-                    totalamountpayable.html($.number(getItemsTotal(), 2))
-                    computeTotalAmountPaid()
-                    $('.bootbox').modal('hide');
-                }
-            }
-        })
+    const $cell = $(this);
+    if ($cell.attr("contenteditable") !== "true") {
+        $cell.attr("contenteditable", "true");
+        $cell.focus();
+        
+        // Select all text in contenteditable cell
+        document.execCommand('selectAll', false, null);
     }
-})
+});
+
+// listen for contenteditable editing events on .price-val (sold by value)
+salesitemsdetails.on("focusout keydown input", ".price-val", function (e) {
+    const $cell = $(this);
+    const $row = $cell.closest("tr");
+    
+    if (e.type === "keydown") {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            $cell.blur();
+        }
+        return;
+    }
+    
+    // Extract the entered value/price
+    let rawVal = $cell.text().replace(/,/g, '').trim();
+    let newPrice = parseFloat(rawVal) || 0;
+    
+    const basePrice = parseFloat($row.attr("data-baseprice")) || 0;
+    if (basePrice <= 0) return;
+    
+    // Calculate new quantity: newPrice / basePrice
+    const newQty = newPrice / basePrice;
+    
+    // Update the quantity display
+    $row.find(".linetotal-qty").text(newQty.toFixed(2));
+    
+    // Update the linetotal (index 9)
+    $row.find(".linetotal").text($.number(newPrice, 2));
+    
+    // Validate buying price floor and highlight if below
+    validateRowBuyingPrice($row);
+    
+    // Update overall cart totals
+    const total = getItemsTotal();
+    overalltotal.html($.number(total, 2));
+    totalamountpayable.html($.number(total, 2));
+    computeTotalAmountPaid();
+
+    // If the active element is NOT this cell anymore (on focusout), format the price value nicely
+    if (e.type === "focusout") {
+        $cell.removeAttr("contenteditable");
+        $cell.text(newPrice.toFixed(2));
+    }
+});
+
+// listen to unit price amount or line total column clicks
+salesitemsdetails.on("click", ".price, .linetotal", function (e) {
+    errordiv.html("")
+    const isTouchscreenV2 = window.location.pathname.includes('touchscreensale_v2');
+    
+    console.log("--- Price Click Triggered ---");
+    console.log("isTouchscreenV2:", isTouchscreenV2);
+    console.log("changeprices flag:", changeprices);
+    console.log("window.allowpricechange:", window.allowpricechange);
+    console.log("window.allow_price_change:", window.allow_price_change);
+    console.log("Selected Row for editing:", $(this).closest("tr"));
+
+    const $cell = $(this);
+    const $row = $cell.closest("tr");
+    const isSoldByValue = $row.attr("data-saleby") === "value";
+    if (isSoldByValue) {
+        return;
+    }
+
+    if (changeprices || (isTouchscreenV2 && window.allowpricechange) || (isTouchscreenV2 && window.allow_price_change)) {
+        if ($cell.attr("contenteditable") !== "true") {
+            const currentUnitPrice = parseFloat($row.find("td").eq(5).text()) || 0;
+            
+            // If they click on .linetotal, show the raw unit price inside it temporarily for editing
+            if ($cell.hasClass("linetotal")) {
+                $cell.text(currentUnitPrice);
+            }
+            
+            $cell.attr("contenteditable", "true");
+            $cell.focus();
+            
+            // Select all text in contenteditable cell
+            document.execCommand('selectAll', false, null);
+        }
+    }
+});
+
+// listen for contenteditable editing events on .price and .linetotal columns
+salesitemsdetails.on("focusout keydown input", ".price, .linetotal", function (e) {
+    const $cell = $(this);
+    const $row = $cell.closest("tr");
+    const isSoldByValue = $row.attr("data-saleby") === "value";
+    if (isSoldByValue) {
+        return;
+    }
+    
+    if (e.type === "keydown") {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            $cell.blur();
+        }
+        return;
+    }
+    
+    // Extract the entered price
+    let rawVal = $cell.text().replace(/,/g, '').trim();
+    let newUnitPrice = parseFloat(rawVal) || 0;
+    
+    // Update unitprice column (td index 5) and price column (td index 3)
+    $row.find("td").eq(3).text(newUnitPrice);
+    $row.find("td").eq(5).text(newUnitPrice);
+    
+    // Recalculate extended total (linetotal)
+    const quantity = parseFloat($row.find(".qty-val").text()) || 0;
+    const linetotal = newUnitPrice * quantity;
+    
+    // If the active element is NOT this cell anymore (on focusout), format the linetotal back nicely
+    if (e.type === "focusout") {
+        $cell.removeAttr("contenteditable");
+        $row.find("td").eq(3).text(newUnitPrice.toFixed(2));
+        $row.find("td").eq(5).text(newUnitPrice.toFixed(2));
+        $row.find(".linetotal").text($.number(linetotal, 2));
+    } else {
+        // During input editing, update the other cell if we are editing .price
+        if ($cell.hasClass("price")) {
+            $row.find(".linetotal").text($.number(linetotal, 2));
+        }
+    }
+    
+    // Validate buying price floor and highlight if below
+    validateRowBuyingPrice($row);
+    
+    // Update overall cart totals
+    overalltotal.html($.number(getItemsTotal(), 2));
+    totalamountpayable.html($.number(getItemsTotal(), 2));
+    computeTotalAmountPaid();
+});
 
 const touchscreendisplay = $("#touchscreendisplay")
 const touchscreenui = $("#touchscreenui")
@@ -1829,27 +2079,113 @@ function getsystemprinters() {
 saveprinterconfigbutton.on("click", function () {
     const printersettings = [],
         connection = printerconnectioncontrol.val(),
-        printername = printernamecontrol.val()
+        selectedPrinterName = printernamecontrol.val()
 
     let errors = ""
 
     if (connection == "" || connection == undefined) {
         errors = "Please select printer connection mode"
         printerconnectioncontrol.focus()
-    } else if (printername == "" || printername == undefined) {
+    } else if (selectedPrinterName == "" || selectedPrinterName == undefined) {
         errors = "Please select printer name"
         printernamecontrol.focus()
     }
 
     if (errors == "") {
         printernotifications.html(showAlert("processing", "Processing. Please wait ...", 1))
-        printersettings.push({ "connection": connection, "name": printername })
+        printername = selectedPrinterName; // Update global variable in functions.js in memory
+        printersettings.push({ "connection": connection, "name": selectedPrinterName })
         saveSettings(deviceID, printersettings)
         printernotifications.html(showAlert("success", `Printer configuration saved successfully`))
+        testprinterbutton.prop("disabled", false)
     } else {
         printernotifications.html(showAlert("info", errors))
     }
 })
+
+printernamecontrol.on("change", function() {
+    if ($(this).val()) {
+        testprinterbutton.prop("disabled", false);
+    } else {
+        testprinterbutton.prop("disabled", true);
+    }
+});
+
+testprinterbutton.on("click", function () {
+    const selectedPrinter = printernamecontrol.val();
+    if (!selectedPrinter) {
+        printernotifications.html(showAlert("danger", "Please select a printer to test first", 1));
+        return;
+    }
+    
+    printernotifications.html(showAlert("processing", "Sending test page to printer...", 1));
+    
+    connecttoprinter().then(async () => {
+        try {
+            // Find the selected printer and create its config dynamically
+            const printer = await qz.printers.find(selectedPrinter);
+            const testConfig = qz.configs.create(printer);
+            
+            // Build the test print data using the exact same ESC/POS encoder principle
+            const encoder = new ESCPOSEncoder();
+            const data = encoder
+                .initialize()
+                .align('center')
+                .feed(1)
+                .text("================================")
+                .feed()
+                .text("      PRINTER TEST PAGE         ")
+                .feed()
+                .text("================================")
+                .feed()
+                .align('left')
+                .text("Printer Connection: Successful")
+                .feed()
+                .text("Selected Printer: " + selectedPrinter)
+                .feed()
+                .text("Timestamp: " + new Date().toLocaleString())
+                .feed()
+                .line("-")
+                .feed()
+                .text("UPPERCASE LETTERS:")
+                .feed()
+                .text("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+                .feed(1)
+                .text("lowercase letters:")
+                .feed()
+                .text("abcdefghijklmnopqrstuvwxyz")
+                .feed(1)
+                .text("NUMBERS:")
+                .feed()
+                .text("0123456789")
+                .feed(1)
+                .text("SPECIAL CHARACTERS:")
+                .feed()
+                .text("!@#$%^&*()_+-=[]{}|;':\",./<>?")
+                .feed(1)
+                .line("-")
+                .feed()
+                .align('center')
+                .text("SAMPLE BARCODE:")
+                .feed()
+                .barcode("TEST123456")
+                .feed(2)
+                .text("Thank you for using our POS!")
+                .feed(2)
+                .cut()
+                .encode();
+                
+            await qz.print(testConfig, data);
+            printernotifications.html(showAlert("success", "Test print sent successfully!", 1));
+        } catch (err) {
+            console.error("Test print failed:", err);
+            printernotifications.html(showAlert("danger", "Test print failed: " + (err.message || err), 1));
+        }
+    }).catch(err => {
+        console.error("Failed to connect to printer:", err);
+        printernotifications.html(showAlert("danger", "Failed to connect to printer: " + (err.message || err), 1));
+    });
+});
 
 async function getReceiptData(url, receiptno) {
     const operations = [
@@ -1880,11 +2216,33 @@ function printReceipt(receiptno) {
                         vatanalysis = [],
                         receiptfooter = (header.receiptfooter).split("<br>")
 
+                    // Helper to format: dd-mmm-yyyy hh:mm AM/PM (e.g. 25-May-2026 02:13 PM)
+                    const formatReceiptDateTime = (dateStr) => {
+                        if (!dateStr) return '';
+                        const parts = dateStr.split(' ');
+                        if (parts.length >= 2) {
+                            const datePart = parts[0];
+                            const timeParts = parts[1].split(':');
+                            if (timeParts.length >= 2) {
+                                let hours = parseInt(timeParts[0], 10);
+                                const minutes = timeParts[1];
+                                const ampm = hours >= 12 ? 'PM' : 'AM';
+                                hours = hours % 12;
+                                hours = hours ? hours : 12;
+                                return `${datePart} ${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+                            }
+                        }
+                        return dateStr;
+                    };
+
+                    const formattedDate = formatReceiptDateTime(receiptheader.receiptdate);
+
                     let receipttotal = 0
                     // populate sold items
                     receiptDetails.forEach((item, i) => {
+                        const uomStr = item.uom ? ` ${item.uom}` : '';
                         solditems.push([`${i + 1}. ${item.itemcode}`, ($.number(item.quantity * (item.unitprice - item.discount))).toString()])
-                        solditems.push([item.itemname, `${item.quantity} x ${$.number(item.unitprice - item.discount).toString()}`])
+                        solditems.push([item.itemname, `${item.quantity}${uomStr} x ${$.number(item.unitprice - item.discount).toString()}`])
                         receipttotal += item.quantity * (item.unitprice - item.discount)
                     })
 
@@ -1893,7 +2251,8 @@ function printReceipt(receiptno) {
                     })
 
                     vatAnalysis.forEach((vat) => {
-                        vatanalysis.push([vat.abbreviation, vat.taxrate, $.number(vat.vat)])
+                        const taxRateLabel = parseFloat(vat.taxrate) + "%";
+                        vatanalysis.push([vat.abbreviation, taxRateLabel, $.number(vat.vat, 2)])
                     })
 
                     receipttotal = $.number(receipttotal, 2).toString()
@@ -1918,7 +2277,7 @@ function printReceipt(receiptno) {
                         .barcode(receiptno)
                         .feed()
                         .align('left')
-                        .text('Date: ' + receiptheader.receiptdate)
+                        .text('Date: ' + formattedDate)
                         .feed()
                         .text('Outlet: ' + receiptheader.posname)
                         .feed()
@@ -2015,6 +2374,14 @@ itemcodefield.on("input", function (e) {
     const query = $(this).val()
     clearTimeout(searchTimeout);
 
+    // Immediately clear previous search results on typing
+    if (query.length > 0) {
+        products.html("");
+        searchresultslist.hide();
+        searchproductslist.html("");
+        errordiv.html("");
+    }
+
     if (query.length >= 2) {
         searchTimeout = setTimeout(function () {
             // Select ALL category button visually
@@ -2069,6 +2436,51 @@ $(document).on('keydown', function (e) {
         savebutton.trigger("click")
     }
 })
+
+function validateRowBuyingPrice($row) {
+    const isTouchscreenV2 = window.location.pathname.includes('touchscreensale_v2');
+    if (!isTouchscreenV2) return true;
+
+    const buyingPrice = parseFloat($row.attr("data-buyingprice")) || 0;
+    const priceText = $row.find("td").eq(5).text() || $row.find(".price").text() || "0";
+    const currentPrice = parseFloat(priceText.replace(/,/g, '').trim()) || 0;
+
+    if (currentPrice < buyingPrice) {
+        $row.addClass("text-danger font-weight-bold").css("background-color", "#fef2f2");
+        $row.find("td").addClass("text-danger");
+        return false;
+    } else {
+        $row.removeClass("text-danger font-weight-bold").css("background-color", "");
+        $row.find("td").removeClass("text-danger");
+        return true;
+    }
+}
+
+function updateValueSoldProduct($row, newPrice) {
+    const basePrice = parseFloat($row.attr("data-baseprice")) || 0;
+    if (basePrice <= 0) return;
+    
+    // Calculate new quantity: newPrice / basePrice
+    const newQty = newPrice / basePrice;
+    
+    // Update the price display inside the price pill
+    $row.find(".price-val").text(newPrice.toFixed(2));
+    
+    // Update the quantity display
+    $row.find(".linetotal-qty").text(newQty.toFixed(2));
+    
+    // Update the linetotal (index 9)
+    $row.find(".linetotal").text($.number(newPrice, 2));
+    
+    // Validate buying price floor and highlight if below
+    validateRowBuyingPrice($row);
+    
+    // Update overall cart totals
+    const total = getItemsTotal();
+    overalltotal.html($.number(total, 2));
+    totalamountpayable.html($.number(total, 2));
+    computeTotalAmountPaid();
+}
 
 })
 

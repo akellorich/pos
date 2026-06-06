@@ -11,12 +11,18 @@ $(document).ready(function(){
         errordiv=$("#errors"),
         termsfield=$("#terms"), 
         searchresults=$("#searchproducts"),
-        categoryfield=$("#purchasetype")
+        categoryfield=$("#purchasetype"),
+        currencyfield=$("#currency"),
+        exchangeratefield=$("#exchangerate"),
+        departmentlist=$("#department"),
+        taxtypefield=$("#taxtype"),
+        applytaxrate=$("#taxrate")
 
     let errors=""
+    let taxrate=0
 
     // get suppliers
-    $.getJSON(
+    const supplierPromise = $.getJSON(
         "../controllers/getsuppliers.php",
         function(data){
             var results="<option value=''>&lt;Choose One&gt;</option>"
@@ -26,6 +32,10 @@ $(document).ready(function(){
             $(results).appendTo(supplierslist)
         }    
     )
+
+    const deptPromise = getdepartments(departmentlist,'choose')
+    const currencyPromise = getscurrencies(currencyfield, 'choose')
+    const taxPromise = gettaxtypes(taxtypefield,'choose')
 
     getdefaultpoterms()
     
@@ -67,7 +77,7 @@ $(document).ready(function(){
 
         purchaseitems.find("tbody tr").each(function(){
             row=$(this)
-            const itemcode=row.find("td").eq(0).text()
+            const itemcode=row.attr("data-productid")
             const unitprice=row.find(".unitprice").text().replace(",","") 
             const quantity=row.find(".quantity").text().replace(",","") 
             const taxable=row.find(".taxable").prop("checked")?1:0
@@ -141,13 +151,13 @@ $(document).ready(function(){
         let sum = 0;
         // iterate through each td based on class and add the values
         $(".totalitem").each(function() {
-            let value = $(this).text().replace(",","");
+            let value = $(this).text().replace(/,/g,"");
             // add only if the value is number
             if(!isNaN(value) && value.length != 0) {
                 sum += Number(value);
             }
         })
-        return sum.toFixed(2);
+        return sum;
     }
 
     function storeTblValues()
@@ -177,14 +187,23 @@ $(document).ready(function(){
                     name:name
                 },
                 function(data){
-                    let results="<ul class='searchresults'>"
+                    let results="<div class='searchresults-container' style='background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); overflow: hidden;'>"
+                    results+="<ul class='searchresults' style='list-style: none; margin: 0; padding: 0; max-height: 250px; overflow-y: auto;'>"
                     searchresults.html("")
                     if(data.length>0){
                         for(i=0;i<data.length;i++){
-                            results+="<li id='"+data[i].itemcode+"'>"+data[i].itemname+"</li>"
+                            results+=`<li class='search-item-row' id='${data[i].itemcode}' style='display: flex; align-items: center; gap: 8px; padding: 6px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9;'>`
+                            results+=`<input type='checkbox' class='select-product-chk' data-itemcode='${data[i].itemcode}' style='cursor: pointer; width: 16px; height: 16px;'>`
+                            results+=`<span style='flex-grow: 1; font-size: 13px; color: #334155;'>${data[i].itemname}</span>`
+                            results+=`</li>`
                         }
                         results+="</ul>"
-                        // console.log(results)
+                        results+="<div style='padding: 8px 12px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px; background: #f8fafc;'>"
+                        results+="<button type='button' class='btn btn-xs btn-outline-danger' id='cancel-search-selection' style='padding: 2px 8px; font-size: 11px;'>Cancel</button>"
+                        results+="<button type='button' class='btn btn-xs btn-success' id='add-selected-search-items' style='padding: 2px 8px; font-size: 11px;'><i class='fas fa-plus-circle'></i> Add Selected</button>"
+                        results+="</div>"
+                        results+="</div>"
+                        
                         $(results).appendTo(searchresults)
                         searchresults.show()
                     } 
@@ -193,16 +212,47 @@ $(document).ready(function(){
         }
     })
 
-    // listen to the click event of search term when clicked
-    searchresults.on("click","li",function(){
-        const itemcode=$(this).attr("id")
-        itemcodefield.val(itemcode)
-        getProduct()
-        searchresults.hide()
-        // searchresults.addClass("mt-5")
-        itemcodefield.val("")
-        itemcodefield.focus()
-    })
+    // Toggle checkbox on clicking the search row itself (excluding checkbox clicks to avoid double toggling)
+    searchresults.on("click", ".search-item-row", function(e) {
+        if (!$(e.target).is("input[type='checkbox']")) {
+            const $chk = $(this).find(".select-product-chk");
+            $chk.prop("checked", !$chk.prop("checked"));
+        }
+    });
+
+    // Add selected items to list
+    searchresults.on("click", "#add-selected-search-items", function(e) {
+        e.stopPropagation();
+        const selectedCodes = [];
+        searchresults.find(".select-product-chk:checked").each(function() {
+            selectedCodes.push($(this).attr("data-itemcode"));
+        });
+        
+        if (selectedCodes.length === 0) {
+            bootbox.alert({
+                message: "Please check at least one item to add.",
+                size: 'small'
+            });
+            return;
+        }
+        
+        // Loop through and load each product
+        selectedCodes.forEach(function(itemcode) {
+            getProduct(itemcode);
+        });
+        
+        searchresults.hide();
+        itemcodefield.val("");
+        itemcodefield.focus();
+    });
+
+    // Cancel selection
+    searchresults.on("click", "#cancel-search-selection", function(e) {
+        e.stopPropagation();
+        searchresults.hide();
+        itemcodefield.val("");
+        itemcodefield.focus();
+    });
 
     function itemCodeExists(itemcode) {
         let exists = false;
@@ -216,9 +266,9 @@ $(document).ready(function(){
         return exists;
     }
 
-    function getProduct(){
+    function getProduct(specifiedItemCode){
         // display progress
-        const itemcode=itemcodefield.val()
+        const itemcode = specifiedItemCode || itemcodefield.val();
         errordiv.html("")
         if(itemCodeExists(itemcode)){
             errordiv.html(showAlert("info",`Item already added to the list`))
@@ -238,19 +288,23 @@ $(document).ready(function(){
                     errors="No product with similar code found"
                     errordiv.html(showAlert("info",errors))
                     $(errors).appendTo(errordiv)
+                }else if(data[0].disallowpurchasing == 1){
+                    errordiv.html("")
+                    errors="Purchasing is disallowed for this item: " + data[0].itemname
+                    errordiv.html(showAlert("danger",errors))
                 }else{
                     errordiv.html("")
-                    productdetails+="<tr><td>"+data[0].itemcode+"</td>"
+                    productdetails+="<tr data-productid='"+data[0].productid+"'><td>"+data[0].itemcode+"</td>"
                     productdetails+="<td>"+data[0].itemname+"</td>"
-                    productdetails+="<td class='unitprice'>"+data[0].buyingprice+"</td>"
-                    productdetails+="<td><input type='checkbox' checked class='taxable'></td>"
-                    productdetails+="<td><input type='checkbox' checked class='taxinclusive'></td>"
+                    productdetails+="<td class='unitprice d-none d-lg-table-cell'>"+data[0].buyingprice+"</td>"
+                    productdetails+="<td class='d-none d-lg-table-cell'><input type='checkbox' checked class='taxable'></td>"
+                    productdetails+="<td class='d-none d-lg-table-cell'><input type='checkbox' checked class='taxinclusive'></td>"
                     //  productdetails+="<td>0.00</td>"
                     //  productdetails+="<td>"+data[0].buyingprice+"</td>"
                     productdetails+="<td class='quantity text-align-right'>1</td>"
                     productdetails+="<td class='linetotal text-align-right'>"+data[0].buyingprice+"</td>"
-                    productdetails+="<td class='totaltax text-align-right'>0.00</td>"
-                    productdetails+="<td class='totalitem text-align-right'>0.00</td>"
+                    productdetails+="<td class='totaltax text-align-right d-none d-lg-table-cell'>0.00</td>"
+                    productdetails+="<td class='totalitem text-align-right d-none d-lg-table-cell'>0.00</td>"
                     productdetails+="<td class='text-align-center'><a href='#' class='delete' data-id='"+randomId()+"'><span><i class='fas fa-trash fa-sm' id='"+data[0].itemcode+"' name='"+data[0].itemcode+"'></i></span></a></td></tr>"
                     $(productdetails).appendTo(purchaseitems.find("tbody"))
                     // display overall total
@@ -285,7 +339,7 @@ $(document).ready(function(){
                     callback: function() {
                         //console.log(parent)
                         parent.remove()
-                        overalltotal.val(getItemsTotal())
+                        overalltotal.val($.number(getItemsTotal(), 2))
                         $('.bootbox').modal('hide');
                     }
                 }
@@ -307,110 +361,121 @@ $(document).ready(function(){
         errordiv.html("")
     })
 
-    // listen to change quantity event
-    purchaseitems.on("click",".quantity",function(e){
-        // console.log($(this).html())
-         const parent = $(this).parent("tr");
-         bootbox.prompt({
-             title:"Enter New Quantity",
-             size: 'small',
-             message: "Enter quantity required",
-             inputType: 'number',
-             callback: function (result) {
-                 if(parseFloat(result)>0){
-                    //  var unitprice= parent.find("td").eq(4).text(),
-                    //      linetotal=parseFloat(result*unitprice)
-                     parent.find("td").eq(5).text(result)
-                    //  parent.find("td").eq(6).text(linetotal)
-                     computetaxes()
-                    //  overalltotal.val(getItemsTotal())
-                 } 
-             }
-         });
-     })
+    // Listen to quantity and unit price clicks to make them contenteditable
+    purchaseitems.on("click", ".quantity, .unitprice", function (e) {
+        const $cell = $(this);
+        // Only trigger edit if not already editing
+        if ($cell.attr("contenteditable") !== "true") {
+            $cell.attr("contenteditable", "true");
+            $cell.focus();
+            
+            // Select all text in contenteditable cell
+            document.execCommand('selectAll', false, null);
+        }
+    });
 
-     purchaseitems.on("click",".unitprice",function(e){
-        // console.log($(this).html())
-         const parent = $(this).parent("tr");
-         bootbox.prompt({
-             title:"Enter New Price",
-             size: 'small',
-             message: "Enter Price required",
-             inputType: 'number',
-             callback: function (result) {
-                 if(parseFloat(result)>=0){
-                    parent.find("td").eq(2).text(result)
-                    computetaxes()
-                    //  const quantity= parent.find("td").eq(5).text(),
-                    //      linetotal=parseFloat(result*quantity)
-                    //  parent.find("td").eq(2).text(result)
-                    //  parent.find("td").eq(6).text(linetotal)
-                    //  parent.find("td").eq(4).text(result)
-                    //  overalltotal.val(getItemsTotal())
-                 } 
-             }
-         });
-     })
+    // Listen for keydown, input, and focusout events on .quantity and .unitprice
+    purchaseitems.on("focusout keydown input", ".quantity, .unitprice", function (e) {
+        const $cell = $(this);
+        const $row = $cell.closest("tr");
+        
+        if (e.type === "keydown") {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                $cell.blur();
+            }
+            return;
+        }
+        
+        // On blur (focusout), strip contenteditable, sanitize input, and update
+        if (e.type === "focusout") {
+            $cell.removeAttr("contenteditable");
+            
+            let rawVal = $cell.text().replace(/,/g, '').trim();
+            let parsedVal = parseFloat(rawVal) || 0;
+            
+            if ($cell.hasClass("quantity")) {
+                if (parsedVal <= 0) parsedVal = 1; // Enforce minimum quantity of 1
+                $cell.text($.number(parsedVal, 2));
+            } else if ($cell.hasClass("unitprice")) {
+                if (parsedVal < 0) parsedVal = 0; // Enforce non-negative unit price
+                $cell.text($.number(parsedVal, 2));
+            }
+            
+            computetaxes();
+        } else if (e.type === "input") {
+            // Keep dynamic updates running during input typing without modifying the active caret
+            computetaxes();
+        }
+    });
 
-     let purchaseid=0
-     purchaseid=urlParam("id")
-     if(purchaseid>0){
-        idfield.val(purchaseid)
-        // get purchase order details
-       $.getJSON(
-           "../controllers/purchaseorderoperations.php",
-           {
-                getpurchaseorderdetails:true,
-                id:idfield.val()
-           },
-           function(data){
-            //    console.log(data)
-                // check if cancelled 
-                if(data[0].status=="Cancelled"){
-                    bootbox.alert({
-                        message: "The Purchase order has been cancelled and cannot be edited",
-                        size: 'small'
-                    })
-                    
-                }else if(data[0].status=='Received'){
-                    bootbox.alert({
-                        message: "The Purchase order has been received and hence cannot be edited",
-                        size: 'small'
-                    })
-                }else{
-                    supplierslist.val(data[0].supplierid)
-                    termsfield.val(data[0].terms)
-                    let  productdetails=''
-                    for(let i=0;i<data.length;i++){
-                        // productdetails+="<tr><td>"+data[i].itemcode+"</td>"
-                        // productdetails+="<td>"+data[i].itemname+"</td>"
-                        // productdetails+="<td>"+data[i].unitprice+"</td>"
-                        // productdetails+="<td>0.00</td>"
-                        // productdetails+="<td class='unitprice'>"+data[i].unitprice+"</td>"
-                        // productdetails+="<td class='quantity'>"+data[i].quanity+"</td>"
-                        // productdetails+="<td class='linetotal'>"+parseFloat(data[i].unitprice*data[i].quanity)+"</td>"
-                        // productdetails+="<td><a href='#' class='delete' data-id='"+randomId()+"'><span><i class='fas fa-trash fa-sm' id='"+data[0].itemcode+"' name='"+data[0].itemcode+"'></i></span></a></td></tr>"
-                        
-                        // display overall total
-                        productdetails+="<tr><td>"+data[i].itemcode+"</td>"
-                        productdetails+="<td>"+data[i].itemname+"</td>"
-                        productdetails+="<td class='unitprice'>"+data[i].unitprice+"</td>"
-                        productdetails+="<td><input type='checkbox' checked class='taxable'></td>"
-                        productdetails+="<td><input type='checkbox' checked class='taxinclusive'></td>"
-                        //  productdetails+="<td>0.00</td>"
-                        //  productdetails+="<td>"+data[0].unitprice+"</td>"
-                        productdetails+="<td class='quantity text-align-right'>"+data[i].quanity+"</td>"
-                        productdetails+="<td class='linetotal text-align-right'>"+data[i].unitprice+"</td>"
-                        productdetails+="<td class='totaltax text-align-right'>0.00</td>"
-                        productdetails+="<td class='totalitem text-align-right'>"+parseFloat(data[i].unitprice*data[i].quanity)+"</td>"
-                        productdetails+="<td class='text-align-center'><a href='#' class='delete' data-id='"+randomId()+"'><span><i class='fas fa-trash fa-sm' id='"+data[i].itemcode+"' name='"+data[i].itemcode+"'></i></span></a></td></tr>"
-                    } 
-                    purchaseitems.find("tbody").html(productdetails)
-                    overalltotal.val(getItemsTotal())   
-                }
-           }
-        ) 
-    }
+      let purchaseid=0
+      purchaseid=urlParam("id")
+      if(purchaseid>0){
+         idfield.val(purchaseid)
+         
+         // Wait for all dynamic dropdowns to be fully loaded first
+         $.when(supplierPromise, deptPromise, currencyPromise, taxPromise).done(function() {
+             // get purchase order details
+             $.getJSON(
+                 "../controllers/purchaseorderoperations.php",
+                 {
+                      getpurchaseorderdetails:true,
+                      id:idfield.val()
+                 },
+                 function(data){
+                      if (!data || data.length === 0) return;
+                      
+                      // check if cancelled 
+                      if(data[0].status=="Cancelled"){
+                          bootbox.alert({
+                              message: "The Purchase order has been cancelled and cannot be edited",
+                              size: 'small'
+                          })
+                          
+                      }else if(data[0].status=='Received'){
+                          bootbox.alert({
+                              message: "The Purchase order has been received and hence cannot be edited",
+                              size: 'small'
+                          })
+                      }else{
+                          // Populate Step 1 fields
+                          supplierslist.val(data[0].supplierid)
+                          departmentlist.val(data[0].departmentid)
+                          categoryfield.val(data[0].category)
+                          currencyfield.val(data[0].currencyid)
+                          exchangeratefield.val(data[0].exchangerate)
+                          taxtypefield.val(data[0].taxid)
+                          termsfield.val(data[0].terms)
+                          
+                          if(data[0].currencyid != 1){
+                              exchangeratefield.prop("disabled", false)
+                          }else{
+                              exchangeratefield.prop("disabled", true)
+                          }
+                          
+                          let productdetails=''
+                          for(let i=0;i<data.length;i++){
+                              if (data[i].itemid && data[i].itemid > 0) {
+                                  productdetails+="<tr data-productid='"+data[i].itemid+"'><td>"+data[i].itemcode+"</td>"
+                                  productdetails+="<td>"+data[i].itemname+"</td>"
+                                  productdetails+="<td class='unitprice d-none d-lg-table-cell'>"+data[i].unitprice+"</td>"
+                                  productdetails+="<td class='d-none d-lg-table-cell'><input type='checkbox' checked class='taxable'></td>"
+                                  productdetails+="<td class='d-none d-lg-table-cell'><input type='checkbox' checked class='taxinclusive'></td>"
+                                  productdetails+="<td class='quantity text-align-right'>"+data[i].quanity+"</td>"
+                                  productdetails+="<td class='linetotal text-align-right'>"+data[i].unitprice+"</td>"
+                                  productdetails+="<td class='totaltax text-align-right d-none d-lg-table-cell'>0.00</td>"
+                                  productdetails+="<td class='totalitem text-align-right d-none d-lg-table-cell'>"+parseFloat(data[i].unitprice*data[i].quanity)+"</td>"
+                                  productdetails+="<td class='text-align-center'><a href='#' class='delete' data-id='"+randomId()+"'><span><i class='fas fa-trash fa-sm' id='"+data[i].itemcode+"' name='"+data[i].itemcode+"'></i></span></a></td></tr>"
+                              }
+                          } 
+                          purchaseitems.find("tbody").html(productdetails)
+                          overalltotal.val($.number(getItemsTotal(), 2))   
+                      }
+                 }
+             )
+         })
+      }
 
     $('input').on('input',function(){
         errordiv.html("")
@@ -420,16 +485,7 @@ $(document).ready(function(){
         errordiv.html("")
     })
 
-    const currencyfield=$("#currency")
-    const exchangeratefield=$("#exchangerate")
-    const departmentlist=$("#department")
-    const taxtypefield=$("#taxtype")
-    const applytaxrate=$("#taxrate")
-    let taxrate=0
 
-    getdepartments(departmentlist,'choose')
-    getscurrencies(currencyfield, 'choose')
-    gettaxtypes(taxtypefield,'choose')
 
     exchangeratefield.prop("disabled",true)
     exchangeratefield.val(1)
@@ -467,27 +523,33 @@ $(document).ready(function(){
 
     // compute taxes
     function computetaxes(){
-        let tax=0
-        purchaseitems.find("tr").each(function(){
+        purchaseitems.find("tbody tr").each(function(){
             const row=$(this)
             const taxable=row.find(".taxable")
-            const unitprice=row.find(".unitprice").text().replace(",","")
-            const quantity=row.find(".quantity").text().replace(",","")
-            let totalprice=unitprice*quantity
-            let tax=0
+            const unitprice = parseFloat(row.find(".unitprice").text().replace(/,/g,"")) || 0
+            const quantity = parseFloat(row.find(".quantity").text().replace(/,/g,"")) || 0
+            let totalprice = unitprice * quantity
+            let tax = 0
             if(taxable.prop("checked")){
                 const taxinclusive=row.find(".taxinclusive")
                 if(taxinclusive.prop("checked")){
-                    totalprice=(((100)/(100+Number(taxrate)))*totalprice).toFixed(2) 
+                    totalprice = (((100)/(100+Number(taxrate)))*totalprice)
                 }
-                row.find(".linetotal").text(totalprice)
-                tax=((taxrate/100)*totalprice ).toFixed(2)
+                tax = ((taxrate/100)*totalprice)
             }
-            // console.log(tax)
-            row.find(".totaltax").text(tax)
-            row.find(".totalitem").text(Number(totalprice)+Number(tax))
-            overalltotal.val(getItemsTotal())
+            
+            // Render formatted with thousands separators only if not focused to avoid caret/cursor jumping while typing
+            if (!row.find(".unitprice").is(":focus")) {
+                row.find(".unitprice").text($.number(unitprice, 2))
+            }
+            if (!row.find(".quantity").is(":focus")) {
+                row.find(".quantity").text($.number(quantity, 2))
+            }
+            row.find(".linetotal").text($.number(totalprice, 2))
+            row.find(".totaltax").text($.number(tax, 2))
+            row.find(".totalitem").text($.number(totalprice + tax, 2))
         })
+        overalltotal.val($.number(getItemsTotal(), 2))
     }
 
     purchaseitems.on("click",":checkbox",function(){

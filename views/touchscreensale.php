@@ -61,7 +61,7 @@
                                 <div class="form-group">
                                     <label for="itemcode">Item Code:</label>
                                     <div class="input-group">
-                                        <input type="text" name="itemcode" id="itemcode"  class="form-control form-control-sm"> 
+                                        <input type="text" name="itemcode" id="itemcode"  class="form-control form-control-sm" autocomplete="off" placeholder="Search Item ..."> 
                                         <div class="input-group-append">
                                             <button class="btn btn-sm btn-outline-success" id="searchproduct"><i class="fal fa-search fa-lg fa-fw"></i></button>
                                         </div>

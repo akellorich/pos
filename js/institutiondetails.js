@@ -20,7 +20,9 @@ $(document).ready(function(){
         logopreview=$("#logopreview"),
         loadlogobutton=$("#logo"),
         inputfield=$("input"),
-        selectfield=$("select")
+        selectfield=$("select"),
+        allowpricechangefield=$("#allowpricechange"),
+        allownegativesalesgloballyfield=$("#allownegativesalesglobally")
 
     let logochanged=true, savedlogo=''
 
@@ -61,6 +63,8 @@ $(document).ready(function(){
             autoinvoicegrn=autoinvoicegrnfield.val(),
             showwaiterlogin=showwaiterloginfield.val(),
             receiptfooter=sanitizestring(receiptfooterfield.val()),
+            allowpricechange=allowpricechangefield.val(),
+            allownegativesalesglobally=allownegativesalesgloballyfield.val(),
             fd = new FormData(),
             logo = $('#logo')[0].files[0]
 
@@ -102,6 +106,12 @@ $(document).ready(function(){
         }else if(showwaiterlogin==""){
             errors="Please select shopw waiter login window status"
             showwaiterloginfield.focus()
+        }else if(allowpricechange==""){
+            errors="Please select allow price change status"
+            allowpricechangefield.focus()
+        }else if(allownegativesalesglobally==""){
+            errors="Please select allow negative sales status"
+            allownegativesalesgloballyfield.focus()
         }else if(receiptfooter==""){
             errors="Please select receipt footer"
             receiptfooterfield.focus()
@@ -136,6 +146,8 @@ $(document).ready(function(){
             fd.append('autoinvoicegrn',autoinvoicegrn)  
             fd.append('showwaiterlogin',showwaiterlogin)    
             fd.append('receiptfooter',receiptfooter)  
+            fd.append('allowpricechange',allowpricechange)  
+            fd.append('allownegativesalesglobally',allownegativesalesglobally)  
             
             $.ajax({
                 url:  "../controllers/settingoperations.php",
@@ -196,6 +208,8 @@ $(document).ready(function(){
                 autoinvoicegrnfield.val(institution.autoaddinvoiceduringgrn)
                 showwaiterloginfield.val(institution.showwaiterlogin)
                 receiptfooterfield.val(institution.receiptfooter)
+                allowpricechangefield.val(institution.allowpricechange)
+                allownegativesalesgloballyfield.val(institution.allownegativesalesglobally)
 
                 if(institution.logo!="" && institution.logo!=null){
                     logopreview.attr('src', institution.logo)

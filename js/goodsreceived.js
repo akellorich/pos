@@ -14,37 +14,30 @@ $(document).ready(function(){
         errordiv=$("#errors"),
         grnlist=$("#grnlist")
 
-    // check all dates by default and disable date fields
-    alldates.prop("checked",true)
-    disabledatefields()
-
     // set date fields 
     startdatefield.datepicker({dateFormat: 'dd-M-yy',maxDate:  new Date()})
     enddatefield.datepicker({dateFormat: 'dd-M-yy',maxDate:  new Date()})
+
+    // Set default dates to last 7 days (unchecked by default)
+    alldates.prop("checked",false)
+    enabledatefields()
+    
+    const today = new Date();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(today.getDate() - 7);
+
+    startdatefield.datepicker("setDate", sevenDaysAgo);
+    enddatefield.datepicker("setDate", today);
 
     // listen to check all dates checkbox on click
     alldates.on("click",function(){
         alldates.prop("checked")?disabledatefields(): enabledatefields()
     })
-
-    // search customers or suppliers based on option selected on souce delivery category drop down
-    // sourcefield.on("change", function(){
-    //     if(sourcefield.val()=="all"){
-    //         sourcelabel.html("Source")
-    //         sourcenamefield.html("<option value='all'>&lt;All&gt;</option>")
-    //     }else{
-    //         var source=sourcefield.find("option:selected").text()
-    //         sourcelabel.html(source)
-    //         // get all customers or suppliers
-    //         if(source=="Customer"){
-    //             getcustomers(sourcenamefield)
-    //         }else{
-               
-    //         }
-    //     }
-    // }) 
     
-    getSuppliers(sourcenamefield)
+    getSuppliers(sourcenamefield).done(function() {
+        // Trigger initial filter on load after suppliers are fully loaded
+        filtergoodsreceivedbutton.trigger("click");
+    });
 
     // show window for adding a new GRN
     addnewgrn.on("click",function(){
@@ -53,8 +46,6 @@ $(document).ready(function(){
 
     // filter grns
     filtergoodsreceivedbutton.on("click",function(){
-        // source=sourcefield.val(),
-        //     sourceid=sourcenamefield.val(),
         const grnno=grnnofield.val(),
             deliverynoteno=deliverynotenofield.val(),
             supplierid=sourcenamefield.val()
@@ -81,7 +72,6 @@ $(document).ready(function(){
         }
        if(errors==""){
            // filter grns
-           errordiv.html(showAlert("info","Processing ...",1))
            $.getJSON(
                "../controllers/rawmaterialsoperations.php",
                {
@@ -98,12 +88,12 @@ $(document).ready(function(){
                         for(var i=0;i<data.length;i++){
                             results+=`<tr><td>${Number(i+1)}</td>`
                             results+=`<td>${data[i].grnno}</td>`
-                            results+=`<td>${data[i].deliverynono}</td>`
+                            results+=`<td class="d-none d-lg-table-cell">${data[i].deliverynono}</td>`
                             results+=`<td>${data[i].datereceived}</td>`
-                            results+=`<td>${data[i].warehousename}</td>`
+                            results+=`<td class="d-none d-lg-table-cell">${data[i].warehousename}</td>`
                             results+=`<td>${data[i].suppliername}</td>`
-                            results+=`<td>${data[i].receivedbyname}</td>`
-                            results+=`<td>${data[i].inspectedbyname}</td>`
+                            results+=`<td class="d-none d-lg-table-cell">${data[i].receivedbyname}</td>`
+                            results+=`<td class="d-none d-lg-table-cell">${data[i].inspectedbyname}</td>`
                             results+=`<td>${$.number(data[i].total,2)}</td>`
                             // print button
                             results+=`<td><a href='javascript void(0)' class='printdata text-primary' data-grnno='${data[i].grnno}'><span><i class='fal fa-print fa-lg fa-fw'></i></span></a></td></tr>`
@@ -112,7 +102,6 @@ $(document).ready(function(){
                         results=`<tr><td colspan='8'>${showAlert("info","Sorry, no records found matching filter criterion selected",1)}</td></tr>`
                     }
                     makedatatable(grnlist,results,15)
-                    //    grnlist.find("tbody").html(results)
                    errordiv.html("")
                }
            )
@@ -143,4 +132,20 @@ $(document).ready(function(){
         startdatelabel.removeClass("text-muted")
         enddatelabel.removeClass("text-muted")
     }
+
+    // Fixed FAB click handler to trigger Add New GRN
+    $("#mobileAddGrnFAB").on("click", function() {
+        $("#addnewgrn").trigger("click");
+    });
+
+    // Toggle Filters collapsible panel text & icons
+    $('#filterCollapse').on('show.bs.collapse', function () {
+        $('#toggleFiltersBtn span').text('Close');
+        $('#toggleFiltersBtn i').removeClass('fa-filter').addClass('fa-times');
+    });
+    $('#filterCollapse').on('hide.bs.collapse', function () {
+        $('#toggleFiltersBtn span').text('Filters');
+        $('#toggleFiltersBtn i').removeClass('fa-times').addClass('fa-filter');
+    });
+
 })

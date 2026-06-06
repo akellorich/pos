@@ -37,12 +37,9 @@ $(document).ready(function(){
                     accordionclasses+='<div class="card">'
                     accordionclasses+='<div class="card-header" id="'+data[i].classname+'">'
                     accordionclasses+='<h2 class="mb-0">'
-                    accordionclasses+='<button class="d-flex align-items-center justify-content-between btn btn-link collapsed" data-toggle="collapse" data-target="#'+accordionid+'" aria-expanded="false" aria-controls="'+accordionid+'">'
+                    accordionclasses+='<button class="d-flex align-items-center btn btn-link collapsed" data-toggle="collapse" data-target="#'+accordionid+'" aria-expanded="false" aria-controls="'+accordionid+'" style="text-decoration: none;">'
+                    accordionclasses+='<i class="fas fa-plus mr-2 account-toggle-icon" style="font-size: 14px; width: 18px;"></i>'
                     accordionclasses+='<span class="text-uppercase">'+ data[i].newname+'</span>'
-                    accordionclasses+='<span class="fa-stack fa-sm">'        
-                    accordionclasses+='<i class="fas fa-circle fa-stack-2x"></i>'            
-                    accordionclasses+='<i class="fas fa-plus fa-stack-1x fa-inverse"></i>'            
-                    accordionclasses+='</span>'       
                     accordionclasses+='</button>'       
                     accordionclasses+='</h2>'    
                     accordionclasses+='</div>'   
@@ -184,15 +181,25 @@ $(document).ready(function(){
         var accountgroupid=accountsubgroup.val(),
             accountcode=accountcodefield.val(),
             accountname=accountnamefield.val(),
-            id=idfield.val(),
-            errors=""
+            id=idfield.val();
+
+        accounterrordiv.html(""); // clear previous desktop alerts
+
         if(accountgroupid==0){
-            errors="<p class='alert alert-danger'>Please provide the account sub group</p>"
+            showNotification("info", "Please select/provide the account sub group");
+            accountsubgroup.focus();
         }else if(accountcode==""){
-            errors="<p class='alert alert-danger'>Please provide the account code</p>" 
+            showNotification("info", "Please provide the account code");
+            accountcodefield.focus();
         }else if(accountname==""){
-            errors="<p class='alert alert-danger'>Please provide the account name</p>"
+            showNotification("info", "Please provide the account name");
+            accountnamefield.focus();
         }else{
+            // Show processing alert on desktop
+            if (window.innerWidth >= 992) {
+                accounterrordiv.html(showAlert("processing", "Saving GL account, please wait...", 1));
+            }
+            
             // save the GL account and display results
             $.post(
                 "../controllers/glaccountoperations.php",
@@ -204,37 +211,36 @@ $(document).ready(function(){
                     saveglaccount:true
                 },
                 function(data){
-                    result=$.trim(data).toString()
-                    //console.log(result)
+                    var result=$.trim(data).toString();
                     if(result=="success"){
-                        errors="<p class='alert alert-success'>The GL account has been saved successfully</p>"
+                        showNotification("success", "The GL account has been saved successfully");
                         // clear the form 
-                        accountcodefield.val("")
-                        accountnamefield.val("")
-                        refreshChartOfAccounts()
+                        accountcodefield.val("");
+                        accountnamefield.val("");
+                        refreshChartOfAccounts();
                     }else if (result=="account code exists"){
-                        errors="<p class='alert alert-warning'>Sorry, <strong>account code</strong> provided is already in use</p>"
+                        showNotification("info", "Sorry, account code provided is already in use");
                     }else if (result=="account name exists"){
-                        errors="<p class='alert alert-warning'>Sorry, <strong>account name</strong> provided is already in use</p>"
+                        showNotification("info", "Sorry, account name provided is already in use");
                     }else{
-                        // display any other error resturned
-                        errors="<p class='alert alert-danger'>"+result+"</p>"
+                        showNotification("danger", result);
                     }
-                    accounterrordiv.html(errors)
                 }
-            )
+            );
         }
-        accounterrordiv.html(errors)
     })
 
     // listen to clearform click event
     clearform.on("click",clearForm)
 
     function clearForm(){
-        accountsubgroup.val(0),
-        accountcodefield.val(""),
-        accountnamefield.val(0),
-        idfield.val(0)
+        glaccountclass.val(0);
+        accountgroup.html("<option value=0>&lt;Choose One&gt;</option>");
+        accountsubgroup.html("<option value=0>&lt;Choose One&gt;</option>");
+        accountcodefield.val("");
+        accountnamefield.val("");
+        idfield.val(0);
+        accounterrordiv.html("");
     }
 
     function getSubGroups(){
@@ -300,7 +306,7 @@ $(document).ready(function(){
      accordion.on("hide.bs.collapse show.bs.collapse", e => {
         $(e.target)
           .prev()
-          .find("i:last-child")
+          .find(".account-toggle-icon")
           .toggleClass("fa-minus fa-plus");
       })
 
@@ -366,6 +372,33 @@ $(document).ready(function(){
             }
         )
         return dfd.promise()
+    }
+
+    function showNotification(type, message) {
+        var isMobileOrTablet = window.innerWidth < 992;
+        var alertHtml = showAlert(type, message);
+        
+        if (isMobileOrTablet) {
+            var modalId = 'notificationModal';
+            var modalHtml = `
+            <div class="modal fade" id="${modalId}" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content" style="border-radius: 8px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                        <div class="modal-body p-4">
+                            ${alertHtml}
+                            <div class="text-right mt-3" style="margin-top: 15px;">
+                                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">OK</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            $('#' + modalId).remove();
+            $('body').append(modalHtml);
+            $('#' + modalId).modal('show');
+        } else {
+            accounterrordiv.html(alertHtml);
+        }
     }
         
 })

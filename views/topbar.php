@@ -1,9 +1,9 @@
-<div class="home-content d-flex justify-content-between align-items-center pr-4 shadow-sm bg-white" style="height: 55px; border-bottom: 1px solid #ebecef;">
-    <div class="d-flex align-items-center">
-        <i class='bx bx-menu cursor-pointer menu-toggle-icon' style="font-size: 22px; margin-right: 15px; color: #555;"></i>
-        <span class="text font-weight-bold" style="font-size: 16px; color: #2c3e50; letter-spacing: -0.2px;"><?php echo isset($pagename) ? $pagename : 'SalesFlow'; ?></span>
+<div class="home-content d-flex justify-content-between align-items-center pr-4 shadow-sm bg-white flex-nowrap" style="height: 55px; border-bottom: 1px solid #ebecef;">
+    <div class="d-flex align-items-center" style="min-width: 0;">
+        <i class='bx bx-menu cursor-pointer menu-toggle-icon' style="font-size: 22px; margin-left: 15px; margin-right: 15px; color: #555; flex-shrink: 0;"></i>
+        <span class="text font-weight-bold page-header-title" style="font-size: 16px; color: #2c3e50; letter-spacing: -0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo isset($pagename) ? $pagename : 'SalesFlow'; ?></span>
     </div>
-    <div class="branch-selector d-flex align-items-center">
+    <div class="branch-selector d-flex align-items-center" style="flex-shrink: 0;">
         <div class="dropdown">
             <button class="btn btn-sm d-flex align-items-center bg-white border shadow-sm px-3" type="button" id="branchDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="border-radius: 20px; height: 32px; border-color: #d1d5db !important;">
                 <i class="fal fa-building mr-2" style="font-size: 12px; color: #9ca3af;"></i>
@@ -41,6 +41,12 @@
         color: #2563eb;
         font-weight: 600;
     }
+    @media (max-width: 768px) {
+        .page-header-title {
+            max-width: 12ch;
+            font-size: 13.5px !important;
+        }
+    }
 </style>
 
 <script>
@@ -48,6 +54,28 @@
         const branchList = $("#branch-list");
         const currentBranchName = $("#current-branch-name");
         
+        function adjustHeaderForMobile() {
+            const titleSpan = $(".page-header-title");
+            const originalText = titleSpan.attr("data-original-title") || titleSpan.text().trim();
+            
+            if (!titleSpan.attr("data-original-title")) {
+                titleSpan.attr("data-original-title", originalText);
+            }
+            
+            if (window.innerWidth <= 768) {
+                if (originalText.length > 11) {
+                    titleSpan.text(originalText.slice(0, 11) + "...");
+                } else {
+                    titleSpan.text(originalText);
+                }
+            } else {
+                titleSpan.text(originalText);
+            }
+        }
+        
+        adjustHeaderForMobile();
+        $(window).on("resize", adjustHeaderForMobile);
+
         function loadBranchData() {
             const branchesPromise = $.getJSON("../controllers/settingoperations.php", {getbranches: true});
             const userPromise = $.getJSON("../controllers/useroperations.php", {getloggedinuserdetails: true});

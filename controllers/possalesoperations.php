@@ -40,7 +40,8 @@
             $discount=$saleitem['discount']; 
             $serialno=$saleitem['serialno'];
             $description=isset($saleitem['description'])?$saleitem['description']:'';
-            $sale->saveTemporarySale($refno,$itemcode,$quantity,$unitprice,$discount,$serialno,$description);
+            $uom=isset($saleitem['uom'])?$saleitem['uom']:'';
+            $sale->saveTemporarySale($refno,$itemcode,$quantity,$unitprice,$discount,$serialno,$description,$uom);
 
         }
 
@@ -266,7 +267,8 @@
            $discount=$saleitem['discount']; 
            $serialno=$saleitem['serialno'];
            $description=$saleitem['description'];
-           $sale->saveTemporarySale($refno,$itemcode,$quantity,$unitprice,$discount,$serialno,$description);
+           $uom=isset($saleitem['uom'])?$saleitem['uom']:'';
+           $sale->saveTemporarySale($refno,$itemcode,$quantity,$unitprice,$discount,$serialno,$description,$uom);
         }
         // save permanently
         $sale->holdSale($refno,$customerid,$posid);
@@ -364,6 +366,13 @@
     if(isset($_GET['getreceiptvatanalysis'])){
         $receiptno=$_GET['receiptno'];
         echo $sale->getreceiptvatanalysis($receiptno);
+    }
+
+    if(isset($_GET['getinstitutiondetails'])){
+        $sql="CALL `spgetinstitutiondetails`({$sale->clientid})";
+        $institution = $sale->getData($sql)->fetch(PDO::FETCH_ASSOC);
+        echo json_encode($institution);
+        exit;
     }
 
      if(isset($_POST['completerefund'])){

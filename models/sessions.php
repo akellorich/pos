@@ -3,12 +3,12 @@
 
     class session extends db{
         function checksession(){
-            $sql="CALL `sp_checksessionid`({$this->branchid})";
+            $sql="CALL `sp_checksessionid`({$this->branchid},{$this->userid})";
             return $this->getData($sql)->rowCount();
         }
 
         function getactivesession(){
-            $sql="CALL `sp_checksessionid`({$this->branchid})";
+            $sql="CALL `sp_checksessionid`({$this->branchid},{$this->userid})";
             return $this->getJSON($sql);
         }
 

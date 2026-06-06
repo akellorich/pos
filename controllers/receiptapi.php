@@ -53,7 +53,7 @@ try {
     $walletid          =$data['walletid'] ?? "";
 
     // Get Institution details
-    $sql="CALL `spgetinstitutiondetails`()";
+    $sql="CALL `spgetinstitutiondetails`({$sale->clientid})";
     $institution = $sale->getData($sql)->fetch();
 
     /** ===========================

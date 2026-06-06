@@ -11,10 +11,10 @@ $db=new db();
 $pono=isset($_POST['pono'])?$_POST['pono']:$_GET['pono'];
 $print=isset($_GET['print'])?$_GET["print"]:false;
 // get institutional details
-$sql="CALL spgetinstitutiondetails()";
+$sql="CALL spgetinstitutiondetails({$db->clientid})";
 $rst=$db->getData($sql)->fetch();
 
-$sql="CALL sp_getpoheaderdetails('{$pono}')";
+$sql="CALL sp_getpoheaderdetails({$db->branchid},'{$pono}')";
 $rst2=$db->getData($sql)->fetch();
 
 $suppliername=$rst2['suppliername'];
@@ -133,7 +133,7 @@ $terms=nl2br($rst2['terms']);
 $supplieremail=$rst2['supplieremail'];
 
 // get po items
-$sql="CALL sp_getpoitems('{$pono}')";
+$sql="CALL sp_getpoitems({$db->branchid},'{$pono}')";
 $rst=$db->getData($sql);
 
 // create a heading for the table containing items
@@ -142,6 +142,7 @@ $data.="<table  width='100%' cellpadding='3' cellspacing='0' class='items'><thea
 // variables for holding total and taxes
 $total=0;
 $taxes=0;
+$taxname='VAT';
 
 while($row=$rst->fetch()){
     $taxname=$row['taxname'];

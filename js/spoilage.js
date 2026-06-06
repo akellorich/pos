@@ -5,7 +5,7 @@ $(document).ready(()=>{
     const enddatefield=$("#enddate")
     const alldates=$("#alldates")
     const addspoilagemodal=$("#spoilagedetailsmodal")
-    const addnewmodalbutton=$("#addnew")
+    const addnewmodalbutton=$("#addnew, #mobileAddSpoilageFAB")
     const addspoilagecategory=$("#detailscategory")
     const addspoilageproduct=$("#detailsproduct")
     const addspoilagequantity=$("#detailsquantity")
@@ -200,24 +200,48 @@ $(document).ready(()=>{
                     let results="",counter=0
                     data.forEach((spoilage)=>{
                         counter++
-                        results+=`<tr><td>${counter}</td>`
+                        results+=`<tr>`
+                        results+=`<td class="d-none d-md-table-cell">${counter}</td>`
                         results+=`<td>${spoilage.categoryname}</td>`
                         results+=`<td>${spoilage.itemname}</td>`
                         results+=`<td>${$.number(spoilage.quantity,2)}</td>`
-                        results+=`<td>${spoilage.narration}</td>`
-                        results+=`<td>${spoilage.dateadded}</td>`
-                        results+=`<td>${spoilage.addedby}</td>`
-                        // add edit and delete buttons
-                        results+=`<td data-id=${spoilage.id} class="edit-spoilage text-primary "><span><i class='fas fa-edit fa-sm mt-1' ></i></span></td>`
-                        results+=`<td data-id=${spoilage.id} class="delete-spoilage text-danger"><span><i class='fas fa-trash-alt fa-sm mt-1'></span></i></td></tr>`
+                        results+=`<td class="d-none d-md-table-cell">${spoilage.narration}</td>`
+                        results+=`<td class="d-none d-md-table-cell">${spoilage.dateadded}</td>`
+                        results+=`<td class="d-none d-md-table-cell">${spoilage.addedby}</td>`
+                        
+                        // Action dropdown
+                        results+=`<td class="text-center">
+                            <div class="dropdown">
+                                <a class="btn btn-sm btn-link text-secondary p-0" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 1.2rem; text-decoration: none;">
+                                    <i class="fal fa-ellipsis-v"></i>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right shadow border-0" style="border-radius: 8px; font-size: 0.85rem; z-index: 1050 !important;">
+                                    <a class="dropdown-item edit-spoilage" href="#" data-id="${spoilage.id}">
+                                        <i class="fal fa-edit fa-fw mr-2" style="color: #6c757d; font-size: 0.72rem;"></i> Edit
+                                    </a>
+                                    <a class="dropdown-item delete-spoilage" href="#" data-id="${spoilage.id}">
+                                        <i class="fal fa-trash-alt fa-fw mr-2" style="color: red; font-size: 0.72rem;"></i> Delete
+                                    </a>
+                                </div>
+                            </div>
+                        </td></tr>`
                     })
-                    console.log(results)
                     filternotifications.html("")
-                    spoilagelist.find("tbody").html(results)
+                    makedatatable(spoilagelist, results, 15)
                 }
             )
         }else{
             filternotifications.html(showAlert("info",errors))
         }
     })
+
+    // Toggle Filters collapsible panel text & icons
+    $('#filterCollapse').on('show.bs.collapse', function () {
+        $('#toggleFiltersBtn span').text('Close');
+        $('#toggleFiltersBtn i').removeClass('fa-filter').addClass('fa-times');
+    });
+    $('#filterCollapse').on('hide.bs.collapse', function () {
+        $('#toggleFiltersBtn span').text('Filters');
+        $('#toggleFiltersBtn i').removeClass('fa-times').addClass('fa-filter');
+    });
 })

@@ -7,12 +7,16 @@ $(document).ready(function(){
         errordiv=$("#errors"),
         glstatement=$("#results"),
         errors=""
-        // assign date control datepickers
-    startdatefield.datepicker({maxDate: new Date()})
-    enddatefield.datepicker({maxDate: new Date()})
-    $.datepicker.setDefaults({
-        dateFormat: 'dd-M-yy'
-    });
+
+    // assign date control datepickers
+    startdatefield.datepicker({
+        dateFormat: 'dd-M-yy',
+        maxDate: new Date()
+    })
+    enddatefield.datepicker({
+        dateFormat: 'dd-M-yy',
+        maxDate: new Date()
+    })
 
     alldates.prop("checked",true)
     startdatefield.prop("disabled",true)
@@ -32,35 +36,34 @@ $(document).ready(function(){
     getGLAccounts(glaccountlist,0,option='one')
     
     searchbutton.on("click",function(){
-        var  results='', runningbalance=0
+        var results='', runningbalance=0
         errors=''
         if(alldates.prop("checked")){
             startdate='01-Jan-2019'
             enddate='31-Dec-2100'
         }else{
             if(startdatefield.val()==""){
-                errors="<p class='alert alert-danger'>Please provide start date first</p>"
+                errors=showAlert("error", "Please provide start date first");
             }else{
                 startdate=startdatefield.val()
             }
             if(enddatefield.val()==""){
-                errors="<p class='alert alert-danger'>Please provide end date first</p>"
+                errors=showAlert("error", "Please provide end date first");
             }else{
                 enddate=enddatefield.val()
             }
         }
 
         if(glaccountlist.val()==""){
-            errors="<p class='alert alert-danger'>Please select a GL account first</p>"
+            errors=showAlert("error", "Please select a GL account first");
         }else{
             glaccount=glaccountlist.val()
         }
-        console.log(errors)
         
         if(errors!=""){
             errordiv.html(errors)
         }else{
-            errordiv.html("<p class='alert alert-info'>Processing ...</p>")
+            errordiv.html(showAlert("progress", "Processing ..."))
             glstatement.html("")
             $.getJSON(
                 "../controllers/reportoperations.php",
@@ -72,7 +75,7 @@ $(document).ready(function(){
                 },
                 function(data){
                     if(data.length==0){
-                        results="<p class='alert alert-info'>Sorry, No data matching filter criteria provided.</p>"
+                        results=showAlert("info", "Sorry, No data matching filter criteria provided.");
                     }else{
                         runningbalance=parseFloat(data[0].openingbalance)
                         results="<table class='table table-sm'><tr>"
@@ -85,7 +88,7 @@ $(document).ready(function(){
                         results+="<tr><td>&nbsp;</td>"
                         results+="<td class='text-right'> Closing Balance: <span class='font-weight-bold'>"+$.number(data[0].closingbalance,2)+"</span></td></tr></table>"
 
-                        results+="<table class='table table-striped table-sm'><thead><th>Date</th><th>Reference</th><th>Narrative</th><th>Added By</th><th>Debit</th><th>Credit</th><th>Balance</th><thead>"
+                        results+="<table class='table table-striped table-sm' id='statementtable'><thead><th>Date</th><th>Reference</th><th>Narrative</th><th>Added By</th><th>Debit</th><th>Credit</th><th>Balance</th></thead>"
                         results+="<tbody>"
                         
                         for(var i=0; i<data.length;i++){
@@ -102,10 +105,46 @@ $(document).ready(function(){
                         results+="</tbody></table>"
                     }
                     
+                    if ($.fn.DataTable.isDataTable('#statementtable')) {
+                        $('#statementtable').DataTable().destroy();
+                    }
                     glstatement.html(results)
                     errordiv.html("")
+
+                    if(data.length > 0) {
+                        $('#statementtable').DataTable({
+                            responsive: true,
+                            dom: '<"dt-buttons-container mb-3"B><"dt-controls-container d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-3"lf>rtip',
+                            "lengthMenu": [[10, 15, 25, 50, 100, -1], [10, 15, 25, 50, 100, "All"]],
+                            "pageLength": 25,
+                            buttons: [
+                                {
+                                    extend: 'excelHtml5',
+                                    text: '<i class="fal fa-file-excel mr-1"></i> Excel',
+                                    className: 'btn btn-xs btn-success mr-2'
+                                },
+                                {
+                                    extend: 'csvHtml5',
+                                    text: '<i class="fal fa-file-csv mr-1"></i> CSV',
+                                    className: 'btn btn-xs btn-primary mr-2'
+                                },
+                                {
+                                    extend: 'pdfHtml5',
+                                    text: '<i class="fal fa-file-pdf mr-1"></i> PDF',
+                                    className: 'btn btn-xs btn-danger mr-2'
+                                },
+                                {
+                                    extend: 'print',
+                                    text: '<i class="fal fa-print mr-1"></i> Printer',
+                                    className: 'btn btn-xs btn-info'
+                                }
+                            ]
+                        });
+                    }
                 }
-            )
+            ).fail(function(jqXHR, textStatus, errorThrown) {
+                errordiv.html(showAlert("error", "Sorry, an error occurred: " + textStatus));
+            })
         }
     })
 })

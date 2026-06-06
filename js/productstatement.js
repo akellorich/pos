@@ -5,18 +5,17 @@ $(document).ready(function(){
         alldates=$("#alldates"),
         filterbutton=$("#search"),
         errordiv=$("#errors"),
-        report=$("#report")
-    // add datepickers
+        report=$("#report");
     
-    startdatefield.datepicker({dateFormat: 'dd-M-yy'})
-    enddatefield.datepicker({dateFormat: 'dd-M-yy'})
+    startdatefield.datepicker({maxDate: new Date(), dateFormat: 'dd-M-yy'})
+    enddatefield.datepicker({maxDate: new Date(), dateFormat: 'dd-M-yy'})
 
     alldates.prop("checked",true)
     startdatefield.prop("disabled",true)
     enddatefield.prop("disabled",true)
 
     alldates.on("click",function(){
-        if(alldates.prop("disabled")){
+        if(alldates.prop("checked")){
             startdatefield.prop("disabled",true)
             enddatefield.prop("disabled",true)
         }else{
@@ -54,6 +53,10 @@ $(document).ready(function(){
         }
 
         if(errors==""){
+            errordiv.html("");
+            if ($.fn.DataTable.isDataTable(report)) {
+                report.DataTable().destroy();
+            }
             $.getJSON(
                 "../controllers/productoperations.php",
                 {
@@ -63,6 +66,7 @@ $(document).ready(function(){
                     enddate
                 },
                 function(data){
+                    errordiv.html("");
                     let runningbalance=Number(data[0].openingbalance), results=""
                     for(var i=0;i<data.length;i++){
                         results+=`<tr><td>${Number(i+1)}</td>`
@@ -70,18 +74,48 @@ $(document).ready(function(){
                         results+=`<td>${data[i].description}</td>`
                         if(i==0){
                             results+=`<td>&nbsp;</td>`
-                            results+=`<td>&nbsp;</td>`
-                            results+=`<td>&nbsp;</td>`
+                            results+=`<td class="text-right">&nbsp;</td>`
+                            results+=`<td class="text-right">&nbsp;</td>`
                         }else{
                             results+=`<td>${data[i].reference}</td>`
-                            results+=`<td>${Number(data[i].stockin)}</td>`
-                            results+=`<td>${Number(data[i].stockout)}</td>`
+                            results+=`<td class="text-right">${Number(data[i].stockin) > 0 ? $.number(data[i].stockin, 2) : "-"}</td>`
+                            results+=`<td class="text-right">${Number(data[i].stockout) > 0 ? $.number(data[i].stockout, 2) : "-"}</td>`
                         }
                         runningbalance+=Number(data[i].stockin)-Number(data[i].stockout)
                         console.log(runningbalance)
-                        results+=`<td>${$.number(runningbalance)}</td></tr>`
+                        results+=`<td class="text-right">${$.number(runningbalance, 2)}</td></tr>`
                     }
-                    report.find("tbody").html(results)
+                    report.find("tbody").html(results);
+                    
+                    report.DataTable({
+                        responsive: true,
+                        ordering: false,
+                        dom: '<"dt-buttons-container mb-3"B><"dt-controls-container d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-3"lf>rtip',
+                        "lengthMenu": [[10, 15, 25, 50, 100, -1], [10, 15, 25, 50, 100, "All"]],
+                        "pageLength": 15,
+                        buttons: [
+                            {
+                                extend: 'excelHtml5',
+                                text: '<i class="fal fa-file-excel mr-1"></i> Excel',
+                                className: 'btn btn-xs btn-success mr-2'
+                            },
+                            {
+                                extend: 'csvHtml5',
+                                text: '<i class="fal fa-file-csv mr-1"></i> CSV',
+                                className: 'btn btn-xs btn-primary mr-2'
+                            },
+                            {
+                                extend: 'pdfHtml5',
+                                text: '<i class="fal fa-file-pdf mr-1"></i> PDF',
+                                className: 'btn btn-xs btn-danger mr-2'
+                            },
+                            {
+                                extend: 'print',
+                                text: '<i class="fal fa-print mr-1"></i> Printer',
+                                className: 'btn btn-xs btn-info'
+                            }
+                        ]
+                    });
                 }
             )
         }else{

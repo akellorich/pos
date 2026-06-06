@@ -410,38 +410,41 @@ $(document).ready(function(){
     }
 
     function populateCustomerPerformance() {
-        const customerDummyData = [
-            { name: "Acme Corp", type: "Wholesale Partner", revenue: 48250, share: 32, icon: "business" },
-            { name: "Global Logistics", type: "Contract Client", revenue: 34120, share: 22, icon: "public" },
-            { name: "Tech Solutions", type: "Premium Member", revenue: 28450, share: 18, icon: "computer" },
-            { name: "City Retailers", type: "Standard Account", revenue: 19800, share: 12, icon: "store" }
-        ];
-
-        let html = '';
-        customerDummyData.forEach(customer => {
-            html += `
-            <div class="col-12 col-md-6 col-lg-3 mb-1">
-                <div class="d-flex align-items-center mb-1">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center mr-2" style="width: 32px; height: 32px; background: #e3f2fd; color: #0059bb; border: 1px solid #bbdefb;">
-                        <span class="material-symbols-outlined" style="font-size: 16px;">${customer.icon}</span>
-                    </div>
-                    <div>
-                        <p class="mb-0 font-weight-bold text-dark" style="font-size: 13px;">${customer.name}</p>
-                        <p class="mb-0 text-muted font-weight-bold text-uppercase" style="font-size: 10px; letter-spacing: 0.02em;">${customer.type}</p>
-                    </div>
-                </div>
-                <div>
-                    <div class="d-flex justify-content-between mb-1" style="font-size: 13px;">
-                        <span class="font-weight-bold" style="color: #c64f00;">${$.number(customer.revenue, 2)}</span>
-                        <span class="text-muted font-weight-bold" style="font-size: 10px;">${customer.share}% Rev</span>
-                    </div>
-                    <div class="progress-slim" style="height: 6px;">
-                        <div class="h-100 transition-all duration-700" style="width: ${customer.share}%; background: #c64f00;"></div>
-                    </div>
-                </div>
-            </div>`;
+        $.getJSON("../controllers/reportoperations.php", {
+            getcustomerperformance: true,
+            startdate: startdate,
+            enddate: enddate
+        }, function(data) {
+            let html = '';
+            if (data && data.length > 0) {
+                data.forEach(customer => {
+                    html += `
+                    <div class="col-12 col-md-6 col-lg-3 mb-1">
+                        <div class="d-flex align-items-center mb-1">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center mr-2" style="width: 32px; height: 32px; background: #e3f2fd; color: #0059bb; border: 1px solid #bbdefb;">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">${customer.icon || 'person'}</span>
+                            </div>
+                            <div>
+                                <p class="mb-0 font-weight-bold text-dark" style="font-size: 13px;">${customer.name}</p>
+                                <p class="mb-0 text-muted font-weight-bold text-uppercase" style="font-size: 10px; letter-spacing: 0.02em;">${customer.type}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="d-flex justify-content-between mb-1" style="font-size: 13px;">
+                                <span class="font-weight-bold" style="color: #c64f00;">${$.number(customer.revenue, 2)}</span>
+                                <span class="text-muted font-weight-bold" style="font-size: 10px;">${customer.share}% Rev</span>
+                            </div>
+                            <div class="progress-slim" style="height: 6px;">
+                                <div class="h-100 transition-all duration-700" style="width: ${customer.share}%; background: #c64f00;"></div>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+            } else {
+                html = '<div class="col-12 text-center py-3 text-muted">No data available</div>';
+            }
+            $("#salesbycustomer-container").html(html);
         });
-        $("#salesbycustomer-container").html(html);
     }
 
     function getbestsellingproductInternal() {
@@ -511,16 +514,11 @@ $(document).ready(function(){
     }
 
     function populateReorderItems() {
-        // High-fidelity dummy data for Reorder Items
-        const reorderData = [
-            { name: "Organic Fertilizer 50kg", code: "FERT-001", stock: 12, reorder: 50, supplier: "AgroSupply Ltd" },
-            { name: "Irrigation Pump X2", code: "PUMP-X2", stock: 2, reorder: 10, supplier: "TechFlow Systems" },
-            { name: "Premium Seeds (Maize)", code: "SEED-MZ", stock: 45, reorder: 200, supplier: "EcoSeeds Co" },
-            { name: "Hand Tools Set", code: "TOOL-HND", stock: 5, reorder: 25, supplier: "Global Hardware" }
-        ];
-
-        // Update Summary Card Placeholder
-        $("#reorderitemsplaceholder").text(reorderData.length);
+        $.getJSON("../controllers/reportoperations.php", {
+            getreorderitems: true
+        }, function(data) {
+            $("#reorderitemsplaceholder").text(data.length);
+        });
     }
 
     function getsalesbycustomervalueInternal(rangeType) {

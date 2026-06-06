@@ -17,12 +17,18 @@ $(document).ready(function(){
     startdatefield.prop("disabled",true)
     enddatefield.prop("disabled",true)
 
-    startdatefield.datepicker({maxDate: new Date()})
-    enddatefield.datepicker({maxDate: new Date()})
-    invoicedate.datepicker({maxDate: new Date()})
-
-    $.datepicker.setDefaults({
-        dateFormat: 'dd-M-yy'
+    startdatefield.flatpickr({
+        maxDate: new Date(),
+        dateFormat: 'd-M-Y'
+    });
+    enddatefield.flatpickr({
+        maxDate: new Date(),
+        dateFormat: 'd-M-Y'
+    });
+    invoicedate.flatpickr({
+        maxDate: new Date(),
+        dateFormat: 'd-M-Y',
+        defaultDate: new Date()
     });
 
     getSuppliers(supplierslist,'choose')
@@ -57,7 +63,7 @@ $(document).ready(function(){
         }
 
         if(errors==''){
-            errordiv.html("<div class='alert alert-info'><i class='fas fa-shipping-fast fa-fw fa-lg'></i> Processing. Please wait ...</div>")
+            errordiv.html(showAlert("info", "Processing. Please wait ..."))
             $.getJSON(
                 "../controllers/grnoperations.php",
                 {
@@ -70,19 +76,18 @@ $(document).ready(function(){
                     var results=''
                     for(var i=0;i<data.length;i++){
                         results+="<tr><td><input type='checkbox' id='"+data[i].id+"' class='grn'></td>"
-                        results+="<td>"+parseInt(i+1)+"</td>"
+                        results+="<td class='d-none d-md-table-cell'>"+parseInt(i+1)+"</td>"
                         results+="<td>"+data[i].grnno+"</td>"
                         results+="<td>"+data[i].deliverynono+"</td>"
-                        results+="<td>"+data[i].datereceived+"</td>"
-                        results+="<td>"+$.number(data[i].ordertotal,0)+"</td></tr>"
+                        results+="<td class='d-none d-md-table-cell'>"+data[i].datereceived+"</td>"
+                        results+="<td class='text-right'>"+$.number(data[i].ordertotal,0)+"</td></tr>"
                     }
                     uninvoicedgrns.html(results)
                     errordiv.html("")
                 }
             ) 
         }else{
-            errors="<div class='alert alert-info'><i class='fas fa-info-circle fa-lg fa-fw'></i> "+errors+"</div>"
-            errordiv.html(errors)
+            errordiv.html(showAlert("warning", errors))
         }
     })
 
@@ -119,7 +124,7 @@ $(document).ready(function(){
 
     savebutton.on("click",function(){
         //console.log("save button clicked")
-        var data = [], supplierid,invoiceno, errors=""
+        var data = [], supplierid, invoiceno, invoicedate, errors=""
         supplierid=supplierslist.val()
         invoiceno=$.trim(invoicenofield.val())
         invoicedate=invoicedatefield.val()
@@ -157,27 +162,29 @@ $(document).ready(function(){
                 function(data){
                     var results=$.trim(data.toString())
                     if(results=="success"){
-                        errors="<p class='alert alert-success'><i class='fas fa-check-circle fa-lg fa-fw'></i> The Invoice has been saved successfully.</p>"
-                        // Clear the form
+                        errordiv.html(showAlert("success", "The Invoice has been saved successfully."))
                         clearForm()
                     }else{
-                        errors="<p class='alert alert-danger'><i class='fas fa-times-circle fa-lg fa-fw'></i> Sorry. An error occured."+results+"</p>"
+                        errordiv.html(showAlert("danger", "Sorry. An error occurred: " + results))
                     }
-                    errordiv.html(errors)
                 }
             )
         }else{
-            errors="<div class='alert alert-info'><i class='fas fa-info-circle fa-fw fa-lg'></i> "+errors+"</div>"
-            errordiv.html(errors)
+            errordiv.html(showAlert("warning", errors))
         }
             
     })
    
     function clearForm(){
-        supplierslist.val("0")
+        supplierslist.val("")
         invoicenofield.val("")
         invoicedatefield.val("")
-        uninvoicedgrns.html("")
-        totalfield.val("")
+        uninvoicedgrns.html("<tr><td colspan='6' class='text-center text-muted py-4'>No records listed. Select supplier and apply filters.</td></tr>")
+        totalfield.val("0.00")
+        allgrn.prop("checked", false)
     }
+
+    $("#clear").on("click", function(){
+        clearForm()
+    })
 })

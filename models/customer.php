@@ -36,17 +36,13 @@ class customer extends db{
 
     function saveCustomer($customerid,$customername,$tradingname,$physicaladdress,$postaladdress,$mobile ,$email,$creditlimit,$creditterm,$category,$posid,$onetimecustomer,$pinno,$idno,$subzoneid){
         if(!$this->checkCustomerName($customerid,$customername)){
-            // check if either PIN or ID number exists
-            // if($this->checkcustomerdocuments($customerid,'pin',$pinno)){
-            //     return "pin exists";
-            // }else if($this->checkcustomerdocuments($customerid,'id',$idno)){
-            //     return "id exists";
-            // }else{
-            $sql="CALL spsavecustomer({$this->clientid},{$customerid},'{$customername}','{$tradingname}','{$physicaladdress}','{$postaladdress}','{$mobile}' ,'{$email}',{$creditlimit},{$creditterm},{$_SESSION['userid']},{$category},{$posid},{$onetimecustomer},'{$pinno}','{$idno}',{$subzoneid})";
+            // Format optional/nullable subzoneid safely for database call
+            $dbSubzoneId = (!empty($subzoneid) && is_numeric($subzoneid)) ? (int)$subzoneid : "NULL";
+            
+            $sql="CALL spsavecustomer({$this->clientid},{$customerid},'{$customername}','{$tradingname}','{$physicaladdress}','{$postaladdress}','{$mobile}' ,'{$email}',{$creditlimit},{$creditterm},{$_SESSION['userid']},{$category},{$posid},{$onetimecustomer},'{$pinno}','{$idno}',{$dbSubzoneId})";
             // echo $sql;
             $this->getData($sql);
             return  "success";
-            // }
         }else{
             return "name exists";
         }
@@ -109,7 +105,7 @@ class customer extends db{
     }
 
     function saveCustomerReceipt($refno,$customerid,$paymentmode,$referenceno,$overpay){
-        $sql="CALL spsavecustomerreceipt({$this->clientid},'{$refno}',{$customerid}, {$paymentmode},'{$referenceno}',{$_SESSION['userid']},{$overpay})";
+        $sql="CALL spsavecustomerreceipt({$this->branchid},'{$refno}',{$customerid}, {$paymentmode},'{$referenceno}',{$_SESSION['userid']},{$overpay})";
         //echo $sql."<br/>";
         $rst=$this->getData($sql);
         if($rst->rowCount()>0){
@@ -209,34 +205,25 @@ class customer extends db{
         return $this->getJSON($sql);
     }
 
-    function checkcustomercontact($id,$customerid,$contactname){
-        $sql="CALL `sp_checkcustomercontact`({$this->clientid},{$id},{$customerid},'{$contactname}')";
-        return $this->getData($sql)->rowCount();
-    }
-
-    function savecustomercontact($id,$customerid,$categoryid,$contactname,$mobile,$email){
-        if($this->checkcustomercontact($id,$customerid,$contactname)){
-            return "exists";
-        }else{
-            $sql="CALL `sp_savecustomercontact`({$this->clientid},{$id},{$customerid},{$categoryid},'{$contactname}','{$mobile}','{$email}',{$_SESSION['userid']})";
-            $this->getData($sql);
-            return "success";
-        }
+    function savecustomercontact($id,$customerid,$categoryid,$contactname,$idno,$mobile,$email,$consentsigned){
+        $sql="CALL `spsavecustomercontact`({$this->clientid},{$id},{$customerid},{$categoryid},'{$contactname}','{$idno}','{$mobile}','{$email}',{$consentsigned},{$_SESSION['userid']})";
+        $this->getData($sql);
+        return "success";
     }
 
     function deletecustomercontact($id){
-        $sql="CALL `sp_deletecustomercontact`({$this->clientid},{$id},{$_SESSION['userid']})";
+        $sql="CALL `spdeletecustomercontact`({$this->clientid},{$id},{$_SESSION['userid']})";
         $this->getData($sql);
         return "success";
     }
 
     function getcustomercontacts($customerid){
-        $sql="CALL `sp_getcustomercontacts`({$this->clientid},{$customerid})";
+        $sql="CALL `spgetcustomercontacts`({$this->clientid},{$customerid})";
         return $this->getJSON($sql);
     }
 
     function getcontactcategories(){
-        $sql="CALL `sp_getcontactscategories`({$this->clientid})";
+        $sql="CALL `spgetcontactscategories`({$this->clientid})";
         return $this->getJSON($sql);
     }
 }

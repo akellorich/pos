@@ -27,7 +27,7 @@
                     <tfoot></tfoot>
                 </table>
                 
-                <input type="button" id="addpos" name="addpos" Value="Add New Outlet" class="btn btn-success btn-sm">
+                <button type="button" id="addpos" name="addpos" class="btn btn-success btn-sm"><i class="fal fa-plus mr-1" style="font-size: 0.75rem;"></i> Add New Outlet</button>
                 <!-- <input type="button" id="goback" name="goback" Value="Main Menu" class="btn btn-primary btn-sm"> -->
             </div>
         </div>

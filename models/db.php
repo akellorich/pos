@@ -49,7 +49,7 @@ class db
             $this->username = "rgvddxtv_app";
             $this->password = "K@r1bun1kenya";
         } else {
-            $this->defaultdb = "pos_autoclassic";
+            $this->defaultdb = "pos";
             $this->username = "root";
             $this->password = "";
         }

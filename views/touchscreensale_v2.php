@@ -45,53 +45,65 @@
             <main class="main-pos-container">
                 <div id="errors"></div>
                 
-                <!-- Row 1: Mode Toggle & Action Icons -->
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="segmented-control">
-                        <button class="btn active" id="cashsale" onclick="$('.segmented-control .btn').removeClass('active'); $(this).addClass('active')">Sale</button>
-                        <button class="btn" id="quotation" onclick="$('.segmented-control .btn').removeClass('active'); $(this).addClass('active')">Quotation</button>
-                        <button class="btn" id="proforma" onclick="$('.segmented-control .btn').removeClass('active'); $(this).addClass('active')">Proforma</button>
+                <div class="pos-controls-header">
+                    <!-- Row 1: Mode Toggle & Action Icons -->
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="segmented-control">
+                            <button class="btn active" id="cashsale" onclick="$('.segmented-control .btn').removeClass('active'); $(this).addClass('active')">Sale</button>
+                            <button class="btn" id="quotation" onclick="$('.segmented-control .btn').removeClass('active'); $(this).addClass('active')">Quotation</button>
+                            <button class="btn" id="proforma" onclick="$('.segmented-control .btn').removeClass('active'); $(this).addClass('active')">Proforma</button>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-nexus-action-icon" title="Staff Mode">
+                                <span class="material-symbols-outlined">person_play</span>
+                            </button>
+                            <button class="btn btn-nexus-action-icon" id="locksystem_v2" title="Lock">
+                                <span class="material-symbols-outlined">lock</span>
+                            </button>
+                            <button class="btn btn-nexus-action-icon" id="settings_v2" title="Settings">
+                                <span class="material-symbols-outlined">settings</span>
+                            </button>
+                        </div>
                     </div>
-                    
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-nexus-action-icon" title="Staff Mode">
-                            <span class="material-symbols-outlined">person_play</span>
-                        </button>
-                        <button class="btn btn-nexus-action-icon" id="locksystem_v2" title="Lock">
-                            <span class="material-symbols-outlined">lock</span>
-                        </button>
-                        <button class="btn btn-nexus-action-icon" id="settings_v2" title="Settings">
-                            <span class="material-symbols-outlined">settings</span>
-                        </button>
+
+                    <!-- Row 2: Search Bar -->
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="search-wrapper flex-grow-1 mb-0">
+                            <span class="material-symbols-outlined">search</span>
+                            <input id="itemcode" class="pos-search-input" placeholder="Search Item ..." type="text" autocomplete="off"/>
+                        </div>
+                        <div class="view-toggle-group">
+                            <button type="button" class="btn-view-toggle active" id="view-cards-btn" title="Card View">
+                                <span class="material-symbols-outlined">grid_view</span>
+                            </button>
+                            <button type="button" class="btn-view-toggle" id="view-list-btn" title="List View">
+                                <span class="material-symbols-outlined">view_list</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Row 2: Search Bar -->
-                <div class="search-wrapper mb-4">
-                    <span class="material-symbols-outlined">search</span>
-                    <input id="itemcode" class="pos-search-input" placeholder="Search Item ..." type="text" autocomplete="off"/>
-                </div>
+                    <!-- Row 3: Categories with "More" -->
+                    <div class="d-flex align-items-center gap-2 mb-2 position-relative">
+                        <div id="categories" class="no-scrollbar">
+                            <!-- Categories populated by JS -->
+                        </div>
+                        <button id="show-more-categories" class="btn btn-nexus-secondary" style="white-space: nowrap;">
+                            <span class="material-symbols-outlined" style="font-size: 20px;">apps</span>
+                            More
+                        </button>
 
-                <!-- Row 3: Categories with "More" -->
-                <div class="d-flex align-items-center gap-2 mb-4 position-relative">
-                    <div id="categories" class="no-scrollbar">
-                        <!-- Categories populated by JS -->
-                    </div>
-                    <button id="show-more-categories" class="btn btn-nexus-secondary" style="white-space: nowrap;">
-                        <span class="material-symbols-outlined" style="font-size: 20px;">apps</span>
-                        More
-                    </button>
-
-                    <!-- Popup for extra categories -->
-                    <div id="categories-popup" class="categories-popup shadow-lg">
-                        <div class="popup-grid" id="all-categories-list">
-                            <!-- Populated by JS -->
+                        <!-- Popup for extra categories -->
+                        <div id="categories-popup" class="categories-popup shadow-lg">
+                            <div class="popup-grid" id="all-categories-list">
+                                <!-- Populated by JS -->
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Search Results List -->
-                <div id="searchresultslist" style="display:none" class="position-absolute bg-white border rounded shadow-lg w-75" style="z-index: 1050; margin-top: -15px; border-radius: 12px !important;">
+                <div id="searchresultslist" class="position-absolute bg-white border rounded shadow-lg w-75" style="display:none;">
                     <ul id="searchproductlist" class="list-unstyled p-2 mb-0"></ul>
                 </div>
 
@@ -107,39 +119,54 @@
             <!-- Right Sidebar: Current Sale -->
             <aside class="cart-sidebar">
                 <div class="cart-header">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
                         <h5 class="font-manrope font-weight-bold mb-0">Current Sale</h5>
-                        <div class="bg-light px-3 py-1 border rounded-pill d-flex align-items-center" style="color: #10b981;">
-                            <span class="material-symbols-outlined mr-2" style="font-size: 14px;">calendar_today</span>
-                            <input type="text" id="transactiondate" class="bg-transparent border-0 text-center font-weight-bold" style="width: 85px; font-size: 11px; outline: none; color: #10b981;" readonly disabled>
+                        <div class="d-flex align-items-center gap-2" style="gap: 8px;">
+                            <div class="bg-light px-3 py-1 border rounded-pill d-flex align-items-center" style="color: #10b981;">
+                                <span class="material-symbols-outlined mr-2" style="font-size: 14px;">calendar_today</span>
+                                <input type="text" id="transactiondate" class="bg-transparent border-0 text-center font-weight-bold" style="width: 85px; font-size: 11px; outline: none; color: #10b981;" readonly disabled>
+                            </div>
+                            <button id="btnToggleCartHeader" type="button" title="Toggle sale details"
+                                style="background: none; border: none; padding: 4px 6px; cursor: pointer; color: #64748b; border-radius: 8px; display: flex; align-items: center; transition: background 0.2s;">
+                                <span class="material-symbols-outlined" id="cartHeaderChevron" style="font-size: 20px; transition: transform 0.25s ease;">expand_less</span>
+                            </button>
                         </div>
                     </div>
 
-                    <div class="row no-gutters mx-n1 mb-1">
-                        <div class="col-6 px-1">
-                            <div class="cart-input-group">
-                                <span class="material-symbols-outlined">store</span>
-                                <select id="outlet"></select>
+                    <div id="cart-header-details">
+                        <div class="row no-gutters mx-n1 mb-1">
+                            <div class="col-6 px-1">
+                                <div class="cart-input-group">
+                                    <span class="material-symbols-outlined">store</span>
+                                    <select id="outlet"></select>
+                                </div>
+                            </div>
+                            <div class="col-6 px-1">
+                                <div class="cart-input-group">
+                                    <span class="material-symbols-outlined">description</span>
+                                    <input id="reference" placeholder="Quotation #" type="text"/>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-6 px-1">
-                            <div class="cart-input-group">
-                                <span class="material-symbols-outlined">description</span>
-                                <input id="reference" placeholder="Quotation #" type="text"/>
-                            </div>
+                        
+                        <div class="cart-input-group">
+                            <span class="material-symbols-outlined">person</span>
+                            <select id="customer"></select>
                         </div>
-                    </div>
-                    
-                    <div class="cart-input-group">
-                        <span class="material-symbols-outlined">person</span>
-                        <select id="customer"></select>
                     </div>
                 </div>
 
                 <div class="cart-items-container no-scrollbar">
                     <table id="salesitemsdetails">
                         <thead>
-                            <tr><th>Code</th><th>Name</th><th>Desc</th><th>Price</th><th>Disc</th><th>Ext</th><th>Stock</th><th>Qty</th><th>Serial</th><th>Total</th><th></th><th>UOM</th></tr>
+                            <tr class="cart-header-row">
+                                <th class="col-delete"></th>
+                                <th class="col-product">Product</th>
+                                <th class="col-uom">UOM</th>
+                                <th class="col-qty">Quantity</th>
+                                <th class="col-price">UnitPrice</th>
+                                <th class="col-total">LineTotal</th>
+                            </tr>
                         </thead>
                         <tbody></tbody>
                     </table>

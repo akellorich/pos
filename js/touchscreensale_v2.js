@@ -185,4 +185,68 @@ $(document).ready(function() {
             $(document).on('touchend touchcancel', stopResize);
         }
     })();
+
+    // 7. Cart Header Details Toggle
+    (function() {
+        const $details  = $('#cart-header-details');
+        const $chevron  = $('#cartHeaderChevron');
+        const STORE_KEY = 'pos-cart-header-collapsed';
+
+        // Restore saved state
+        if (localStorage.getItem(STORE_KEY) === '1') {
+            $details.addClass('collapsed');
+            $chevron.css('transform', 'rotate(180deg)');
+            $('body').addClass('cart-header-collapsed');
+        }
+
+        $('#btnToggleCartHeader').on('click', function() {
+            const isCollapsed = $details.hasClass('collapsed');
+            if (isCollapsed) {
+                $details.removeClass('collapsed');
+                $chevron.css('transform', 'rotate(0deg)');
+                $('body').removeClass('cart-header-collapsed');
+                localStorage.setItem(STORE_KEY, '0');
+            } else {
+                $details.addClass('collapsed');
+                $chevron.css('transform', 'rotate(180deg)');
+                $('body').addClass('cart-header-collapsed');
+                localStorage.setItem(STORE_KEY, '1');
+            }
+        });
+    })();
+
+    // 6. Card / List View Toggle
+    (function() {
+        const $products    = $('#products');
+        const $cardsBtn    = $('#view-cards-btn');
+        const $listBtn     = $('#view-list-btn');
+        const STORAGE_KEY  = 'pos-view-mode';
+
+        // Apply a saved preference on load
+        const savedMode = localStorage.getItem(STORAGE_KEY);
+        if (savedMode === 'list') {
+            $products.addClass('list-view');
+            $listBtn.addClass('active');
+            $cardsBtn.removeClass('active');
+        } else {
+            $products.removeClass('list-view');
+            $cardsBtn.addClass('active');
+            $listBtn.removeClass('active');
+        }
+
+        $cardsBtn.on('click', function() {
+            $products.removeClass('list-view');
+            $cardsBtn.addClass('active');
+            $listBtn.removeClass('active');
+            localStorage.setItem(STORAGE_KEY, 'cards');
+        });
+
+        $listBtn.on('click', function() {
+            $products.addClass('list-view');
+            $listBtn.addClass('active');
+            $cardsBtn.removeClass('active');
+            localStorage.setItem(STORAGE_KEY, 'list');
+        });
+    })();
 });
+

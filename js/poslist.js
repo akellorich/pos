@@ -189,11 +189,44 @@ $(document).ready(function(){
                         </td>
                     </tr>`
                 }) 
-                results+="</table> </div> </div>"
+                results+=`</table></div>`
+                // Select All placed outside the scrollable area in card-footer
+                results+=`<div class='card-footer py-2 bg-white border-top'>
+                    <input type='checkbox' id='chkSelectAllCategories'>&nbsp;&nbsp;<label for='chkSelectAllCategories' class='mb-0 font-weight-bold text-secondary' style='cursor:pointer; font-size:0.82rem;'>Select All / Deselect All</label>
+                </div></div>`
                 posproductcategories.html(results)
+
+                // Sync the Select All checkbox state on load
+                syncSelectAllState()
+
+                // When Select All is toggled, check/uncheck all category boxes
+                posproductcategories.find("#chkSelectAllCategories").on("change", function(){
+                    const checked = $(this).prop("checked")
+                    posproductcategories.find(".checkoption").prop("checked", checked)
+                })
+
+                // When any individual checkbox changes, sync the Select All state
+                posproductcategories.on("change", ".checkoption", function(){
+                    syncSelectAllState()
+                })
             }
         )
     }
+
+    function syncSelectAllState(){
+        const all   = posproductcategories.find(".checkoption")
+        const checked = posproductcategories.find(".checkoption:checked")
+        const $selectAll = posproductcategories.find("#chkSelectAllCategories")
+
+        if (checked.length === 0) {
+            $selectAll.prop("checked", false).prop("indeterminate", false)
+        } else if (checked.length === all.length) {
+            $selectAll.prop("checked", true).prop("indeterminate", false)
+        } else {
+            $selectAll.prop("checked", false).prop("indeterminate", true)
+        }
+    }
+
     
     saveposbutton.on("click",()=>{
         const posid=posidfield.val(),

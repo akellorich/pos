@@ -11,10 +11,17 @@
               padding-left: 15px !important;
               padding-right: 15px !important;
           }
+          #receiptlist .containergroup.card {
+              height: calc(100vh - 90px);
+              display: flex;
+              flex-direction: column;
+          }
           .card-body-list {
+              flex: 1;
               height: auto !important;
-              max-height: 450px;
+              max-height: none !important;
               overflow-y: auto;
+              padding-bottom: 24px !important;
           }
       }
 
@@ -222,6 +229,12 @@
               padding: 4px 8px !important;
               font-size: 0.68rem !important;
           }
+      }
+
+      /* Space between the responsive expand (+) button and the first data column */
+      #stocklistreport td.dtr-control,
+      #stocklistreport th.dtr-control {
+          padding-right: 12px !important;
       }
     </style>
    </head>

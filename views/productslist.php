@@ -423,6 +423,9 @@
                                         <span id="importProgressPercent">0%</span>
                                     </div>
                                 </div>
+
+                                <!-- Inline results panel (shown after import runs) -->
+                                <div id="importResultsContainer" class="mt-3 flex-grow-1" style="display: none;"></div>
                             </div>
                         </div>
                     </div>

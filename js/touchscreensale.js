@@ -191,7 +191,9 @@ $(document).ready(() => {
     })
 
     getPointsOfSale(poslist, 'choose')
-    getproductcategories()
+    // Default state: no outlet selected — categories and products are empty
+    categories.html("")
+    products.html("")
 
     function renderProductCard(product) {
         let stock = parseFloat(product.available_stock) || 0;
@@ -205,26 +207,48 @@ $(document).ready(() => {
 
         return `
             <button class='pos-product-card' data-id='${product.productid}' data-code='${product.itemcode}'>
-               <span class="stock-pill ${stockClass}">${stockDisplay}</span>
-               <span class="product-name">${product.itemname}</span>
-               <span class="product-price">${product.sellingprice}</span>
+               <span class="material-symbols-outlined product-icon">inventory_2</span>
+               <div class="product-details">
+                   <span class="product-name">${product.itemname}</span>
+                   <div class="product-meta">
+                       <span class="product-code">${product.itemcode}</span>
+                       <span class="product-price">${product.sellingprice}</span>
+                       <span class="stock-pill ${stockClass}">${stockDisplay}</span>
+                   </div>
+               </div>
             </button>`;
     }
 
-    function getproductcategories() {
-        $.getJSON(
-            "../controllers/getcategories.php",
-            (data) => {
-                data = data.filter(category => category.rawmaterialcategory == 0)
-                let results = '<button class="category-btn active" data-id="all">ALL</button>'
-                data.forEach(category => {
-                    results += `<button class='category-btn' data-id='${category.categoryid}'>${category.categoryname}</button>`
-                })
-                categories.html(results)
-                // Load all products initially
-                categories.find('button[data-id="all"]').trigger('click')
-            }
-        )
+    function getproductcategories(posid) {
+        if (!posid) {
+            // No outlet selected — clear everything
+            categories.html("")
+            products.html("")
+            return
+        } else {
+            // Outlet selected — load only its accessible categories
+            $.getJSON(
+                "../controllers/posoperations.php",
+                { getposproductcategories: true, posid: posid },
+                (data) => {
+                    // data includes all categories; filter to only those assigned to this outlet
+                    const allowed = data.filter(cat => cat.poscategoryid != null)
+                    let results = '<button class="category-btn" data-id="all">ALL</button>'
+                    if (allowed.length > 0) {
+                        allowed.forEach(category => {
+                            results += `<button class='category-btn' data-id='${category.categoryid}'>${category.categoryname}</button>`
+                        })
+                    } else {
+                        // Outlet has no category restrictions — show all
+                        data.forEach(category => {
+                            results += `<button class='category-btn' data-id='${category.categoryid}'>${category.categoryname}</button>`
+                        })
+                    }
+                    categories.html(results)
+                    // Products are NOT auto-loaded — user must click a category
+                }
+            )
+        }
     }
 
     categories.on("click", "button", function (e) {
@@ -264,12 +288,10 @@ $(document).ready(() => {
     })
 
     poslist.on("change", function () {
-        const activeCategory = categories.find("button.active");
-        if (activeCategory.length > 0) {
-            activeCategory.trigger("click");
-        } else {
-            categories.find('button[data-id="all"]').trigger('click');
-        }
+        const posid = poslist.val()
+        errordiv.html("")
+        // Rebuild category strip for this outlet, then auto-click ALL
+        getproductcategories(posid)
     })
 
     // get product details
@@ -381,7 +403,7 @@ $(document).ready(() => {
                                 productdetails += `<td class='quantity'>${qtyHtml}</td>`
                                 productdetails += data[0].serializable == 1 ? `<td><button class='btn btn-xs btn-primary addserials' data-id='${randomno}' data-name='${data[0].itemname}'><span><i class='fas fa-plus-circle fa-sm'></i> Add serials numbers</span></button></td>` : `<td>&nbsp</td>`
                                 productdetails += `<td class='linetotal'>${$.number(sellingprice, 2)}</td>`
-                                productdetails += `<td class='cart-item-delete'><a href='javascript:void(0)' class='deletedata' data-id='${randomId()}'><i class='material-symbols-outlined'>close</i></a></td>`
+                                productdetails += `<td class='cart-item-delete'><a href='javascript:void(0)' class='deletedata' data-id='${randomId()}'><i class='material-symbols-outlined'>delete</i></a></td>`
                                 productdetails += `<td class='cart-item-uom'>${uomHtml}</td></tr>`
 
                                 $(productdetails).appendTo(salesitemsdetails.find("tbody"))
@@ -390,6 +412,11 @@ $(document).ready(() => {
                                 overalltotal.html($.number(total, 2))
                                 totalamountpayable.html($.number(total, 2))
                                 computeTotalAmountPaid()
+                                // Autoscroll to the last item on current sale
+                                const $cartContainer = $('.cart-items-container, .scrollable');
+                                if ($cartContainer.length) {
+                                    $cartContainer.animate({ scrollTop: $cartContainer[0].scrollHeight }, 300);
+                                }
                             }
                         );
                     }
@@ -1267,6 +1294,11 @@ donebundlebuttons.on("click", function () {
     totalamountpayable.html($.number(total, 2))
     // compute totals and balance
     computeTotalAmountPaid()
+    // Autoscroll to the last item on current sale
+    const $cartContainer = $('.cart-items-container, .scrollable');
+    if ($cartContainer.length) {
+        $cartContainer.animate({ scrollTop: $cartContainer[0].scrollHeight }, 300);
+    }
     // hide the modal
     bundleitemsmodal.modal("hide")
 
@@ -1615,19 +1647,70 @@ function getHeldSalesDetails(id) {
         },
         function (data) {
             var results = ""
+            const isTouchscreenV2 = window.location.pathname.includes('touchscreensale_v2');
             for (var i = 0; i < data.length; i++) {
-                results += `<tr class='clickable-row'><td>${data[i].itemcode}</td>`
-                results += `<td>${data[i].itemname}</td>`
-                // results+="<td>"+data[i].description+"</td>"
-                results += `<td>${Number(data[i].unitprice) + Number(data[i].discount)}</td>`
-                results += `<td>${data[i].discount}</td>`
-                results += `<td>${data[i].unitprice}</td>`
-                results += `<td>${data[i].itembalance}</td>`
-                results += `<td class='quantity'>${data[i].quantity}</td>`
-                results += `<td>&nbsp;</td>`
-                // results+="<td>"+data[i].serialno+"</td>"
-                results += `<td class='linetotal'>${Number(data[i].quantity * data[i].unitprice)}</td>`
-                results += `<td><a href='javascript void(0)' class='deletedata' data-id='${randomId()}'><span><i class='fas fa-trash-alt fa-sm'></i></span></a></td></tr>`
+                if (isTouchscreenV2) {
+                    let discountLabel = `Discount: 0.00`;
+                    if (Number(data[i].discount) > 0) {
+                        discountLabel = `Discount: KES ${$.number(data[i].discount, 2)}`;
+                    }
+                    const baseUom = data[i].uom || "Piece";
+                    const uomHtml = `<span class='badge badge-default' style='font-size: 11px; font-weight: 600; padding: 4px 8px; color: #475569; background: #f1f5f9; border-radius: 6px;'>${baseUom}</span>`;
+                    
+                    const isSoldByValue = data[i].saleby === 'value';
+                    let rowClass = 'clickable-row';
+                    let priceHtml = '';
+                    let qtyHtml = '';
+                    let randomno = randomId();
+
+                    if (isSoldByValue) {
+                        rowClass += ' sold-by-value';
+                        priceHtml = `<div class='qty-pill price-pill'>
+                            <button class='qty-btn btn-minus' data-id='${randomno}'>−</button>
+                            <span class='qty-val-price price-val'>${Number(data[i].unitprice).toFixed(2)}</span>
+                            <button class='qty-btn btn-plus' data-id='${randomno}'>+</button>
+                        </div>`;
+                        qtyHtml = `<span class='qty-val linetotal-qty'>${Number(data[i].quantity).toFixed(2)}</span>`;
+                    } else {
+                        rowClass += ' sold-by-quantity';
+                        priceHtml = Number(data[i].unitprice).toFixed(2);
+                        qtyHtml = `<div class='qty-pill'>
+                            <button class='qty-btn btn-minus' data-id='${randomno}'>−</button>
+                            <span class='qty-val linetotal-qty'>${Math.round(data[i].quantity)}</span>
+                            <button class='qty-btn btn-plus' data-id='${randomno}'>+</button>
+                        </div>`;
+                    }
+
+                    results += `<tr class='${rowClass}' data-id='${randomno}' data-productid='${data[i].productid}' data-serializable='${data[i].serializable}' data-serial-nos='${data[i].serialno || ""}' data-allownegativesales=${data[i].allownegativesales || 0} data-buyingprice='${data[i].buyingprice || 0}' data-saleby='${data[i].saleby || "quantity"}' data-baseprice='${data[i].unitprice}'><td>${data[i].itemcode}</td>`
+                    results += `<td class='cart-item-info'>
+                        <div class='item-name'>${data[i].itemname}</div>
+                        <div class='item-barcode'>${data[i].itemcode}</div>
+                        <div class='item-discount'>${discountLabel}</div>
+                    </td>`
+                    results += `<td class='description'></td>`
+                    results += `<td class='price'>${priceHtml}</td>`
+                    results += `<td class='discount-val'>${data[i].discount || 0}</td>`
+                    results += `<td>${data[i].unitprice}</td>`
+                    results += `<td>${data[i].itembalance}</td>`
+                    results += `<td class='quantity'>${qtyHtml}</td>`
+                    results += data[i].serializable == 1 ? `<td><button class='btn btn-xs btn-primary addserials' data-id='${randomno}' data-name='${data[i].itemname}'><span><i class='fas fa-plus-circle fa-sm'></i> Add serials numbers</span></button></td>` : `<td>&nbsp;</td>`
+                    results += `<td class='linetotal'>${$.number(data[i].quantity * data[i].unitprice, 2)}</td>`
+                    results += `<td class='cart-item-delete'><a href='javascript:void(0)' class='deletedata' data-id='${randomId()}'><i class='material-symbols-outlined'>delete</i></a></td>`
+                    results += `<td class='cart-item-uom'>${uomHtml}</td></tr>`
+                } else {
+                    results += `<tr class='clickable-row'><td>${data[i].itemcode}</td>`
+                    results += `<td>${data[i].itemname}</td>`
+                    // results+="<td>"+data[i].description+"</td>"
+                    results += `<td>${Number(data[i].unitprice) + Number(data[i].discount)}</td>`
+                    results += `<td>${data[i].discount}</td>`
+                    results += `<td>${data[i].unitprice}</td>`
+                    results += `<td>${data[i].itembalance}</td>`
+                    results += `<td class='quantity'>${data[i].quantity}</td>`
+                    results += `<td>&nbsp;</td>`
+                    // results+="<td>"+data[i].serialno+"</td>"
+                    results += `<td class='linetotal'>${Number(data[i].quantity * data[i].unitprice)}</td>`
+                    results += `<td><a href='javascript void(0)' class='deletedata' data-id='${randomId()}'><span><i class='fas fa-trash-alt fa-sm'></i></span></a></td></tr>`
+                }
             }
             salesitemsdetails.find("tbody").html(results)
             // display overall total
@@ -1636,6 +1719,11 @@ function getHeldSalesDetails(id) {
             totalamountpayable.html($.number(total, 2))
             // compute totals and balance
             computeTotalAmountPaid()
+            // Autoscroll to the last item on current sale
+            const $cartContainer = $('.cart-items-container, .scrollable');
+            if ($cartContainer.length) {
+                $cartContainer.animate({ scrollTop: $cartContainer[0].scrollHeight }, 300);
+            }
             dfd.resolve()
         }
     )
@@ -1771,6 +1859,18 @@ salesitemsdetails.on("click", ".qty-val", function (e) {
         return;
     }
 
+    const isTouchscreenV2 = window.location.pathname.includes('touchscreensale_v2');
+    if (isTouchscreenV2) {
+        if ($qtyVal.attr("contenteditable") !== "true") {
+            // Store previous quantity in case we need to revert
+            $qtyVal.data("prev-qty", $qtyVal.text().trim());
+            $qtyVal.attr("contenteditable", "true");
+            $qtyVal.focus();
+            document.execCommand('selectAll', false, null);
+        }
+        return;
+    }
+
     bootbox.prompt({
         title: "Enter New Quantity",
         size: 'small',
@@ -1795,6 +1895,73 @@ salesitemsdetails.on("click", ".qty-val", function (e) {
         }
     })
 })
+
+// listen for contenteditable editing events on .qty-val (touchscreen v2)
+salesitemsdetails.on("focusout keydown input", ".qty-val", function (e) {
+    const isTouchscreenV2 = window.location.pathname.includes('touchscreensale_v2');
+    if (!isTouchscreenV2) return;
+
+    const $qtyVal = $(this);
+    const parent = $qtyVal.closest("tr");
+    const isSoldByValue = parent.attr("data-saleby") === "value";
+    if (isSoldByValue) {
+        return;
+    }
+    
+    if (e.type === "keydown") {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            $qtyVal.blur();
+        }
+        return;
+    }
+    
+    // Extract the entered quantity
+    let rawVal = $qtyVal.text().trim();
+    let result = parseFloat(rawVal) || 0;
+    
+    const unitprice = parseFloat(parent.find("td").eq(5).text()) || 0;
+    const linetotal = result * unitprice;
+    const stockquantity = parseFloat(parent.find("td").eq(6).text()) || 0;
+    const allownegativesales = parent.data("allownegativesales");
+
+    // Verify stock constraints
+    let isValid = true;
+    if (result <= 0) {
+        isValid = false;
+    } else if (stockquantity < result && Number(allownegativesales) !== 1 && !window.allownegativesalesglobally) {
+        isValid = false;
+        if (e.type === "focusout") {
+            errors = "Quantity to be sold exceeds stock quantity";
+            errordiv.html(showAlert("danger", errors));
+        }
+    }
+    
+    if (isValid) {
+        errordiv.html("");
+        parent.find(".linetotal").text($.number(linetotal, 2));
+    }
+    
+    if (e.type === "focusout") {
+        $qtyVal.removeAttr("contenteditable");
+        if (!isValid) {
+            const prevQty = parseFloat($qtyVal.data("prev-qty")) || 1;
+            $qtyVal.text(prevQty);
+            const fallbackTotal = prevQty * unitprice;
+            parent.find(".linetotal").text($.number(fallbackTotal, 2));
+        } else {
+            $qtyVal.text(result);
+        }
+        
+        // Format layout price warning highlight
+        validateRowBuyingPrice(parent);
+    }
+    
+    // Update overall cart totals
+    overalltotal.html($.number(getItemsTotal(), 2));
+    totalamountpayable.html($.number(getItemsTotal(), 2));
+    computeTotalAmountPaid();
+});
 
 // listen to price click for sold by value items
 salesitemsdetails.on("click", ".price-val", function (e) {
@@ -1854,8 +2021,8 @@ salesitemsdetails.on("focusout keydown input", ".price-val", function (e) {
     }
 });
 
-// listen to unit price amount or line total column clicks
-salesitemsdetails.on("click", ".price, .linetotal", function (e) {
+// listen to unit price amount clicks
+salesitemsdetails.on("click", ".price", function (e) {
     errordiv.html("")
     const isTouchscreenV2 = window.location.pathname.includes('touchscreensale_v2');
     
@@ -1875,13 +2042,6 @@ salesitemsdetails.on("click", ".price, .linetotal", function (e) {
 
     if (changeprices || (isTouchscreenV2 && window.allowpricechange) || (isTouchscreenV2 && window.allow_price_change)) {
         if ($cell.attr("contenteditable") !== "true") {
-            const currentUnitPrice = parseFloat($row.find("td").eq(5).text()) || 0;
-            
-            // If they click on .linetotal, show the raw unit price inside it temporarily for editing
-            if ($cell.hasClass("linetotal")) {
-                $cell.text(currentUnitPrice);
-            }
-            
             $cell.attr("contenteditable", "true");
             $cell.focus();
             
@@ -1891,8 +2051,8 @@ salesitemsdetails.on("click", ".price, .linetotal", function (e) {
     }
 });
 
-// listen for contenteditable editing events on .price and .linetotal columns
-salesitemsdetails.on("focusout keydown input", ".price, .linetotal", function (e) {
+// listen for contenteditable editing events on .price column
+salesitemsdetails.on("focusout keydown input", ".price", function (e) {
     const $cell = $(this);
     const $row = $cell.closest("tr");
     const isSoldByValue = $row.attr("data-saleby") === "value";
@@ -1912,25 +2072,22 @@ salesitemsdetails.on("focusout keydown input", ".price, .linetotal", function (e
     let rawVal = $cell.text().replace(/,/g, '').trim();
     let newUnitPrice = parseFloat(rawVal) || 0;
     
-    // Update unitprice column (td index 5) and price column (td index 3)
-    $row.find("td").eq(3).text(newUnitPrice);
+    // Update unitprice column (td index 5) but NOT the active editable price cell (index 3) during typing
     $row.find("td").eq(5).text(newUnitPrice);
     
     // Recalculate extended total (linetotal)
     const quantity = parseFloat($row.find(".qty-val").text()) || 0;
     const linetotal = newUnitPrice * quantity;
     
-    // If the active element is NOT this cell anymore (on focusout), format the linetotal back nicely
+    // If the active element is NOT this cell anymore (on focusout), format the cells and update UI
     if (e.type === "focusout") {
         $cell.removeAttr("contenteditable");
-        $row.find("td").eq(3).text(newUnitPrice.toFixed(2));
+        $cell.text(newUnitPrice.toFixed(2)); // Updates td index 3
         $row.find("td").eq(5).text(newUnitPrice.toFixed(2));
         $row.find(".linetotal").text($.number(linetotal, 2));
     } else {
-        // During input editing, update the other cell if we are editing .price
-        if ($cell.hasClass("price")) {
-            $row.find(".linetotal").text($.number(linetotal, 2));
-        }
+        // During input editing, update the linetotal cell
+        $row.find(".linetotal").text($.number(linetotal, 2));
     }
     
     // Validate buying price floor and highlight if below
@@ -2371,49 +2528,59 @@ searchproductbutton.on("click", () => {
 
 let searchTimeout = null;
 itemcodefield.on("input", function (e) {
-    const query = $(this).val()
+    const query = $(this).val().trim();
     clearTimeout(searchTimeout);
 
-    // Immediately clear previous search results on typing
-    if (query.length > 0) {
-        products.html("");
-        searchresultslist.hide();
-        searchproductslist.html("");
-        errordiv.html("");
+    // Hide the autocomplete dropdown on every keystroke
+    searchresultslist.hide();
+    searchproductslist.html("");
+    errordiv.html("");
+
+    if (query.length === 0) {
+        // Reset to "ALL" category view
+        categories.find('button[data-id="all"]').trigger('click');
+        return;
     }
 
     if (query.length >= 2) {
+        // Show a subtle loading state inside the grid while debounce waits
+        products.html(`
+            <div style="grid-column: 1/-1; display:flex; align-items:center; gap:10px; padding:24px; color:#94a3b8; font-size:13px;">
+                <span class="material-symbols-outlined" style="font-size:18px; animation:spin 1s linear infinite;">sync</span>
+                Searching for "<strong style="color:#334155;">${query}</strong>"...
+            </div>
+        `);
+
         searchTimeout = setTimeout(function () {
             // Select ALL category button visually
             categories.find('button').removeClass('active');
             categories.find('button[data-id="all"]').addClass('active');
 
-            // Filter products in the main grid using the design-accurate cards
+            const posid = poslist.val();
+
             $.getJSON(
                 "../controllers/productoperations.php",
                 {
                     filterproductbyname: 1,
                     name: query,
-                    posid: poslist.val()
+                    posid: posid
                 },
                 function (data) {
-                    let results = ""
                     if (data.length > 0) {
+                        let results = "";
                         data.forEach((product) => {
                             results += renderProductCard(product);
-                        })
-                        products.html(results)
-                        errordiv.html(""); // Clear any previous alerts
+                        });
+                        products.html(results);
+                        errordiv.html("");
                     } else {
-                        errordiv.html(showAlert("info", 'No products found matching "' + query + '"'));
+                        products.html("");
+                        errordiv.html(showAlert("info", 'No products found matching "<strong>' + query + '</strong>"'));
                     }
-                    searchresultslist.hide() // Ensure dropdown is hidden
+                    searchresultslist.hide();
                 }
-            )
-        }, 1000);
-    } else if (query.length === 0) {
-        // Reset to "ALL" category view
-        categories.find('button[data-id="all"]').trigger('click');
+            );
+        }, 400);
     }
 })
 
@@ -2435,6 +2602,36 @@ $(document).on('keydown', function (e) {
         e.preventDefault()
         savebutton.trigger("click")
     }
+    // Toggle between Card and List view modes for products
+    const $viewCardsBtn = $("#view-cards-btn");
+    const $viewListBtn = $("#view-list-btn");
+    const $productsContainer = $("#products");
+
+    function setViewMode(mode) {
+        if (mode === "list") {
+            $productsContainer.addClass("list-view");
+            $viewListBtn.addClass("active");
+            $viewCardsBtn.removeClass("active");
+        } else {
+            $productsContainer.removeClass("list-view");
+            $viewCardsBtn.addClass("active");
+            $viewListBtn.removeClass("active");
+        }
+    }
+
+    $viewCardsBtn.on("click", function () {
+        setViewMode("cards");
+        localStorage.setItem("pos-view-mode", "cards");
+    });
+
+    $viewListBtn.on("click", function () {
+        setViewMode("list");
+        localStorage.setItem("pos-view-mode", "list");
+    });
+
+    // Restore view mode preference from localStorage on init
+    const savedViewMode = localStorage.getItem("pos-view-mode") || "cards";
+    setViewMode(savedViewMode);
 })
 
 function validateRowBuyingPrice($row) {

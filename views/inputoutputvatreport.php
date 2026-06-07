@@ -5,16 +5,23 @@
     <title> SalesFlow | Input / Output VAT Report </title>
     <style>
       /* Responsive customizations for the Input / Output VAT Report page */
-      @media (max-width: 991.98px) {
+            @media (max-width: 991.98px) {
           #receiptlist {
               margin-left: 0 !important;
               padding-left: 15px !important;
               padding-right: 15px !important;
           }
+          #receiptlist .containergroup.card {
+              height: calc(100vh - 90px);
+              display: flex;
+              flex-direction: column;
+          }
           .card-body-list {
+              flex: 1;
               height: auto !important;
-              max-height: 450px;
+              max-height: none !important;
               overflow-y: auto;
+              padding-bottom: 24px !important;
           }
       }
 

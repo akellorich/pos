@@ -461,18 +461,56 @@ $(document).ready(function(){
         const checkExists = $("#chkCheckExists").is(":checked") ? 1 : 0;
         const generateCode = $("#chkGenerateCode").is(":checked") ? 1 : 0;
 
+        // Sanitize: replace single quotes with two single quotes in text fields
+        // to prevent SQL errors from apostrophes (e.g. "O'Brien's Oil")
+        const sanitizeQuotes = (val) => (val ? String(val).replace(/'/g, "''") : val);
+        const sanitizedProducts = parsedProducts.map(row => {
+            const clean = Object.assign({}, row);
+            if (clean['Item Name']    !== undefined) clean['Item Name']    = sanitizeQuotes(clean['Item Name']);
+            if (clean['Category Name']!== undefined) clean['Category Name']= sanitizeQuotes(clean['Category Name']);
+            if (clean['Item Code']    !== undefined) clean['Item Code']    = sanitizeQuotes(clean['Item Code']);
+            if (clean['UOM']          !== undefined) clean['UOM']          = sanitizeQuotes(clean['UOM']);
+            return clean;
+        });
+
         // Disable buttons & show progress
         $("#btnDoImport").prop("disabled", true).html('<i class="fal fa-spinner fa-spin mr-1" style="font-size: 0.82rem;"></i> Importing...');
         $("#importProgressContainer").show();
-        $("#importProgressBar").css("width", "40%");
-        $("#importProgressPercent").text("40%");
-        $("#importStatusText").text("Uploading and validating data...");
+        $("#importProgressBar").css("width", "5%").removeClass("bg-danger").addClass("bg-success");
+        $("#importProgressPercent").text("5%");
+        $("#importStatusText").text("Uploading data...");
+
+        // Simulate smooth progress: crawl from 5% → 90% while waiting for server
+        let simProgress = 5;
+        const progressMessages = [
+            { at: 20, msg: "Uploading data..." },
+            { at: 45, msg: "Validating rows..." },
+            { at: 65, msg: "Saving products..." },
+            { at: 80, msg: "Finalising import..." },
+            { at: 88, msg: "Almost done..." }
+        ];
+        const progressTimer = setInterval(function() {
+            if (simProgress < 90) {
+                // Decelerate as we approach 90%
+                const step = Math.max(0.3, (90 - simProgress) * 0.04);
+                simProgress = Math.min(90, simProgress + step);
+                const pct = Math.floor(simProgress);
+                $("#importProgressBar").css("width", pct + "%");
+                $("#importProgressPercent").text(pct + "%");
+                // Update status label at milestones
+                progressMessages.forEach(function(m) {
+                    if (pct >= m.at && $("#importStatusText").text() !== m.msg) {
+                        $("#importStatusText").text(m.msg);
+                    }
+                });
+            }
+        }, 120);
 
         $.post(
             "../controllers/productoperations.php",
             {
                 importproducts: true,
-                products: JSON.stringify(parsedProducts),
+                products: JSON.stringify(sanitizedProducts),
                 categoryMode: categoryMode,
                 specificCategoryId: specificCategoryId,
                 checkExists: checkExists,
@@ -483,54 +521,107 @@ $(document).ready(function(){
                 autoReconcile: autoReconcile
             },
             function(response) {
+                clearInterval(progressTimer);
                 $("#importProgressBar").css("width", "100%");
                 $("#importProgressPercent").text("100%");
                 $("#importStatusText").text("Processing complete.");
 
                 try {
                     const res = JSON.parse(response);
-                    if (res.status === "success") {
-                        let msg = `<div class="p-2">`;
-                        msg += `<p class="mb-2 text-success font-weight-bold"><i class="fal fa-check-circle mr-2"></i>Import completed successfully!</p>`;
-                        msg += `<table class="table table-bordered table-sm small mb-3">`;
-                        msg += `<tr><td>Products Imported</td><td class="font-weight-bold text-success text-right">${res.imported}</td></tr>`;
-                        msg += `<tr><td>Rows Skipped / Duplicates</td><td class="font-weight-bold text-muted text-right">${res.skipped}</td></tr>`;
-                        msg += `</table>`;
-                        
-                        if (res.errors && res.errors.length > 0) {
-                            msg += `<p class="font-weight-bold text-danger mb-1 small">Errors encountered during execution:</p>`;
-                            msg += `<div class="bg-light p-2 rounded border small" style="max-height: 120px; overflow-y: auto; font-family: monospace;">`;
-                            res.errors.forEach(err => {
-                                msg += `<div class="text-danger mb-1">${err}</div>`;
-                            });
-                            msg += `</div>`;
-                        }
-                        msg += `</div>`;
 
-                        bootbox.alert({
-                            title: "Import Execution Report",
-                            message: msg,
-                            callback: function() {
-                                location.reload();
-                            }
+                    // Hide preview table, show results inline
+                    $("#previewTableContainer").hide();
+                    $("#previewEmptyState").addClass("d-none").removeClass("d-flex");
+
+                    if (res.status === "success") {
+                        $("#importProgressBar").removeClass("bg-danger");
+                        let errHtml = "";
+                        if (res.errors && res.errors.length > 0) {
+                            errHtml = `
+                                <p class="font-weight-bold text-danger mb-1 small mt-3">
+                                    <i class="fal fa-exclamation-circle mr-1"></i> Errors encountered:
+                                </p>
+                                <div class="bg-light border rounded p-2 small" style="max-height:160px; overflow-y:auto; font-family:monospace;">
+                                    ${res.errors.map(e => `<div class="text-danger mb-1">${e}</div>`).join('')}
+                                </div>`;
+                        }
+
+                        $("#importResultsContainer").html(`
+                            <div class="p-3 border rounded bg-white h-100 d-flex flex-column">
+                                ${showAlert("success", "Import completed successfully!")}
+                                <table class="table table-bordered table-sm small mb-0">
+                                    <tr>
+                                        <td>Products Imported</td>
+                                        <td class="font-weight-bold text-success text-right">${res.imported}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Rows Skipped / Duplicates</td>
+                                        <td class="font-weight-bold text-muted text-right">${res.skipped}</td>
+                                    </tr>
+                                </table>
+                                ${errHtml}
+                                <div class="mt-auto pt-3">
+                                    <button type="button" class="btn btn-success btn-sm" id="btnReloadAfterImport">
+                                        <i class="fal fa-sync mr-1" style="font-size: 0.8rem;"></i> Done — Reload Products
+                                    </button>
+                                </div>
+                            </div>
+                        `).show();
+
+                        // Reload on Done click
+                        $(document).one("click", "#btnReloadAfterImport", function() {
+                            location.reload();
                         });
+
+                        // Update modal header to reflect completion
+                        $("#importModalLabel").html('<i class="fal fa-check-circle text-success mr-2" style="font-size:1.25rem;"></i> Import Report');
+                        // Disable close via X until user clicks Done
+                        $("#importModal .close").hide();
+                        // Restore Start Import button state
+                        resetImportProgress();
+
                     } else {
-                        bootbox.alert({
-                            title: "Import Error",
-                            message: `<div class="alert alert-danger py-2 small mb-0">${res.message || "An unexpected error occurred."}</div>`
-                        });
+                        $("#importProgressBar").addClass("bg-danger").removeClass("bg-success");
+                        $("#importProgressPercent").text("Failed");
+                        $("#importStatusText").text("Import failed.");
+
+                        $("#importResultsContainer").html(`
+                            <div class="alert alert-danger py-3 small mb-0">
+                                <p class="font-weight-bold mb-1"><i class="fal fa-times-circle mr-2"></i> Import Error</p>
+                                <p class="mb-0">${res.message || "An unexpected error occurred."}</p>
+                            </div>
+                        `).show();
+
                         resetImportProgress();
                     }
+
                 } catch(e) {
-                    bootbox.alert({
-                        title: "Parsing Error",
-                        message: `<div class="alert alert-danger py-2 small mb-0">Failed to parse server response. Raw output:<br><pre class="mt-2 mb-0 bg-dark text-white p-2 small" style="max-height: 100px; overflow-y: auto;">${response}</pre></div>`
-                    });
+                    $("#importProgressBar").addClass("bg-danger").removeClass("bg-success");
+                    $("#importProgressPercent").text("Error");
+                    $("#importStatusText").text("Server response error.");
+
+                    $("#importResultsContainer").html(`
+                        <div class="alert alert-danger py-3 small mb-0">
+                            <p class="font-weight-bold mb-1"><i class="fal fa-bug mr-2"></i> Parse Error</p>
+                            <p class="mb-1">Failed to read server response.</p>
+                            <pre class="bg-dark text-white p-2 small mt-2 rounded" style="max-height:100px; overflow-y:auto;">${response}</pre>
+                        </div>
+                    `).show();
+
                     resetImportProgress();
                 }
             }
         ).fail(function() {
-            bootbox.alert("Failed to communicate with the server. Please check your network connection.");
+            clearInterval(progressTimer);
+            $("#importProgressBar").addClass("bg-danger").removeClass("bg-success");
+            $("#importStatusText").text("Network error.");
+
+            $("#importResultsContainer").html(`
+                <div class="alert alert-danger py-3 small mb-0">
+                    <i class="fal fa-wifi-slash mr-2"></i> Failed to reach the server. Please check your connection and try again.
+                </div>
+            `).show();
+
             resetImportProgress();
         });
     });
@@ -557,6 +648,13 @@ $(document).ready(function(){
         `).addClass("d-flex").removeClass("d-none");
         $("#previewTableContainer").hide();
         $("#previewRowCount").text("0 rows loaded");
+
+        // Clear inline results panel
+        $("#importResultsContainer").hide().empty();
+
+        // Restore modal header and close button
+        $("#importModalLabel").html('<i class="fal fa-file-import text-primary mr-2" style="font-size: 1.25rem;"></i> Bulk Product Import');
+        $("#importModal .close").show();
         
         resetImportProgress();
     }
